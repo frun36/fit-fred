@@ -1,4 +1,4 @@
-READOUTCARDS = {
+TCM = {
     INSTRUCTIONS = {
         PATH = ../boards/tcm/tcm.conf
     }

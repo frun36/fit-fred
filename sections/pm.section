@@ -1,0 +1,9 @@
+PM = {
+    INSTRUCTIONS = {
+        PATH = ../boards/pm/pm.conf
+    }
+    MAPPING = {
+        PMA[0] = ALF/SERIAL_0/LINK_0
+        PMC[0] = ALF/SERIAL_0/LINK_0
+    }
+}

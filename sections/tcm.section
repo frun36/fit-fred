@@ -1,0 +1,8 @@
+TCM = {
+    INSTRUCTIONS = {
+        PATH = ../boards/tcm/tcm.conf
+    }
+    MAPPING = {
+        TCM[0] = ALF/SERIAL_0/LINK_0
+    }
+}

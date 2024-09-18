@@ -1,2 +1,14 @@
 # FIT FRED
-This repository contains the FRED MAPI code for ALICE's FIT detector, CERN.
+## About
+This repository contains the FRED MAPI code for ALICE's FIT detector.
+
+## Build & Run
+Required - `devtoolset-7`.
+```
+git submodule update --init
+cd core
+cmake3 . -DMAPI=1
+make
+cd ..
+bin/FREDServer
+```

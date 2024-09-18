@@ -10,10 +10,6 @@
 
 class WinCCMessage {
 public:
-    struct Exception : public std::runtime_error {
-        Exception(std::string msg) : std::runtime_error(msg) {}
-    };
-
     struct Request {
         enum class Operation { Read, Write };
         
@@ -34,5 +30,5 @@ public:
         return m_requests;
     }
 
-    static double stringToDouble(std::string str);
+    static std::optional<double> stringToDouble(std::string str);
 };

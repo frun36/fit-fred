@@ -1,10 +1,5 @@
 #include "mapifactory.h"
 
-#include "basic_mapi/mapiexample.h"
-#include "indefinite_mapi/indefinitemapi.h"
-#include "iterative_mapi/averagetemp.h"
-#include "mapigroup/testgroup.h"
-
 MapiFactory::MapiFactory(Fred *fred) {
     this->fred = fred;
 

@@ -74,7 +74,7 @@ AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
 {
     if(*m_sequence == '\0')
     {
-        /* Error handling */
+        throw std::runtime_error("Iterator points to end(), cannot increment");
     }
     if(m_sequence[m_currentLine->length] == '\0'){  
         m_sequence += m_currentLine->length;
@@ -97,7 +97,7 @@ AlfResponseParser::iterator AlfResponseParser::iterator::operator++(int) const
 AlfResponseParser::Line AlfResponseParser::iterator::operator*() const
 {
     if(m_currentLine == std::nullopt){
-        /* Error handling */
+        throw std::runtime_error("Iterator points to end(), cannot dereference");
     }
     return *m_currentLine;
 }

@@ -115,5 +115,5 @@ AlfResponseParser::iterator AlfResponseParser::begin()
 
 AlfResponseParser::iterator AlfResponseParser::end()
 {
-    return iterator(m_sequence + m_sequenceLen);
+    return iterator(m_sequence + m_sequenceLen - 1);
 }

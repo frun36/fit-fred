@@ -4,5 +4,5 @@ RUN yum install -y gcc-c++ cmake make
 COPY . /fred
 
 WORKDIR /fred
-RUN cmake core
+RUN cmake -DMAPI=1
 RUN make

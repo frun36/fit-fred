@@ -22,17 +22,25 @@ int main(int argc, const char** argv)
     // Set up random number generators
     std::random_device rd;
     std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist_p(0,1);
     std::uniform_int_distribution<uint16_t> dist_prefix(0, 0xFFF); // 3 hex digits
     std::uniform_int_distribution<uint32_t> dist_32bit(0, 0xFFFFFFFF); // 8 hex digits
 
     for (int i = 0; i < num_lines; ++i)
     {
         std::stringstream ss;
+        if(dist_p(gen) < 0.5)
+        {
+            ss << "0\n";
+        } 
+        else
+        {
         ss << "0x"
            << std::hex << std::uppercase << std::setw(3) << std::setfill('0') << dist_prefix(gen)
            << std::setw(8) << dist_32bit(gen)
            << std::setw(8) << dist_32bit(gen)
            << '\n';
+        }
         data += ss.str();
     }
 

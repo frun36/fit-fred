@@ -5,13 +5,13 @@
 namespace fit_swt
 {
 
-SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse=true)
+SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse)
 {
     std::string saddress = wordToHex(address);
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address, const uint32_t* data, bool expectResponse=true)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address, const uint32_t* data, bool expectResponse)
 {
     switch(type)
     {

@@ -4,10 +4,11 @@
 #include <string>
 #include <stdexcept>
 
-#include <Database/databaseinterface.h>
+// #include <Database/databaseinterface.h>
 
 class Parameter {
 public:
+    // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
         Unsigned, Signed16, Signed32
     };
@@ -26,9 +27,9 @@ private:
     bool m_isReadonly;
 
 public:
-    Parameter(std::vector<MultiBase*>) {
-        // to be implemented when database structure is certain
-    }
+    // Parameter(std::vector<MultiBase*>) {
+    //     // to be implemented when database structure is certain
+    // }
 
     Parameter(
         std::string name, 

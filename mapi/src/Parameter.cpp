@@ -25,10 +25,10 @@ uint32_t Parameter::getRawValue(double physicalValue) {
 
     switch (m_valueEncoding) {
         case ValueEncoding::Unsigned:
-            return static_cast<uint32_t>(encodedValue);
+            return static_cast<uint32_t>(encodedValue) << m_startBit;
         case ValueEncoding::Signed32:
-            return static_cast<uint32_t>(static_cast<int32_t>(encodedValue));
+            return static_cast<uint32_t>(static_cast<int32_t>(encodedValue)) << m_startBit;
         case ValueEncoding::Signed16:
-            return static_cast<uint32_t>(static_cast<int16_t>(encodedValue));
+            return static_cast<uint32_t>(static_cast<int16_t>(encodedValue)) << m_startBit;
     }
 }

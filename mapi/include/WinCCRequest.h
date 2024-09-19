@@ -15,7 +15,7 @@ public:
         
         std::string name;
         Operation operation;
-        std::optional<double> value;
+        std::optional<double> value; // this assumes only single-valued writes
 
         explicit Command(const std::string& line);
     };

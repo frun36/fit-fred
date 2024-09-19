@@ -1,6 +1,6 @@
 #include "WinCCRequest.h"
 
-explicit WinCCRequest::Command::Command(const std::string& line) {
+WinCCRequest::Command::Command(const std::string& line) {
     std::vector<std::string> arguments = Utility::splitString(line, ",");
 
     if (arguments.size() < 2)
@@ -26,7 +26,7 @@ explicit WinCCRequest::Command::Command(const std::string& line) {
     }
 }
 
-explicit WinCCRequest::WinCCRequest(const std::string& input) {
+WinCCRequest::WinCCRequest(const std::string& input) {
     std::vector<std::string> lines = Utility::splitString(input, "\n"); // CRLF for Windows-based WinCC?
 
     for (const auto& line: lines)

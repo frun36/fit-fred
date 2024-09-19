@@ -1,6 +1,6 @@
-#include "WinCCMessage.h"
+#include "WinCCRequest.h"
 
-explicit WinCCMessage::Request::Request(const std::string& line) {
+explicit WinCCRequest::Command::Command(const std::string& line) {
     std::vector<std::string> arguments = Utility::splitString(line, ",");
 
     if (arguments.size() < 2)
@@ -26,14 +26,14 @@ explicit WinCCMessage::Request::Request(const std::string& line) {
     }
 }
 
-explicit WinCCMessage::WinCCMessage(const std::string& input) {
+explicit WinCCRequest::WinCCRequest(const std::string& input) {
     std::vector<std::string> lines = Utility::splitString(input, "\n"); // CRLF for Windows-based WinCC?
 
     for (const auto& line: lines)
-        m_requests.push_back(Request(line));
+        m_commands.push_back(Command(line));
 }
 
-std::optional<double> WinCCMessage::stringToDouble(std::string str) {
+std::optional<double> WinCCRequest::stringToDouble(std::string str) {
     // stringstream is slow - makes for easy code though, I suggest we stick with it for now to avoid premature optimisation
     std::stringstream ss;
     double value;

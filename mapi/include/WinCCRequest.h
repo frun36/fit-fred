@@ -8,26 +8,26 @@
 
 #include "Parser/utility.h"
 
-class WinCCMessage {
+class WinCCRequest {
 public:
-    struct Request {
+    struct Command {
         enum class Operation { Read, Write };
         
         std::string name;
         Operation operation;
         std::optional<double> value;
 
-        explicit Request(const std::string& line);
+        explicit Command(const std::string& line);
     };
 
 private:
-    std::vector<Request> m_requests;
+    std::vector<Command> m_commands;
 
 public:
-    explicit WinCCMessage(const std::string& input);
+    explicit WinCCRequest(const std::string& input);
 
-    const std::vector<Request>& getRequests() const {
-        return m_requests;
+    const std::vector<Command>& getCommands() const {
+        return m_commands;
     }
 
     static std::optional<double> stringToDouble(std::string str);

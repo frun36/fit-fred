@@ -4,7 +4,12 @@ project(FREDServer)
 
 enable_testing()
 
-add_subdirectory(core)
+option(test-only "Build only the tests" OFF)
+
+# Conditionally include core if test-only is not set
+if (NOT test-only)
+    add_subdirectory(core)
+endif()
 
 include_directories(mapi/include)
 

@@ -28,7 +28,7 @@ AlfResponseParser::Line::Line(const char* hex, int64_t len): length(len)
     }
     else
     {
-        /* Error handling */
+        throw std::runtime_error("Invalid line - aborting operation");
     }
 }
 

@@ -103,9 +103,9 @@ void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
-const uint32_t* SwtSequence::passMask(uint32_t firtBit, uint32_t lastBit, uint32_t value) 
+const uint32_t* SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
 {
-    createMask(firtBit, lastBit, value, m_mask);
+    createMask(firstBit, lastBit, value, m_mask);
     return m_mask;
 }
 

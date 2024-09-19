@@ -52,7 +52,7 @@ TEST(SwtSequenceTest, CreateMask)
 TEST(SwtSequenceTest, PassMask)
 {
     fit_swt::SwtSequence seq;
-    const uint32_t* mask = seq.passMask(4, 7, 0xF);
+    const uint32_t* mask = seq.passMasks(4, 7, 0xF);
     EXPECT_EQ(mask[0], 0xFFFFFF0F);
     EXPECT_EQ(mask[1], 0x000000F0);
 }

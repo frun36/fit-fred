@@ -46,11 +46,11 @@ class SwtSequence
 
     /*
         Creates mask for RMW bits operation */
-    static void createMask(uint32_t firtBit, uint32_t lastBit, uint32_t value, uint32_t* dest);
+    static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* dest);
 
     /*
         Creates mask in an internal buffer and returns pointer to it. */
-    const uint32_t* passMask(uint32_t firtBit, uint32_t lastBit, uint32_t value);
+    const uint32_t* passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value);
 
     /*
         Translate word to hex format */
@@ -132,7 +132,7 @@ class SwtSequence
     std::string m_buffer;
 
     /*
-        Buffer for RMW bits mask. Used by passMask  */
+        Buffer for RMW bits mask. Used by passMasks  */
     uint32_t m_mask[2];
     
 };

@@ -31,6 +31,8 @@ public:
     //     // to be implemented when database structure is certain
     // }
 
+    Parameter() = default;
+
     Parameter(
         std::string name, 
         uint32_t baseAddress, 

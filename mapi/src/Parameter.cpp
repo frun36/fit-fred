@@ -30,5 +30,7 @@ uint32_t Parameter::getRawValue(double physicalValue) const {
             return static_cast<uint32_t>(static_cast<int32_t>(encodedValue)) << m_startBit;
         case ValueEncoding::Signed16:
             return static_cast<uint32_t>(static_cast<int16_t>(encodedValue)) << m_startBit;
+        default:
+            throw std::runtime_error("Invalid value encoding");
     }
 }

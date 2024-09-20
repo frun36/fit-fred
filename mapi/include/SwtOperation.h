@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 #include "Parameter.h"
@@ -19,6 +21,8 @@ struct SwtOperation {
     uint32_t address;
     uint32_t data0;
     uint32_t data1;
+
+    SwtOperation() = default;
 
     SwtOperation(Type type, uint32_t baseAddress, uint32_t data0 = 0, uint32_t data1 = 0)
         : type(type), address(baseAddress), data0(data0), data1(data1) { }

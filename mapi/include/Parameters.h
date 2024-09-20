@@ -9,6 +9,7 @@
 #include "WinCCRequest.h"
 
 class Parameters : public Mapi {
+public:
     Parameters(unordered_map<string, Parameter> parameterMap) : m_parameterMap(parameterMap) {}
 
     unordered_map<string, Parameter> m_parameterMap;

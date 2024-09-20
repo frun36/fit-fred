@@ -20,7 +20,7 @@ double Parameter::getPhysicalValue(uint32_t rawValue) const {
     return m_multiplier * encodedValue;
     }
 
-uint32_t Parameter::getRawValue(double physicalValue) {
+uint32_t Parameter::getRawValue(double physicalValue) const {
     double encodedValue = physicalValue / m_multiplier;
 
     switch (m_valueEncoding) {

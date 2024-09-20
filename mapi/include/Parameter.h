@@ -72,13 +72,17 @@ public:
         return m_endBit;
     }
 
+    uint8_t getBitLength() const {
+        return m_endBit - m_startBit + 1;
+    }
+
     uint32_t getRegblockSize() const {
         return m_regblockSize;
     }
 
     double getPhysicalValue(uint32_t rawValue) const;
 
-    uint32_t getRawValue(double physicalValue);
+    uint32_t getRawValue(double physicalValue) const;
 
     // Currently no value validation!
 

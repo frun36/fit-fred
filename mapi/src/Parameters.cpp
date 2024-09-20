@@ -32,7 +32,7 @@ string Parameters::processOutputMessage(string msg) {
     }
 
     for (const auto& line : alfMsg) {
-        if (line.frame.prefix == 0x000) { // read response
+        if (line.frame.prefix == 0x000) { // response to read operation
             const vector<string>& parametersToUpdate = m_currRequestedParameterNames[line.frame.address];
             
             for (const auto& name: parametersToUpdate) {
@@ -58,3 +58,4 @@ vector<SwtOperation> Parameters::handleRequest(const WinCCRequest& req) {
 
     return operations;
 }
+

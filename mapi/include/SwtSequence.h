@@ -2,10 +2,7 @@
 
 #include<string>
 #include<cstdint>
-namespace fit_swt
-{
-
-
+#include<array>
 /*
     Creates SWT sequence in the ALF-ready format */
 class SwtSequence
@@ -16,6 +13,14 @@ class SwtSequence
     enum class Operation{Read, Write, RMWbits, RMWsum};
 
     SwtSequence():m_buffer("reset\n"){}
+
+    struct SwtOperation
+    {
+        Operation type;
+        uint32_t address;
+        std::array<uint32_t,2> data;
+        bool expectResponse;
+    };
 
     /*  
         Adds operation to sequence.
@@ -39,6 +44,9 @@ class SwtSequence
             - Reference to itself   
     */
     SwtSequence& addOperation(Operation type, const char* address, const uint32_t* data = nullptr, bool expectResponse=true);
+
+    SwtSequence& addOperation(SwtOperation&& operation);
+    SwtSequence& addOperation(const SwtOperation& operation);
 
     /* 
         Returns stored sequence */
@@ -136,6 +144,4 @@ class SwtSequence
     uint32_t m_mask[2];
     
 };
-}// fit_swt
-
 

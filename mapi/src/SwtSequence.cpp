@@ -2,8 +2,6 @@
 #include<cstring>
 #include<charconv>
 
-namespace fit_swt
-{
 
 SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse)
 {
@@ -77,6 +75,15 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address, cons
     return *this;
 }
 
+SwtSequence& SwtSequence::addOperation(SwtSequence::SwtOperation&& operation)
+{
+    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
+}
+
+SwtSequence& SwtSequence::addOperation(const SwtSequence::SwtOperation& operation)
+{
+    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
+}
 
 std::string SwtSequence::wordToHex(uint32_t word)
 {
@@ -108,6 +115,3 @@ const uint32_t* SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint
     createMask(firstBit, lastBit, value, m_mask);
     return m_mask;
 }
-
-}// fir_swt
-

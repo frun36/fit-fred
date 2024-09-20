@@ -19,10 +19,10 @@ TEST(ParameterInterpretationTest, Unsigned) {
     );
 
     double physicalValue = p.getPhysicalValue(0xffffffff);
-    EXPECT_EQ(physicalValue, 1785);
+    EXPECT_EQ(physicalValue, 105);
 
-    uint32_t rawValue = p.getRawValue(1785);
-    EXPECT_EQ(rawValue, 0x00000ff0);
+    uint32_t rawValue = p.getRawValue(105);
+    EXPECT_EQ(rawValue, 0x000000f0);
 }
 
 } // namespace

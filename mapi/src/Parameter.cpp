@@ -3,7 +3,7 @@
 
 double Parameter::getPhysicalValue(uint32_t rawValue) const {
     uint8_t bitLength = m_endBit - m_startBit + 1;
-    uint32_t shiftedValue = (rawValue >> m_startBit) & ((1 < bitLength) - 1);
+    uint32_t shiftedValue = (rawValue >> m_startBit) & ((1 << bitLength) - 1);
     
     double encodedValue;
     switch (m_valueEncoding) {

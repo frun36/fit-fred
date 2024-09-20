@@ -3,7 +3,7 @@
 #include<charconv>
 
 
-SwtSequence::SwtSequence(std::vector<SwtOperation> operations)
+SwtSequence::SwtSequence(const std::vector<SwtOperation>& operations)
 {
     for(auto & op: operations)
     {

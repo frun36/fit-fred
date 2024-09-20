@@ -15,7 +15,7 @@ class SwtSequence
     enum class Operation{Read, Write, RMWbits, RMWsum};
 
     SwtSequence():m_buffer("reset\n"){}
-    SwtSequence(std::vector<SwtOperation> operations);
+    SwtSequence(const std::vector<SwtOperation>& operations);
 
     struct SwtOperation
     {

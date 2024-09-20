@@ -4,17 +4,17 @@
 
 bool AlfResponseParser::isSuccess() const
 {
-    return ( strncmp(m_sequence, "success", strlen("success")) == 0);
+    return ( m_sequence.compare(0, strlen("success") , "success") == 0);
 }
 
-AlfResponseParser::SwtFrame::SwtFrame(const char* src)
+AlfResponseParser::SwtFrame::SwtFrame(std::string_view src)
 {
     data = (static_cast<uint32_t>(stringToByte(src[11], src[12])) << 24) + (static_cast<uint32_t>(stringToByte(src[13], src[14])) << 16) + (static_cast<uint32_t>(stringToByte(src[15], src[16])) << 8) + static_cast<uint32_t>(stringToByte(src[17], src[18]));
     address = (static_cast<uint32_t>(stringToByte(src[3], src[4])) << 24) + (static_cast<uint32_t>(stringToByte(src[5], src[6])) << 16) + (static_cast<uint32_t>(stringToByte(src[7], src[8])) << 8) + static_cast<uint32_t>(stringToByte(src[9], src[10]));
     prefix = (static_cast<uint16_t>(stringToByte('0', src[0])) << 8) +  static_cast<uint16_t>(stringToByte(src[1], src[2]));
 }
 
-AlfResponseParser::Line::Line(const char* hex, int64_t len): length(len)
+AlfResponseParser::Line::Line(std::string_view hex, int64_t len): length(len)
 {
     if(len == 1)
     {
@@ -32,9 +32,9 @@ AlfResponseParser::Line::Line(const char* hex, int64_t len): length(len)
     }
 }
 
-AlfResponseParser::iterator::iterator(const char* sequence): m_sequence(sequence)
+AlfResponseParser::iterator::iterator(std::string_view sequence): m_sequence(sequence)
 {
-    if(*m_sequence == '\0'){
+    if(m_sequence.at(0) == '\0'){
         m_currentLine = std::nullopt;
     }
     else{
@@ -72,17 +72,17 @@ int64_t AlfResponseParser::iterator::getLineLen() const
 
 AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
 {
-    if(*m_sequence == '\0')
+    if(m_sequence.at(0) == '\0')
     {
         throw std::runtime_error("Iterator points to end(), cannot increment");
     }
     if(m_sequence[m_currentLine->length] == '\0'){  
-        m_sequence += m_currentLine->length;
+        m_sequence = m_sequence.data() + m_currentLine->length;
         m_currentLine = Line(m_sequence, getLineLen());
         return *this;
     }
 
-    m_sequence += m_currentLine->length + 1;
+    m_sequence =  m_sequence.data() + m_currentLine->length + 1;
     m_currentLine = Line(m_sequence, getLineLen());
     return *this;
 }
@@ -109,11 +109,11 @@ bool AlfResponseParser::iterator::operator!=(const iterator& itr)
 
 AlfResponseParser::iterator AlfResponseParser::begin()
 {
-    if(isSuccess()) return iterator(m_sequence+strlen("success")+1);
-    else return iterator(m_sequence+strlen("failure")+1);
+    if(isSuccess()) return iterator(m_sequence.data()+strlen("success")+1);
+    else return iterator(m_sequence.data()+strlen("failure")+1);
 }
 
 AlfResponseParser::iterator AlfResponseParser::end()
 {
-    return iterator(m_sequence + m_sequenceLen - 1);
+    return iterator(m_sequence.data() + m_sequence.size() - 1);
 }

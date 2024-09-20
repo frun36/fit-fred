@@ -2,7 +2,9 @@
 
 #include<string>
 #include<cstdint>
+#include<vector>
 #include<array>
+#include<span>
 /*
     Creates SWT sequence in the ALF-ready format */
 class SwtSequence
@@ -13,6 +15,7 @@ class SwtSequence
     enum class Operation{Read, Write, RMWbits, RMWsum};
 
     SwtSequence():m_buffer("reset\n"){}
+    SwtSequence(std::vector<SwtOperation> operations);
 
     struct SwtOperation
     {
@@ -32,7 +35,7 @@ class SwtSequence
         Return:
             - Reference to itself
     */
-    SwtSequence& addOperation(Operation type, uint32_t address, const uint32_t* data = nullptr, bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, uint32_t address, const std::span<uint32_t> data = std::span<uint32_t>(), bool expectResponse=true);
     /*  
         Adds operation to sequence.
         Arguments:
@@ -43,7 +46,7 @@ class SwtSequence
         Return:
             - Reference to itself   
     */
-    SwtSequence& addOperation(Operation type, const char* address, const uint32_t* data = nullptr, bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, const char* address,  const std::span<uint32_t> data = std::span<uint32_t>(), bool expectResponse=true);
 
     SwtSequence& addOperation(SwtOperation&& operation);
     SwtSequence& addOperation(const SwtOperation& operation);

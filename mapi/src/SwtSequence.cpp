@@ -3,13 +3,22 @@
 #include<charconv>
 
 
-SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse)
+SwtSequence::SwtSequence(std::vector<SwtOperation> operations)
+{
+    for(auto & op: operations)
+    {
+        addOperation(op);
+    }
+}
+
+
+SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const std::span<uint32_t> data bool expectResponse)
 {
     std::string saddress = wordToHex(address);
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address, const uint32_t* data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const std::span<uint32_t> data, bool expectResponse)
 {
     switch(type)
     {

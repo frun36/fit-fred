@@ -2,8 +2,13 @@
 #include<cstring>
 #include<charconv>
 
+SwtSequence::SwtOperation::SwtOperation( Operation typ, uint32_t addr, std::array<uint32_t,2> data, bool expect):
+    type(typ), address(addr), expectResponse(expect)
+{   
+    this->data = data;
+}
 
-SwtSequence::SwtSequence(const std::vector<SwtOperation>& operations)
+SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operations):m_buffer("reset\n")
 {
     for(auto & op: operations)
     {
@@ -12,13 +17,13 @@ SwtSequence::SwtSequence(const std::vector<SwtOperation>& operations)
 }
 
 
-SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const std::span<uint32_t> data bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const std::span<const uint32_t> data, bool expectResponse)
 {
     std::string saddress = wordToHex(address);
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const std::span<uint32_t> data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const std::span<const uint32_t> data, bool expectResponse)
 {
     switch(type)
     {
@@ -86,12 +91,12 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  con
 
 SwtSequence& SwtSequence::addOperation(SwtSequence::SwtOperation&& operation)
 {
-    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
+    addOperation(operation.type, operation.address,  std::span<const uint32_t,2>(operation.data), operation.expectResponse);
 }
 
 SwtSequence& SwtSequence::addOperation(const SwtSequence::SwtOperation& operation)
 {
-    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
+    addOperation(operation.type, operation.address, std::span<const uint32_t,2>(operation.data), operation.expectResponse);
 }
 
 std::string SwtSequence::wordToHex(uint32_t word)
@@ -113,14 +118,14 @@ std::string SwtSequence::wordToHex(uint32_t word)
     };
 }
 
-void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* dest)
+void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, std::span<uint32_t> dest)
 {
     dest[0] = ~( ( 0xFFFFFFFFu >> ( 32 - (lastBit - firstBit + 1) ) ) << firstBit );
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
-const uint32_t* SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
+std::span<const uint32_t> SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
 {
-    createMask(firstBit, lastBit, value, m_mask);
-    return m_mask;
+    createMask(firstBit, lastBit, value, std::span<uint32_t>(m_mask));
+    return std::span<const uint32_t>(m_mask);
 }

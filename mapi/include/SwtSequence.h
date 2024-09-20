@@ -14,16 +14,19 @@ class SwtSequence
         SWT operation type  */
     enum class Operation{Read, Write, RMWbits, RMWsum};
 
-    SwtSequence():m_buffer("reset\n"){}
-    SwtSequence(const std::vector<SwtOperation>& operations);
 
     struct SwtOperation
     {
+        SwtOperation( Operation type, uint32_t address, std::array<uint32_t,2> data=std::array<uint32_t,2>(), bool expectResponse=false);
         Operation type;
         uint32_t address;
         std::array<uint32_t,2> data;
         bool expectResponse;
     };
+
+    
+    SwtSequence():m_buffer("reset\n"){}
+    SwtSequence(const std::vector<SwtOperation>& operations);
 
     /*  
         Adds operation to sequence.
@@ -35,7 +38,7 @@ class SwtSequence
         Return:
             - Reference to itself
     */
-    SwtSequence& addOperation(Operation type, uint32_t address, const std::span<uint32_t> data = std::span<uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, uint32_t address, const std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
     /*  
         Adds operation to sequence.
         Arguments:
@@ -46,7 +49,7 @@ class SwtSequence
         Return:
             - Reference to itself   
     */
-    SwtSequence& addOperation(Operation type, const char* address,  const std::span<uint32_t> data = std::span<uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, const char* address,  const std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
 
     SwtSequence& addOperation(SwtOperation&& operation);
     SwtSequence& addOperation(const SwtOperation& operation);
@@ -57,11 +60,11 @@ class SwtSequence
 
     /*
         Creates mask for RMW bits operation */
-    static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* dest);
+    static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, std::span<uint32_t> dest);
 
     /*
         Creates mask in an internal buffer and returns pointer to it. */
-    const uint32_t* passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value);
+    std::span<const uint32_t> passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value);
 
     /*
         Translate word to hex format */
@@ -71,43 +74,9 @@ class SwtSequence
         Translate half byte to hex format. Inline.*/
     static char halfByteToHex(uint8_t halfByte)
     {
-        switch (halfByte) {
-        case 0:
-            return '0';
-        case 1:
-            return '1';
-        case 2:
-            return '2';
-        case 3:
-            return '3';
-        case 4:
-            return '4';
-        case 5:
-            return '5';
-        case 6:
-            return '6';
-        case 7:
-            return '7';
-        case 8:
-            return '8';
-        case 9:
-            return '9';
-        case 10:
-            return 'A';
-        case 11:
-            return 'B';
-        case 12:
-            return 'C';
-        case 13:
-            return 'D';
-        case 14:
-            return 'E';
-        case 15:
-        return 'F';
-        }
+        static constexpr char hexDigits[] = "0123456789ABCDEF";
+        return hexDigits[halfByte & 0x0F];
     }
-
-    
 
     /*
         Prefix addded at the begging of every sequence  */
@@ -144,7 +113,7 @@ class SwtSequence
 
     /*
         Buffer for RMW bits mask. Used by passMasks  */
-    uint32_t m_mask[2];
+    std::array<uint32_t, 2> m_mask;
     
 };
 

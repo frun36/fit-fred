@@ -2,8 +2,8 @@
 #include<cstring>
 #include<charconv>
 
-SwtSequence::SwtOperation::SwtOperation( Operation typ, uint32_t addr, std::array<uint32_t,2> data, bool expect):
-    type(typ), address(addr), expectResponse(expect)
+SwtSequence::SwtOperation::SwtOperation( Operation type, uint32_t addr, std::array<uint32_t,2> data, bool expect):
+    type(type), address(addr), expectResponse(expect)
 {   
     this->data = data;
 }

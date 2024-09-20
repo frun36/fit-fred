@@ -4,7 +4,7 @@
 #include<algorithm>
 #include<optional>
 #include<cstring>
-
+#include<string_view>
 
 class AlfResponseParser
 {
@@ -13,7 +13,7 @@ class AlfResponseParser
     struct SwtFrame
     {
         SwtFrame() = default;
-        SwtFrame(const char* src);
+        SwtFrame(std::string_view src);
 
         uint16_t prefix;
         uint32_t address;
@@ -23,7 +23,7 @@ class AlfResponseParser
     struct Line
     {
         Line() = default;
-        Line(const char* hex, int64_t len);
+        Line(std::string_view hex, int64_t len);
 
         enum class Type {ResponseToRead, ResponseToWrite} type;
         SwtFrame frame;
@@ -38,17 +38,17 @@ class AlfResponseParser
         iterator operator++(int) const;
         Line operator*() const;
 
-        explicit iterator(const char* sequence);
+        explicit iterator(std::string_view sequence);
 
         private:
 
         int64_t getLineLen() const;
         
-        const char* m_sequence;
+        std::string_view m_sequence;
         std::optional<Line> m_currentLine;
     };
     
-    AlfResponseParser(const char* response): m_sequence(response), m_sequenceLen(strlen(response)) {}
+    AlfResponseParser(std::string_view response): m_sequence(response) {}
 
     iterator begin();
     iterator end();
@@ -59,9 +59,7 @@ class AlfResponseParser
 
     private:
 
-    const char* m_sequence;
-    int64_t m_sequenceLen;
-
+    std::string_view m_sequence;
 };
 
 inline uint8_t charToHex(char ch)

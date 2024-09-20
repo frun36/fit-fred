@@ -9,11 +9,11 @@
 #include "WinCCRequest.h"
 
 class Parameters : public Mapi {
-    std::unordered_map<std::string, Parameter> m_parameterMap;
-    std::vector<SwtOperation> m_currOperations; 
+    unordered_map<string, Parameter> m_parameterMap;
+    unordered_map<uint32_t, vector<string>> m_currRequestedParameterNames;
 
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
 
-    void updateCurrOperations(const WinCCRequest& req);
+    vector<SwtOperation> handleRequest(const WinCCRequest& req);
 };

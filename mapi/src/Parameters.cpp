@@ -68,25 +68,29 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
     if (regblockSize != 1)
         throw std::runtime_error(parameterName + ": regblock operations unsupported");
 
+    if (operation == WinCCRequest::Command::Operation::Read)
+    {
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
+    }
+
+    // WRITE operation
+    if(!data.has_value())
+    {
+        throw std::runtime_error(parameterName + ": no data for WRITE operation");
+    }
+    
     uint8_t startBit = parameter.getStartBit();
     uint8_t endBit = parameter.getEndBit();
     uint8_t bitLength = parameter.getBitLength();
 
-    if (operation == WinCCRequest::Command::Operation::Read)
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
-
-    // WRITE operation
-    if(!data.has_value())
-        throw std::runtime_error(parameterName + ": no data for WRITE operation");
-    
-    uint32_t rawValue = parameter.getRawValue(data.value());
-
-
     if (bitLength == 32)
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, {rawValue});
+    {
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, { parameter.getRawValue(data.value()) });
+    }
 
     // needs RMW
-    uint32_t andMask = ~(((1 << bitLength) - 1) << startBit);
-    uint32_t orMask = rawValue;
-    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, {andMask, orMask});
+    std::array<uint32_t, 2> masks;
+    SwtSequence::createMask(startBit, endBit, parameter.getRawValue(data.value()), masks.data());
+    
+    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, masks);
 }

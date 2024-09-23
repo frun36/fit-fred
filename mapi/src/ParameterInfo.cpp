@@ -1,36 +1,25 @@
 #include "ParameterInfo.h"
-
+#include"Utils.h"
 
 double ParameterInfo::getPhysicalValue(uint32_t rawValue) const {
-    uint8_t bitLength = m_endBit - m_startBit + 1;
-    uint32_t shiftedValue = (rawValue >> m_startBit) & ((1U << bitLength) - 1);
-    
-    double encodedValue;
-    switch (m_valueEncoding) {
-        case ValueEncoding::Unsigned:
-            encodedValue = static_cast<double>(shiftedValue);
-            break;
-        case ValueEncoding::Signed32:
-            encodedValue = fromNBitSigned(shiftedValue, 32);
-            break;
-        case ValueEncoding::Signed16:
-            encodedValue = fromNBitSigned(shiftedValue, 16);
-            break;
+    rawValue = getBitField(rawValue, m_startBit, m_endBit);
+    if(m_valueEncoding != ValueEncoding::Unsigned)
+    {
+        return m_multiplier * static_cast<double>(TwoComplementsDecode<int32_t>(rawValue, m_endBit - m_startBit + 1));
     }
-    return m_multiplier * encodedValue;
+    else  return m_multiplier * static_cast<double>(rawValue);
 }
 
 uint32_t ParameterInfo::getRawValue(double physicalValue) const {
-    double encodedValue = physicalValue / m_multiplier;
-
-    switch (m_valueEncoding) {
-        case ValueEncoding::Unsigned:
-            return static_cast<uint32_t>(encodedValue) << m_startBit;
-        case ValueEncoding::Signed32:
-            return asNBitSigned(encodedValue, 32) << m_startBit;
-        case ValueEncoding::Signed16:
-            return asNBitSigned(encodedValue, 16) << m_startBit;
-        default:
-            throw std::runtime_error("Invalid value encoding");
+    double scaled = physicalValue / m_multiplier;
+    if(scaled > maxUINT(m_startBit, m_endBit))
+    {
+        throw std::runtime_error("Physical value is too large to fit in the bit field");
     }
+    int32_t singedValue = static_cast<int32_t>(scaled);
+    if(m_valueEncoding != ValueEncoding::Unsigned)
+    {
+       return TwoComplementsEncode(singedValue, m_endBit - m_startBit + 1) << m_startBit;
+    }
+    return  static_cast<uint32_t>(singedValue) << m_startBit;
 }

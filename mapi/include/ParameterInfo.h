@@ -10,7 +10,7 @@ class ParameterInfo {
 public:
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
-        Unsigned, Signed16, Signed32
+        Unsigned, Signed
     };
 
 private:

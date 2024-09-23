@@ -39,7 +39,7 @@ TEST(ParameterInterpretationTest, Signed32) {
         0,
         31,
         1,
-        ParameterInfo::ValueEncoding::Signed32,
+        ParameterInfo::ValueEncoding::Signed,
         0.,
         0.,
         -2.,
@@ -47,10 +47,11 @@ TEST(ParameterInterpretationTest, Signed32) {
         false
     );
 
+    double expectedPhysical =  static_cast<double>(static_cast<int32_t>(0x8000DAA7));
     double physicalValue = p.getPhysicalValue(0x8000DAA7);
-    EXPECT_EQ(physicalValue, 4294855346.);
+    EXPECT_EQ(physicalValue,  expectedPhysical);
 
-    uint32_t rawValue = p.getRawValue(4294855346.);
+    uint32_t rawValue = p.getRawValue(expectedPhysical);
     EXPECT_EQ(rawValue, 0x8000DAA7);
 }
 
@@ -61,7 +62,7 @@ TEST(ParameterInterpretationTest, Signed16) {
         12,
         27,
         1,
-        ParameterInfo::ValueEncoding::Signed16,
+        ParameterInfo::ValueEncoding::Signed,
         0.,
         0.,
         3.,

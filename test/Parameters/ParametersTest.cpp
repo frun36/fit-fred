@@ -16,13 +16,13 @@ TEST(ParametersTest, PIM) {
     Parameters p(testMap);
 
     string signedRegReadReq = p.processInputMessage("SIGNED_REG,READ");
-    EXPECT_EQ(signedRegReadReq, "reset\n0x0000000000000000000,write\nread");
+    EXPECT_EQ(signedRegReadReq, "reset\n0x0000000000000000000,write\nread\n");
 
-    string signedRegReadRes = p.processOutputMessage("success\n0\n0x00000000000ffffffff");
-    EXPECT_EQ(signedRegReadRes, "SIGNED_REG,-1");
+    string signedRegReadRes = p.processOutputMessage("success\n0\n0x00000000000FFFFFFFF");
+    EXPECT_EQ(signedRegReadRes, "SIGNED_REG,-1\n");
 
     string unsignedHalfReadSignedHalfWriteReq = p.processInputMessage("UNSIGNED_HALF,READ\nSIGNED_HALF,WRITE,-12");
-    EXPECT_EQ(unsignedHalfReadSignedHalfWriteReq, "0x0000000000100000000,write\nread\n0x00200000001ffff0000,write\n0x003000000010000fff4,write\n0x0000000000100000000,write\nread");
+    EXPECT_EQ(unsignedHalfReadSignedHalfWriteReq, "reset\n0x0000000000100000000,write\nread\n0x00200000001FFFF0000,write\n0x003000000010000FFF4,write\n0x0000000000100000000,write\nread\n");
     // string unsignedHalfReadSignedHalfWriteRes = p.processOutputMessage("success\n0\n0x00000000001aaaa0007\n0x");
     
 }

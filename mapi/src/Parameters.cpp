@@ -9,7 +9,10 @@ string Parameters::processInputMessage(string msg) {
     try {
         WinCCRequest req(msg);
         vector<SwtSequence::SwtOperation> operations = handleRequest(req);
-        SwtSequence seq(operations);
+        // SwtSequence seq(operations);
+        SwtSequence seq;
+        for (const auto& op : operations)
+            seq.addOperation(op);
         return seq.getSequence();
     } catch (const runtime_error& e) {
         publishError(e.what());
@@ -45,11 +48,13 @@ string Parameters::processOutputMessage(string msg) {
 
 vector<SwtSequence::SwtOperation> Parameters::handleRequest(const WinCCRequest& req) {
     m_currRequestedParameterNames.clear();
-    vector<SwtSequence::SwtOperation> operations(req.getCommands().size());
+    vector<SwtSequence::SwtOperation> operations;
     for (const auto& cmd : req.getCommands()) {
         SwtSequence::SwtOperation operation = getSwtOperationForParameter(m_parameterMap[cmd.name], cmd.operation, cmd.value);
         m_currRequestedParameterNames[operation.address].push_back(cmd.name);
         operations.push_back(operation);
+        if(cmd.operation != WinCCRequest::Command::Operation::Read)
+            operations.push_back(getSwtOperationForParameter(m_parameterMap[cmd.name], WinCCRequest::Command::Operation::Read, std::nullopt));
     }
 
     return operations;
@@ -82,6 +87,6 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
 
     // needs RMW
     uint32_t andMask = ~(((1 << bitLength) - 1) << startBit);
-    uint32_t orMask = rawValue;
+    uint32_t orMask = rawValue & (~andMask);
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, {andMask, orMask});
 }

@@ -28,7 +28,7 @@ AlfResponseParser::Line::Line(std::string_view hex, int64_t len): length(len)
     }
     else
     {
-        throw std::runtime_error("Invalid line - aborting operation");
+        throw std::runtime_error(std::to_string(len) + hex.data());
     }
 }
 
@@ -76,14 +76,14 @@ AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
     {
         throw std::runtime_error("Iterator points to end(), cannot increment");
     }
-    if(m_sequence[m_currentLine->length] == '\0'){  
-        m_sequence = m_sequence.data() + m_currentLine->length;
+    if(m_sequence[m_currentLine->length] != '\0'){  
+        m_sequence = m_sequence.data() + m_currentLine->length+1;
         m_currentLine = Line(m_sequence, getLineLen());
         return *this;
     }
 
-    m_sequence =  m_sequence.data() + m_currentLine->length + 1;
-    m_currentLine = Line(m_sequence, getLineLen());
+    m_sequence = m_sequence.data() + m_currentLine->length - 1;
+    m_currentLine = std::nullopt;
     return *this;
 }
 
@@ -104,16 +104,16 @@ AlfResponseParser::Line AlfResponseParser::iterator::operator*() const
 
 bool AlfResponseParser::iterator::operator!=(const iterator& itr)
 {
-    return itr.m_sequence != m_sequence;
+    return itr.m_sequence.data() != m_sequence.data();
 }
 
 AlfResponseParser::iterator AlfResponseParser::begin()
 {
-    if(isSuccess()) return iterator(m_sequence.data()+strlen("success")+1);
-    else return iterator(m_sequence.data()+strlen("failure")+1);
+    if(isSuccess()) return iterator(m_sequence.data()+strlen("success\n"));
+    else return iterator(m_sequence.data()+strlen("failure\n"));
 }
 
 AlfResponseParser::iterator AlfResponseParser::end()
 {
-    return iterator(m_sequence.data() + m_sequence.size() - 1);
+    return iterator(m_sequence.data() + m_sequence.size()-1);
 }

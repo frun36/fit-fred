@@ -72,7 +72,7 @@ TEST(SwtSequenceTest, AddOperationRead)
     seq.addOperation(SwtSequence::Operation::Read, address);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
-    expected += std::string(SwtSequence::_READ_PREFIX_) + addr_hex + "0000";
+    expected += std::string(SwtSequence::_READ_PREFIX_) + addr_hex + "00000000";
     expected += SwtSequence::_FRAME_POSTFIX_;
     expected += SwtSequence::_READ_WORD_;
 
@@ -140,7 +140,7 @@ TEST(SwtSequenceTest, AddMultipleOperations)
     std::string data1_hex = SwtSequence::wordToHex(data1);
     expected += std::string(SwtSequence::_WRITE_PREFIX_) + addr1_hex + data1_hex + SwtSequence::_FRAME_POSTFIX_;
     std::string addr2_hex = SwtSequence::wordToHex(address2);
-    expected += std::string(SwtSequence::_READ_PREFIX_) + addr2_hex + "0000" + SwtSequence::_FRAME_POSTFIX_;
+    expected += std::string(SwtSequence::_READ_PREFIX_) + addr2_hex + "00000000" + SwtSequence::_FRAME_POSTFIX_;
     expected += SwtSequence::_READ_WORD_;
 
     EXPECT_EQ(seq.getSequence(), expected);
@@ -153,7 +153,7 @@ TEST(SwtSequenceTest, AddOperationNoResponse)
     seq.addOperation(SwtSequence::Operation::Read, address, nullptr, false);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
-    expected += std::string(SwtSequence::_READ_PREFIX_) + addr_hex + "0000";
+    expected += std::string(SwtSequence::_READ_PREFIX_) + addr_hex + "00000000";
     expected += SwtSequence::_FRAME_POSTFIX_;
 
     EXPECT_EQ(seq.getSequence(), expected);

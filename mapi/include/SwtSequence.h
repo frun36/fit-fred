@@ -38,7 +38,7 @@ class SwtSequence
         Return:
             - Reference to itself
     */
-    SwtSequence& addOperation(Operation type, uint32_t address, const std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, uint32_t address, std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
     /*  
         Adds operation to sequence.
         Arguments:
@@ -49,7 +49,7 @@ class SwtSequence
         Return:
             - Reference to itself   
     */
-    SwtSequence& addOperation(Operation type, const char* address,  const std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, const char* address, std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
 
     SwtSequence& addOperation(SwtOperation&& operation);
     SwtSequence& addOperation(const SwtOperation& operation);

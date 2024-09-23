@@ -17,13 +17,13 @@ SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operation
 }
 
 
-SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const std::span<const uint32_t> data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, std::span<const uint32_t> data, bool expectResponse)
 {
     std::string saddress = wordToHex(address);
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const std::span<const uint32_t> data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address, std::span<const uint32_t> data, bool expectResponse)
 {
     switch(type)
     {

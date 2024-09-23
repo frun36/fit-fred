@@ -1,6 +1,5 @@
 #include "SwtSequence.h"
 #include<cstring>
-#include<charconv>
 
 SwtSequence::SwtOperation::SwtOperation( Operation type, uint32_t addr, std::array<uint32_t,2> data, bool expect):
     type(type), address(addr), expectResponse(expect)
@@ -17,13 +16,13 @@ SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operation
 }
 
 
-SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, std::span<const uint32_t> data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse)
 {
     std::string saddress = wordToHex(address);
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address, std::span<const uint32_t> data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const uint32_t* data, bool expectResponse)
 {
     switch(type)
     {
@@ -91,12 +90,12 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address, std:
 
 SwtSequence& SwtSequence::addOperation(SwtSequence::SwtOperation&& operation)
 {
-    addOperation(operation.type, operation.address,  std::span<const uint32_t,2>(operation.data), operation.expectResponse);
+    addOperation(operation.type, operation.address,  operation.data.data(), operation.expectResponse);
 }
 
 SwtSequence& SwtSequence::addOperation(const SwtSequence::SwtOperation& operation)
 {
-    addOperation(operation.type, operation.address, std::span<const uint32_t,2>(operation.data), operation.expectResponse);
+    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
 }
 
 std::string SwtSequence::wordToHex(uint32_t word)
@@ -118,14 +117,14 @@ std::string SwtSequence::wordToHex(uint32_t word)
     };
 }
 
-void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, std::span<uint32_t> dest)
+void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* dest)
 {
     dest[0] = ~( ( 0xFFFFFFFFu >> ( 32 - (lastBit - firstBit + 1) ) ) << firstBit );
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
-std::span<const uint32_t> SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
+const uint32_t*  SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
 {
-    createMask(firstBit, lastBit, value, std::span<uint32_t>(m_mask));
-    return std::span<const uint32_t>(m_mask);
+    createMask(firstBit, lastBit, value, m_mask.data());
+    return m_mask.data();
 }

@@ -68,7 +68,7 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
     uint8_t bitLength = parameter.getBitLength();
 
     if (operation == WinCCRequest::Command::Operation::Read)
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress);
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
 
     // WRITE operation
     if(!data.has_value())

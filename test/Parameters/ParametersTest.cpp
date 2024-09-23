@@ -16,7 +16,7 @@ TEST(ParametersTest, PIM) {
     Parameters p(testMap);
 
     string signedRegReadReq = p.processInputMessage("SIGNED_REG,READ");
-    EXPECT_EQ(signedRegReadReq, "0x0000000000000000000,write\nread");
+    EXPECT_EQ(signedRegReadReq, "reset\n0x0000000000000000000,write\nread");
 
     string signedRegReadRes = p.processOutputMessage("success\n0\n0x00000000000ffffffff");
     EXPECT_EQ(signedRegReadRes, "SIGNED_REG,-1");

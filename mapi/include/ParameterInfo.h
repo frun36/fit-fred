@@ -6,7 +6,7 @@
 
 // #include <Database/databaseinterface.h>
 
-class Parameter {
+class ParameterInfo {
 public:
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
@@ -27,13 +27,13 @@ private:
     bool m_isReadonly;
 
 public:
-    // Parameter(std::vector<MultiBase*>) {
+    // ParameterInfo(std::vector<MultiBase*>) {
     //     // to be implemented when database structure is certain
     // }
 
-    Parameter() = default;
+    ParameterInfo() = default;
 
-    Parameter(
+    ParameterInfo(
         std::string name, 
         uint32_t baseAddress, 
         uint8_t startBit, 

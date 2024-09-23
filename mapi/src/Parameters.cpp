@@ -35,7 +35,7 @@ string Parameters::processOutputMessage(string msg) {
             const vector<string>& parametersToUpdate = m_currRequestedParameterNames[line.frame.address];
             
             for (const auto& name: parametersToUpdate) {
-                const Parameter& parameter = m_parameterMap[name];
+                const ParameterInfo& parameter = m_parameterMap[name];
 
                 double physicalValue = parameter.getPhysicalValue(line.frame.data);
                 response.addParameter(name, {physicalValue});
@@ -60,7 +60,7 @@ vector<SwtSequence::SwtOperation> Parameters::handleRequest(const WinCCRequest& 
     return operations;
 }
 
-SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Parameter& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data) {
+SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data) {
     const std::string& parameterName = parameter.getName();
     uint32_t baseAddress = parameter.getBaseAddress();
     uint32_t regblockSize = parameter.getRegblockSize();

@@ -1,15 +1,15 @@
 #include "gtest/gtest.h"
 #include "Parameters.h"
-#include "Parameter.h"
+#include "ParameterInfo.h"
 #include <unordered_map>
 
 namespace {
 
-unordered_map<string, Parameter> testMap = {
-    {"SIGNED_REG",      Parameter("SIGNED_REG",     0x0,    0,  31, 1,  Parameter::ValueEncoding::Signed32, 0,      100,    1,  false,  false) },
-    {"SIGNED_HALF",     Parameter("SIGNED_HALF",    0x1,    0,  15, 1,  Parameter::ValueEncoding::Signed16, -100,   100,    1,  false,  false) },
-    {"UNSIGNED_HALF",   Parameter("UNSIGNED_HALF",  0x1,    16, 31, 1,  Parameter::ValueEncoding::Unsigned, 0,      100,    1,  false,  false) },
-    {"READONLY_FLAG",   Parameter("READONLY_FLAG",  0x2,    7,  7,  1,  Parameter::ValueEncoding::Unsigned, 0,      1,      1,  false,  true) },
+unordered_map<string, ParameterInfo> testMap = {
+    {"SIGNED_REG",      ParameterInfo("SIGNED_REG",     0x0,    0,  31, 1,  ParameterInfo::ValueEncoding::Signed32, 0,      100,    1,  false,  false) },
+    {"SIGNED_HALF",     ParameterInfo("SIGNED_HALF",    0x1,    0,  15, 1,  ParameterInfo::ValueEncoding::Signed16, -100,   100,    1,  false,  false) },
+    {"UNSIGNED_HALF",   ParameterInfo("UNSIGNED_HALF",  0x1,    16, 31, 1,  ParameterInfo::ValueEncoding::Unsigned, 0,      100,    1,  false,  false) },
+    {"READONLY_FLAG",   ParameterInfo("READONLY_FLAG",  0x2,    7,  7,  1,  ParameterInfo::ValueEncoding::Unsigned, 0,      1,      1,  false,  true) },
 };
 
 TEST(ParametersTest, PIM) {

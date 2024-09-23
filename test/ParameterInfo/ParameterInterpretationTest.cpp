@@ -1,16 +1,16 @@
 #include "gtest/gtest.h"
-#include "Parameter.h"
+#include "ParameterInfo.h"
 
 namespace {
 
 TEST(ParameterInterpretationTest, Unsigned) {
-    Parameter p(
+    ParameterInfo p(
         "UNSIGNED_TEST",
         0x0,
         4,
         7,
         1,
-        Parameter::ValueEncoding::Unsigned,
+        ParameterInfo::ValueEncoding::Unsigned,
         0.,
         0.,
         7.,

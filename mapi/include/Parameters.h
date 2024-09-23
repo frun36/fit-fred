@@ -4,21 +4,21 @@
 #include <string>
 
 #include "Fred/Mapi/mapi.h"
-#include "Parameter.h"
+#include "ParameterInfo.h"
 #include "SwtSequence.h"
 #include "WinCCRequest.h"
 
 class Parameters : public Mapi {
 public:
-    Parameters(unordered_map<string, Parameter> parameterMap) : m_parameterMap(parameterMap) {}
+    Parameters(unordered_map<string, ParameterInfo> parameterMap) : m_parameterMap(parameterMap) {}
 
-    unordered_map<string, Parameter> m_parameterMap;
+    unordered_map<string, ParameterInfo> m_parameterMap;
     unordered_map<uint32_t, vector<string>> m_currRequestedParameterNames;
 
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
 
-    SwtSequence::SwtOperation getSwtOperationForParameter(const Parameter& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data);
+    SwtSequence::SwtOperation getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data);
 
     vector<SwtSequence::SwtOperation> handleRequest(const WinCCRequest& req);
 };

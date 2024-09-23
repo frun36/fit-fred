@@ -67,9 +67,9 @@ file(GLOB FRED
 
 add_executable(AlfResponseParser-Test test/AlfResponseParser/ParsingTest.cpp mapi/src/AlfResponseParser.cpp)
 add_executable(SwtSequence-Test test/SwtSequence/SwtSequenceTest.cpp mapi/src/SwtSequence.cpp)
-add_executable(ParameterInterpretation-Test test/Parameter/ParameterInterpretationTest.cpp mapi/src/Parameter.cpp)
+add_executable(ParameterInterpretation-Test test/ParameterInfo/ParameterInterpretationTest.cpp mapi/src/ParameterInfo.cpp)
 add_executable(WinCCMessage-Test test/WinCCMessage/WinCCMessageTest.cpp mapi/src/WinCCRequest.cpp ${FRED})
-add_executable(Parameters-Test test/Parameters/ParametersTest.cpp mapi/src/Parameters.cpp mapi/src/Parameter.cpp mapi/src/SwtSequence.cpp mapi/src/AlfResponseParser.cpp mapi/src/WinCCRequest.cpp ${FRED})
+add_executable(Parameters-Test test/Parameters/ParametersTest.cpp mapi/src/Parameters.cpp mapi/src/ParameterInfo.cpp mapi/src/SwtSequence.cpp mapi/src/AlfResponseParser.cpp mapi/src/WinCCRequest.cpp ${FRED})
 target_link_libraries(SwtSequence-Test gtest gtest_main)
 target_link_libraries(ParameterInterpretation-Test gtest gtest_main)
 target_link_libraries(WinCCMessage-Test Alfred clntsh occi nnz19 ociicus gtest gtest_main)

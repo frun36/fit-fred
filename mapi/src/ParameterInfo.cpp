@@ -3,7 +3,7 @@
 
 double ParameterInfo::getPhysicalValue(uint32_t rawValue) const {
     uint8_t bitLength = m_endBit - m_startBit + 1;
-    uint32_t shiftedValue = (rawValue >> m_startBit) & ((1 << bitLength) - 1);
+    uint32_t shiftedValue = (rawValue >> m_startBit) & ((1U << bitLength) - 1);
     
     double encodedValue;
     switch (m_valueEncoding) {
@@ -11,14 +11,14 @@ double ParameterInfo::getPhysicalValue(uint32_t rawValue) const {
             encodedValue = static_cast<double>(shiftedValue);
             break;
         case ValueEncoding::Signed32:
-            encodedValue = static_cast<double>(static_cast<int32_t>(shiftedValue));
+            encodedValue = fromNBitSigned(shiftedValue, 32);
             break;
         case ValueEncoding::Signed16:
-            encodedValue = static_cast<double>(static_cast<int16_t>(shiftedValue));
+            encodedValue = fromNBitSigned(shiftedValue, 16);
             break;
     }
     return m_multiplier * encodedValue;
-    }
+}
 
 uint32_t ParameterInfo::getRawValue(double physicalValue) const {
     double encodedValue = physicalValue / m_multiplier;
@@ -27,9 +27,9 @@ uint32_t ParameterInfo::getRawValue(double physicalValue) const {
         case ValueEncoding::Unsigned:
             return static_cast<uint32_t>(encodedValue) << m_startBit;
         case ValueEncoding::Signed32:
-            return static_cast<uint32_t>(static_cast<int32_t>(encodedValue)) << m_startBit;
+            return asNBitSigned(encodedValue, 32) << m_startBit;
         case ValueEncoding::Signed16:
-            return static_cast<uint32_t>(static_cast<int16_t>(encodedValue)) << m_startBit;
+            return asNBitSigned(encodedValue, 16) << m_startBit;
         default:
             throw std::runtime_error("Invalid value encoding");
     }

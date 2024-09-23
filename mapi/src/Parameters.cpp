@@ -87,6 +87,6 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
 
     // needs RMW
     uint32_t andMask = ~(((1 << bitLength) - 1) << startBit);
-    uint32_t orMask = rawValue & (~andMask);
+    uint32_t orMask = rawValue;
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, {andMask, orMask});
 }

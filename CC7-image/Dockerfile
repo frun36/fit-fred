@@ -1,4 +1,4 @@
-from centos:centos7
+FROM centos:centos7
 
 COPY CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo 
 RUN yum clean all && yum makecache

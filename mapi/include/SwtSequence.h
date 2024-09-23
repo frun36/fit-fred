@@ -4,7 +4,6 @@
 #include<cstdint>
 #include<vector>
 #include<array>
-#include<span>
 /*
     Creates SWT sequence in the ALF-ready format */
 class SwtSequence
@@ -38,7 +37,7 @@ class SwtSequence
         Return:
             - Reference to itself
     */
-    SwtSequence& addOperation(Operation type, uint32_t address, std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, uint32_t address, const uint32_t* data=nullptr, bool expectResponse=true);
     /*  
         Adds operation to sequence.
         Arguments:
@@ -49,7 +48,7 @@ class SwtSequence
         Return:
             - Reference to itself   
     */
-    SwtSequence& addOperation(Operation type, const char* address, std::span<const uint32_t> data = std::span<const uint32_t>(), bool expectResponse=true);
+    SwtSequence& addOperation(Operation type, const char* address,  const uint32_t* data=nullptr, bool expectResponse=true);
 
     SwtSequence& addOperation(SwtOperation&& operation);
     SwtSequence& addOperation(const SwtOperation& operation);
@@ -60,11 +59,11 @@ class SwtSequence
 
     /*
         Creates mask for RMW bits operation */
-    static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, std::span<uint32_t> dest);
+    static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* data);
 
     /*
         Creates mask in an internal buffer and returns pointer to it. */
-    std::span<const uint32_t> passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value);
+    const uint32_t* passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value);
 
     /*
         Translate word to hex format */

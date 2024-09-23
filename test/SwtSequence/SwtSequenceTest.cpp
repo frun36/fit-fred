@@ -3,7 +3,6 @@
 #include "gtest/gtest.h"
 #include "SwtSequence.h"
 #include <array>
-#include <span>
 #include <vector>
 
 namespace {
@@ -39,15 +38,15 @@ TEST(SwtSequenceTest, HalfByteToHex)
 TEST(SwtSequenceTest, CreateMask)
 {
     std::array<uint32_t, 2> dest;
-    SwtSequence::createMask(4, 7, 0xF, dest);
+    SwtSequence::createMask(4, 7, 0xF, dest.data());
     EXPECT_EQ(dest[0], 0xFFFFFF0F);
     EXPECT_EQ(dest[1], 0x000000F0);
 
-    SwtSequence::createMask(0, 31, 0xAAAAAAAA, dest);
+    SwtSequence::createMask(0, 31, 0xAAAAAAAA,  dest.data());
     EXPECT_EQ(dest[0], 0x00000000);
     EXPECT_EQ(dest[1], 0xAAAAAAAA);
 
-    SwtSequence::createMask(5, 5, 1, dest);
+    SwtSequence::createMask(5, 5, 1,  dest.data());
     EXPECT_EQ(dest[0], 0xFFFFFFDF);
     EXPECT_EQ(dest[1], 0x00000020);
 }
@@ -55,7 +54,7 @@ TEST(SwtSequenceTest, CreateMask)
 TEST(SwtSequenceTest, PassMasks)
 {
     SwtSequence seq;
-    const std::span<const uint32_t> mask = seq.passMasks(4, 7, 0xF);
+    const uint32_t * mask= seq.passMasks(4, 7, 0xF);
     EXPECT_EQ(mask[0], 0xFFFFFF0F);
     EXPECT_EQ(mask[1], 0x000000F0);
 }
@@ -85,7 +84,7 @@ TEST(SwtSequenceTest, AddOperationWrite)
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
     uint32_t data = 0x56789ABC;
-    seq.addOperation(SwtSequence::Operation::Write, address, std::span<uint32_t>(&data, 1));
+    seq.addOperation(SwtSequence::Operation::Write, address, &data, 1);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
     std::string data_hex = SwtSequence::wordToHex(data);
@@ -100,7 +99,7 @@ TEST(SwtSequenceTest, AddOperationRMWbits)
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
     std::array<uint32_t, 2> data = {0xFFFFFF0F, 0x000000F0};
-    seq.addOperation(SwtSequence::Operation::RMWbits, address, data);
+    seq.addOperation(SwtSequence::Operation::RMWbits, address, data.data());
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
     std::string data0_hex = SwtSequence::wordToHex(data[0]);
@@ -117,7 +116,7 @@ TEST(SwtSequenceTest, AddOperationRMWsum)
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
     uint32_t data = 0x00000010;
-    seq.addOperation(SwtSequence::Operation::RMWsum, address, std::span<uint32_t>(&data, 1));
+    seq.addOperation(SwtSequence::Operation::RMWsum, address,&data);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
     std::string data_hex = SwtSequence::wordToHex(data);
@@ -133,7 +132,7 @@ TEST(SwtSequenceTest, AddMultipleOperations)
     uint32_t address1 = 0x1234ABCD;
     uint32_t data1 = 0x56789ABC;
     uint32_t address2 = 0xABCDEF01;
-    seq.addOperation(SwtSequence::Operation::Write, address1, std::span<uint32_t>(&data1, 1));
+    seq.addOperation(SwtSequence::Operation::Write, address1, &data1);
     seq.addOperation(SwtSequence::Operation::Read, address2);
 
     std::string expected = "reset\n";
@@ -151,7 +150,7 @@ TEST(SwtSequenceTest, AddOperationNoResponse)
 {
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
-    seq.addOperation(SwtSequence::Operation::Read, address, std::span<uint32_t>(), false);
+    seq.addOperation(SwtSequence::Operation::Read, address, nullptr, false);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
     expected += std::string(SwtSequence::_READ_PREFIX_) + addr_hex + "0000";
@@ -165,7 +164,7 @@ TEST(SwtSequenceTest, AddOperationWithHexAddress)
     SwtSequence seq;
     const char* address = "1234ABCD";
     uint32_t data = 0x56789ABC;
-    seq.addOperation(SwtSequence::Operation::Write, address, std::span<uint32_t>(&data, 1));
+    seq.addOperation(SwtSequence::Operation::Write, address,&data);
     std::string expected = "reset\n";
     std::string data_hex = SwtSequence::wordToHex(data);
     expected += std::string(SwtSequence::_WRITE_PREFIX_) + std::string(address) + data_hex + SwtSequence::_FRAME_POSTFIX_;
@@ -200,8 +199,8 @@ TEST(SwtSequenceTest, AddOperationWithSwtOperation)
 TEST(SwtSequenceTest, ConstructorWithOperationsVector)
 {
     std::vector<SwtSequence::SwtOperation> operations;
-    operations.emplace_back(SwtSequence::Operation::Write, 0x1234ABCD, std::array<uint32_t, 2>{0x56789ABC, 0x0}, false);
-    operations.emplace_back(SwtSequence::Operation::RMWsum, 0xABCDEF01, std::array<uint32_t, 2>{0x00000010, 0x0}, true);
+    operations.emplace_back(SwtSequence::Operation::Write, 0x1234ABCD, std::array<uint32_t,2>{0x56789ABC, 0x0}, false);
+    operations.emplace_back(SwtSequence::Operation::RMWsum, 0xABCDEF01, std::array<uint32_t,2>{0x00000010, 0x0}, true);
 
     SwtSequence seq(operations);
 

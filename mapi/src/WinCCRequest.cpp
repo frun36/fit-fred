@@ -35,15 +35,16 @@ WinCCRequest::WinCCRequest(const std::string& input) {
 
 std::optional<double> WinCCRequest::stringToDouble(std::string str) {
     // stringstream is slow - makes for easy code though, I suggest we stick with it for now to avoid premature optimisation
-    std::stringstream ss;
+    std::stringstream ss(str);
     double value;
+    uint32_t hexTmp;
 
     if (str.rfind("0x", 0) == 0) {
-        ss << std::hex << str; 
+        ss >> std::hex >> hexTmp;
+        value = static_cast<double>(hexTmp); 
     } else {
-        ss << std::dec << str;
+        ss >> value;
     }
-    ss >> value;
 
     if(ss.fail())
         return std::nullopt;

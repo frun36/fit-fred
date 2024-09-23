@@ -2,20 +2,24 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 class WinCCResponse {
 private:
     std::string m_contents;
 public:
-    void addParameter(const std::string& name, const std::vector<double>& data) {
-        std::string line = name;
+    WinCCResponse& addParameter(const std::string& name, const std::vector<double>& data) {
+        std::stringstream ss;
+        ss << name;
 
         for (const auto& val : data)
-            line += "," + std::to_string(val);
+            ss << "," << val;
         
-        line += "\n";
+        ss << "\n";
 
-        m_contents += line;
+        m_contents += ss.str();
+
+        return *this;
     }
 
     const std::string& getContents() const {

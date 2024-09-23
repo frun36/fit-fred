@@ -30,7 +30,7 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  con
         {
             m_buffer.append(_READ_PREFIX_);
             m_buffer.append(address);
-            m_buffer.append("0000");
+            m_buffer.append(wordToHex(0x0));
             m_buffer.append(_FRAME_POSTFIX_);
 
             if(expectResponse)
@@ -91,11 +91,13 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  con
 SwtSequence& SwtSequence::addOperation(SwtSequence::SwtOperation&& operation)
 {
     addOperation(operation.type, operation.address,  operation.data.data(), operation.expectResponse);
+    return *this;
 }
 
 SwtSequence& SwtSequence::addOperation(const SwtSequence::SwtOperation& operation)
 {
     addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
+    return *this;
 }
 
 std::string SwtSequence::wordToHex(uint32_t word)

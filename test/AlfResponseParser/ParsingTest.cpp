@@ -8,7 +8,7 @@
 
 int main(int argc, const char** argv)
 {
-    // Determine the number of lines based on command-line argument
+    //Determine the number of lines based on command-line argument
     int num_lines = 2; // Default number of lines
     if (argc > 1)
     {
@@ -17,7 +17,7 @@ int main(int argc, const char** argv)
     }
 
     // Generate the 'data' string randomly
-    std::string data = "success\n";
+    std::string data = "success";
 
     // Set up random number generators
     std::random_device rd;
@@ -29,22 +29,20 @@ int main(int argc, const char** argv)
     for (int i = 0; i < num_lines; ++i)
     {
         std::stringstream ss;
+        ss <<"\n";
         if(dist_p(gen) < 0.5)
         {
-            ss << "0\n";
+            ss << "0";
         } 
         else
         {
         ss << "0x"
            << std::hex << std::uppercase << std::setw(3) << std::setfill('0') << dist_prefix(gen)
            << std::setw(8) << dist_32bit(gen)
-           << std::setw(8) << dist_32bit(gen)
-           << '\n';
+           << std::setw(8) << dist_32bit(gen);
         }
         data += ss.str();
     }
-
-    data += '0';
 
     // Now proceed with parsing and comparison
     AlfResponseParser parser(data.c_str());
@@ -88,28 +86,31 @@ int main(int argc, const char** argv)
         }
     }
 
-    
-
     int64_t pos = 0;
     char c;
 
-    while (!parsedStream.eof()) {
-        if ((c = parsedStream.get()) == EOF) {
-            break;
-        }
-        
-        //std::cout << c;
-
-        if (c != data[pos++]) {
-            std::cout << "Parsing went wrong at position " << pos << std::endl;
+    std::string parsed = parsedStream.str();
+    if(parsed.size() != data.size())
+    {
+        std::cout<< "Expected: " << data.size() << " chars. Get: " << parsed.size() << std::endl;
+    }
+    for(int i = 0; i < parsed.size(); i++)
+    {
+        if(parsed[i] != data[i])
+        {
+            std::cout << "Parsing went wrong at position " << i << std::endl;
+            return -1;
             break;
         }
     }
+    std::cout << std::endl << "Parsing was successful" << std::endl;
 
-    if (parsedStream.eof()) {
-        std::cout << std::endl << "Parsing was successful" << std::endl;
-        return 0;
+    std::string to_parse = "success\n0\n0x00000000000ffffffff\n0x00000000000afffffff";
+    AlfResponseParser testpars(to_parse);
+    for(auto line: testpars)
+    {
+        std::cout << line.length << std::endl;
     }
 
-    return -1;
+    return 0;
 }

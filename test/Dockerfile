@@ -1,4 +1,4 @@
-FROM fred-server-env
+FROM fit-fred-env
 COPY . /fred
 
 WORKDIR /fred/core

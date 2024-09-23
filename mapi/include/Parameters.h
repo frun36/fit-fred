@@ -5,7 +5,7 @@
 
 #include "Fred/Mapi/mapi.h"
 #include "Parameter.h"
-#include "SwtOperation.h"
+#include "SwtSequence.h"
 #include "WinCCRequest.h"
 
 class Parameters : public Mapi {
@@ -18,5 +18,7 @@ public:
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
 
-    vector<SwtOperation> handleRequest(const WinCCRequest& req);
+    SwtSequence::SwtOperation getSwtOperationForParameter(const Parameter& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data);
+
+    vector<SwtSequence::SwtOperation> handleRequest(const WinCCRequest& req);
 };

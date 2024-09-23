@@ -1,6 +1,6 @@
 #include "Parameters.h"
 #include "WinCCRequest.h"
-#include "SwtOperation.h"
+#include "SwtSequence.h"
 #include "AlfResponseParser.h"
 #include "WinCCResponse.h"
 #include <algorithm>
@@ -8,13 +8,9 @@
 string Parameters::processInputMessage(string msg) {
     try {
         WinCCRequest req(msg);
-        vector<SwtOperation> operations = handleRequest(req);
-
-        // ToDo: unify SwtOperation and SwtSequence logic - what follows is a placeholder
-        string seq = "";
-        for (const auto& operation : operations)
-            seq += operation.getRequest();
-        return seq;
+        vector<SwtSequence::SwtOperation> operations = handleRequest(req);
+        SwtSequence seq(operations);
+        return seq.getSequence();
     } catch (const runtime_error& e) {
         publishError(e.what());
         noRpcRequest = true;
@@ -47,11 +43,11 @@ string Parameters::processOutputMessage(string msg) {
     return response.getContents();
 }
 
-vector<SwtOperation> Parameters::handleRequest(const WinCCRequest& req) {
+vector<SwtSequence::SwtOperation> Parameters::handleRequest(const WinCCRequest& req) {
     m_currRequestedParameterNames.clear();
-    vector<SwtOperation> operations(req.getCommands().size());
+    vector<SwtSequence::SwtOperation> operations(req.getCommands().size());
     for (const auto& cmd : req.getCommands()) {
-        SwtOperation operation = SwtOperation::fromParameterOperation(m_parameterMap[cmd.name], cmd.operation, cmd.value);
+        SwtSequence::SwtOperation operation = getSwtOperationForParameter(m_parameterMap[cmd.name], cmd.operation, cmd.value);
         m_currRequestedParameterNames[operation.address].push_back(cmd.name);
         operations.push_back(operation);
     }
@@ -59,3 +55,33 @@ vector<SwtOperation> Parameters::handleRequest(const WinCCRequest& req) {
     return operations;
 }
 
+SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Parameter& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data) {
+    const std::string& parameterName = parameter.getName();
+    uint32_t baseAddress = parameter.getBaseAddress();
+    uint32_t regblockSize = parameter.getRegblockSize();
+
+    if (regblockSize != 1)
+        throw std::runtime_error(parameterName + ": regblock operations unsupported");
+
+    uint8_t startBit = parameter.getStartBit();
+    uint8_t endBit = parameter.getEndBit();
+    uint8_t bitLength = parameter.getBitLength();
+
+    if (operation == WinCCRequest::Command::Operation::Read)
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress);
+
+    // WRITE operation
+    if(!data.has_value())
+        throw std::runtime_error(parameterName + ": no data for WRITE operation");
+    
+    uint32_t rawValue = parameter.getRawValue(data.value());
+
+
+    if (bitLength == 32)
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, {rawValue});
+
+    // needs RMW
+    uint32_t andMask = ~(((1 << bitLength) - 1) << startBit);
+    uint32_t orMask = rawValue;
+    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, {andMask, orMask});
+}

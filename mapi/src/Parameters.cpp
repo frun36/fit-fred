@@ -83,7 +83,7 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
 
     // needs RMW
     std::array<uint32_t, 2> masks;
-    SwtSequence::createMask(parameter.getStartBit(), parameter.getEndBit(), parameter.getRawValue(data.value()), masks.data());
+    SwtSequence::createMask(parameter.getStartBit(), parameter.getEndBit(), parameter.getRawValue(data.value()) >> parameter.getStartBit(), masks.data());
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, masks);
 }
 

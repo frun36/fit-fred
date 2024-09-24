@@ -8,7 +8,7 @@ TEST(ParameterInterpretationTest, Unsigned) {
         "UNSIGNED_TEST",
         0x0,
         4,
-        7,
+        4,
         1,
         ParameterInfo::ValueEncoding::Unsigned,
         0.,
@@ -18,10 +18,10 @@ TEST(ParameterInterpretationTest, Unsigned) {
         false
     );
 
-    double physicalValue = p.getPhysicalValue(0xffffffff);
+    double physicalValue = p.calculatePhysicalValue(0xffffffff);
     EXPECT_EQ(physicalValue, 105);
 
-    uint32_t rawValue = p.getRawValue(105);
+    uint32_t rawValue = p.calculateRawValue(105);
     EXPECT_EQ(rawValue, 0x000000f0);
 }
 
@@ -30,7 +30,7 @@ TEST(ParameterInterpretationTest, Signed32) {
         "SIGNED32_TEST",
         0x1,
         0,
-        31,
+        32,
         1,
         ParameterInfo::ValueEncoding::Signed,
         0.,
@@ -40,10 +40,10 @@ TEST(ParameterInterpretationTest, Signed32) {
         false
     );
 
-    double physicalValue = p.getPhysicalValue(0x8000DAA7);
+    double physicalValue = p.calculatePhysicalValue(0x8000DAA7);
     EXPECT_EQ(physicalValue, 4294855346.);
 
-    uint32_t rawValue = p.getRawValue(4294855346.);
+    uint32_t rawValue = p.calculateRawValue(4294855346.);
     EXPECT_EQ(rawValue, 0x8000DAA7);
 }
 
@@ -52,7 +52,7 @@ TEST(ParameterInterpretationTest, Signed16) {
         "SIGNED16_TEST",
         0x2,
         12,
-        27,
+        16,
         1,
         ParameterInfo::ValueEncoding::Signed,
         0.,
@@ -62,10 +62,10 @@ TEST(ParameterInterpretationTest, Signed16) {
         false
     );
 
-    double physicalValue = p.getPhysicalValue(0xFFFFFFFF);
+    double physicalValue = p.calculatePhysicalValue(0xFFFFFFFF);
     EXPECT_EQ(physicalValue, -3.);
 
-    uint32_t rawValue = p.getRawValue(-3.);
+    uint32_t rawValue = p.calculateRawValue(-3.);
     EXPECT_EQ(rawValue, 0x0FFFF000);
 }
 

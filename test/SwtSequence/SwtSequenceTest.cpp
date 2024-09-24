@@ -38,15 +38,15 @@ TEST(SwtSequenceTest, HalfByteToHex)
 TEST(SwtSequenceTest, CreateMask)
 {
     std::array<uint32_t, 2> dest;
-    SwtSequence::createMask(4, 7, 0xF, dest.data());
+    SwtSequence::createMask(4, 4, 0xF, dest.data());
     EXPECT_EQ(dest[0], 0xFFFFFF0F);
     EXPECT_EQ(dest[1], 0x000000F0);
 
-    SwtSequence::createMask(0, 31, 0xAAAAAAAA,  dest.data());
+    SwtSequence::createMask(0, 32, 0xAAAAAAAA,  dest.data());
     EXPECT_EQ(dest[0], 0x00000000);
     EXPECT_EQ(dest[1], 0xAAAAAAAA);
 
-    SwtSequence::createMask(5, 5, 1,  dest.data());
+    SwtSequence::createMask(5, 1, 1,  dest.data());
     EXPECT_EQ(dest[0], 0xFFFFFFDF);
     EXPECT_EQ(dest[1], 0x00000020);
 }
@@ -54,7 +54,7 @@ TEST(SwtSequenceTest, CreateMask)
 TEST(SwtSequenceTest, PassMasks)
 {
     SwtSequence seq;
-    const uint32_t * mask= seq.passMasks(4, 7, 0xF);
+    const uint32_t * mask= seq.passMasks(4, 4, 0xF);
     EXPECT_EQ(mask[0], 0xFFFFFF0F);
     EXPECT_EQ(mask[1], 0x000000F0);
 }

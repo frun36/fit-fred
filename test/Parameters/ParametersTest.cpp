@@ -7,10 +7,10 @@
 namespace {
 
 unordered_map<string, ParameterInfo> testMap = {
-    {"SIGNED_REG",      ParameterInfo("SIGNED_REG",     0x0,    0,  31, 1,  ParameterInfo::ValueEncoding::Signed, 0,      100,    1,  false,  false) },
-    {"SIGNED_HALF",     ParameterInfo("SIGNED_HALF",    0x1,    0,  15, 1,  ParameterInfo::ValueEncoding::Signed, -100,   100,    1,  false,  false) },
-    {"UNSIGNED_HALF",   ParameterInfo("UNSIGNED_HALF",  0x1,    16, 31, 1,  ParameterInfo::ValueEncoding::Unsigned, 0,      100,    1,  false,  false) },
-    {"READONLY_FLAG",   ParameterInfo("READONLY_FLAG",  0x0,    7,  7,  1,  ParameterInfo::ValueEncoding::Unsigned, 0,      1,      1,  false,  true) },
+    {"SIGNED_REG",      ParameterInfo("SIGNED_REG",     0x0,    0,  32, 1,  ParameterInfo::ValueEncoding::Signed, 0,      100,    1,  false,  false) },
+    {"SIGNED_HALF",     ParameterInfo("SIGNED_HALF",    0x1,    0,  16, 1,  ParameterInfo::ValueEncoding::Signed, -100,   100,    1,  false,  false) },
+    {"UNSIGNED_HALF",   ParameterInfo("UNSIGNED_HALF",  0x1,    16, 16, 1,  ParameterInfo::ValueEncoding::Unsigned, 0,      100,    1,  false,  false) },
+    {"READONLY_FLAG",   ParameterInfo("READONLY_FLAG",  0x0,    7,  1,  1,  ParameterInfo::ValueEncoding::Unsigned, 0,      1,      1,  false,  true) },
 };
 
 TEST(ParametersTest, SignedRegRead) {

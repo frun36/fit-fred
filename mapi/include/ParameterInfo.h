@@ -6,38 +6,18 @@
 
 // #include <Database/databaseinterface.h>
 
-class ParameterInfo {
-public:
+struct ParameterInfo {
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
         Unsigned, Signed
     };
 
-private:
-    std::string m_name;
-    uint32_t m_baseAddress;
-    uint8_t m_startBit;
-    uint8_t m_endBit;
-    uint32_t m_regblockSize;
-    ValueEncoding m_valueEncoding;
-    double m_minValue;
-    double m_maxValue;
-    double m_multiplier;
-    bool m_isFifo;
-    bool m_isReadonly;
-
-public:
-    // ParameterInfo(std::vector<MultiBase*>) {
-    //     // to be implemented when database structure is certain
-    // }
-
     ParameterInfo() = default;
-
     ParameterInfo(
         std::string name, 
         uint32_t baseAddress, 
         uint8_t startBit, 
-        uint8_t endBit, 
+        uint8_t bitLength, 
         uint32_t regblockSize, 
         ValueEncoding valueEncoding,
         double minValue,
@@ -46,53 +26,37 @@ public:
         bool isFifo,
         bool isReadonly
     ) : 
-        m_name(name), 
-        m_baseAddress(baseAddress), 
-        m_startBit(startBit), 
-        m_endBit(endBit), 
-        m_regblockSize(regblockSize),
-        m_valueEncoding(valueEncoding),
-        m_minValue(minValue),
-        m_maxValue(maxValue),
-        m_multiplier(multiplier),
-        m_isFifo(isFifo),
-        m_isReadonly(isReadonly) {}
+        name(name), 
+        baseAddress(baseAddress), 
+        startBit(startBit), 
+        bitLength(bitLength), 
+        regBlockSize(regBlockSize),
+        valueEncoding(valueEncoding),
+        minValue(minValue),
+        maxValue(maxValue),
+        multiplier(multiplier),
+        isFifo(isFifo),
+        isReadonly(isReadonly),
+        m_value(0.0) {}
 
-    const std::string& getName() const {
-        return m_name;
-    }
+    const std::string name{0};
+    const uint32_t baseAddress{0};
+    const uint8_t startBit{0};
+    const uint8_t bitLength{0};
+    const size_t regBlockSize{1};
+    const ValueEncoding valueEncoding{ValueEncoding::Unsigned};
+    const double minValue{0};
+    const double maxValue{0};
+    const double multiplier{0};
+    const bool isFifo{false};
+    const bool isReadonly{false};
 
-    uint32_t getBaseAddress() const {
-        return m_baseAddress;
-    }
+    double calculatePhysicalValue(uint32_t rawValue) const;
+    uint32_t calculateRawValue(double physicalValue) const;
 
-    uint8_t getStartBit() const {
-        return m_startBit;
-    }
+    void storeValue(double value){m_value = value;}
+    double getStoredValue() const {return m_value;}
 
-    uint8_t getEndBit() const {
-        return m_endBit;
-    }
-
-    uint8_t getBitLength() const {
-        return m_endBit - m_startBit + 1;
-    }
-
-    uint32_t getRegblockSize() const {
-        return m_regblockSize;
-    }
-
-    double getPhysicalValue(uint32_t rawValue) const;
-
-    uint32_t getRawValue(double physicalValue) const;
-
-    // Currently no value validation!
-
-    bool isFifo() const {
-        return m_isFifo;
-    }
-
-    bool isReadonly() const {
-        return m_isReadonly;
-    }
+public:
+    double m_value;
 };

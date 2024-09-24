@@ -27,10 +27,16 @@ IntegerType twosComplementDecode(uint32_t code, uint32_t bitsNumber)
     }
 }
 
-constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)
+// constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)
+// {
+//     if((last - first + 1u) == 32u) return word;
+//     return static_cast<uint32_t>( (word >> first) & ( (1u << (last - first + 1u)) - 1u));
+// }
+
+constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t length)
 {
-    if((last - first + 1u) == 32u) return word;
-    return static_cast<uint32_t>( (word >> first) & ( (1u << (last - first + 1u)) - 1u));
+    if(length == 32u) return word;
+    return static_cast<uint32_t>( (word >> first) & ( (1u << length) - 1u));
 }
 
 constexpr double maxUINT(uint8_t first, uint8_t last)

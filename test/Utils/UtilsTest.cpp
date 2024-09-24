@@ -56,10 +56,10 @@ TEST(GetBitFieldTest, RandomTests)
         // Generate random first and last positions
         uint8_t first = std::uniform_int_distribution<uint8_t>(0, 31)(rng);
         uint8_t last = std::uniform_int_distribution<uint8_t>(first, 31)(rng); // Ensure last >= first
-
-        uint32_t extractedBits = getBitField(word, first, last);
-
         uint32_t bitWidth = last - first + 1u;
+
+        uint32_t extractedBits = getBitField(word, first, bitWidth);
+
         if (bitWidth == 32u)
         {
             ASSERT_EQ(extractedBits, word) << "Failed at word=" << word << ", first=" << static_cast<int>(first) << ", last=" << static_cast<int>(last);

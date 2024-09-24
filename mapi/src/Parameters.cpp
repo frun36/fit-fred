@@ -32,7 +32,7 @@ string Parameters::processOutputMessage(string msg) {
                 const vector<string>& parametersToUpdate = m_currRequestedParameterNames[line.frame.address];
                 
                 for (const auto& name: parametersToUpdate)
-                    response.addParameter(name, {m_parameterMap[name].getPhysicalValue(line.frame.data)});
+                    response.addParameter(name, {m_parameterMap[name].calculatePhysicalValue(line.frame.data)});
             }
         }
 
@@ -62,28 +62,32 @@ vector<SwtSequence::SwtOperation> Parameters::processRequest(const WinCCRequest&
 }
 
 SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data) {
-    const std::string& parameterName = parameter.getName();
-    uint32_t baseAddress = parameter.getBaseAddress();
+    const std::string& parameterName = parameter.name;
+    uint32_t baseAddress = parameter.baseAddress;
 
-    if (parameter.getRegblockSize() != 1)
+    if (parameter.regBlockSize != 1)
+    {
         throw std::runtime_error(parameterName + ": regblock operations unsupported");
+    }
 
     if (operation == WinCCRequest::Command::Operation::Read)
+    {
         return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
+    }
 
     // WRITE operation
-    if(parameter.isReadonly())
+    if(parameter.isReadonly)
         throw std::runtime_error(parameterName + ": attempted WRITE on read-only parameter");
 
     if(!data.has_value())
         throw std::runtime_error(parameterName + ": no data for WRITE operation");
 
-    if (parameter.getBitLength() == 32)
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, { parameter.getRawValue(data.value()) });
+    if (parameter.bitLength == 32)
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, { parameter.calculateRawValue(data.value()) });
 
     // needs RMW
     std::array<uint32_t, 2> masks;
-    SwtSequence::createMask(parameter.getStartBit(), parameter.getEndBit(), parameter.getRawValue(data.value()) >> parameter.getStartBit(), masks.data());
+    SwtSequence::createMask(parameter.startBit, parameter.bitLength, parameter.calculateRawValue(data.value()) >> parameter.startBit, masks.data());
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, masks);
 }
 

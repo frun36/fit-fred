@@ -119,14 +119,14 @@ std::string SwtSequence::wordToHex(uint32_t word)
     };
 }
 
-void SwtSequence::createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* dest)
+void SwtSequence::createMask(uint32_t firstBit, uint32_t bitLength, uint32_t value, uint32_t* dest)
 {
-    dest[0] = ~( ( 0xFFFFFFFFu >> ( 32 - (lastBit - firstBit + 1) ) ) << firstBit );
+    dest[0] = ~( ( 0xFFFFFFFFu >> ( 32 - bitLength ) ) << firstBit );
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
-const uint32_t*  SwtSequence::passMasks(uint32_t firstBit, uint32_t lastBit, uint32_t value) 
+const uint32_t*  SwtSequence::passMasks(uint32_t firstBit, uint32_t bitLength, uint32_t value) 
 {
-    createMask(firstBit, lastBit, value, m_mask.data());
+    createMask(firstBit, bitLength, value, m_mask.data());
     return m_mask.data();
 }

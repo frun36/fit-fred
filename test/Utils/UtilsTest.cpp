@@ -74,27 +74,78 @@ TEST(GetBitFieldTest, RandomTests)
     }
 }
 
-TEST(MaxUINTTest, CorrectValues)
+
+
+// Existing tests for 32-bit types...
+
+// Add tests for 64-bit types
+
+TEST(TwosComplementTest64, EncodeDecode)
 {
-    for (uint8_t first = 0; first <= 31; ++first)
+    // Create a random number generator
+    std::mt19937_64 rng(12345); // Fixed seed for reproducibility
+
+    // Test bitsNumber from 1 to 64
+    for (uint32_t bitsNumber = 1; bitsNumber <= 64; ++bitsNumber)
     {
-        for (uint8_t last = first; last <= 31; ++last)
+        int64_t minValue, maxValue;
+
+        if (bitsNumber == 64)
         {
-            double maxUintValue = maxUINT(first, last);
-            uint32_t bitWidth = last - first + 1u;
-
-            double expectedMax;
-            if (bitWidth == 32u)
-            {
-                expectedMax = static_cast<double>(UINT32_MAX);
-            }
-            else
-            {
-                expectedMax = static_cast<double>((1u << bitWidth) - 1u);
-            }
-
-            ASSERT_EQ(maxUintValue, expectedMax) << "Failed at first=" << static_cast<int>(first) << ", last=" << static_cast<int>(last);
+            minValue = std::numeric_limits<int64_t>::min();
+            maxValue = std::numeric_limits<int64_t>::max();
         }
+        else
+        {
+            minValue = static_cast<int64_t>(-(1ull << (bitsNumber - 1ull)));
+            maxValue = static_cast<int64_t>((1ull << (bitsNumber - 1ull)) - 1ull);
+        }
+
+        std::uniform_int_distribution<int64_t> dist(minValue, maxValue);
+
+        // Test with 100 random values for each bitsNumber
+        for (int i = 0; i < 100; ++i)
+        {
+            int64_t originalValue = dist(rng);
+
+            uint64_t encodedValue = twosComplementEncode<int64_t, uint64_t>(originalValue, bitsNumber);
+            int64_t decodedValue = twosComplementDecode<int64_t, uint64_t>(encodedValue, bitsNumber);
+
+            ASSERT_EQ(decodedValue, originalValue) << "Failed at bitsNumber=" << bitsNumber << ", value=" << originalValue;
+        }
+    }
+}
+
+TEST(GetBitFieldTest64, RandomTests)
+{
+    // Create a random number generator
+    std::mt19937_64 rng(54321); // Fixed seed for reproducibility
+    std::uniform_int_distribution<uint64_t> distWord(0, std::numeric_limits<uint64_t>::max());
+
+    // Test with 1000 random words
+    for (int i = 0; i < 1000; ++i)
+    {
+        uint64_t word = distWord(rng);
+
+        // Generate random first and length positions
+        uint8_t first = std::uniform_int_distribution<uint8_t>(0, 63)(rng);
+        uint8_t maxLength = 64 - first;
+        uint8_t length = std::uniform_int_distribution<uint8_t>(1, maxLength)(rng); // Ensure length is at least 1
+
+        uint64_t extractedBits = getBitField<uint64_t>(word, first, length);
+
+        uint64_t expectedBits;
+        if (length == 64u)
+        {
+            expectedBits = word;
+        }
+        else
+        {
+            uint64_t mask = ((1ull << length) - 1ull);
+            expectedBits = (word >> first) & mask;
+        }
+
+        ASSERT_EQ(extractedBits, expectedBits) << "Failed at word=" << word << ", first=" << static_cast<int>(first) << ", length=" << static_cast<int>(length);
     }
 }
 

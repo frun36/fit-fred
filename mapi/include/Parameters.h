@@ -18,7 +18,7 @@ public:
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
 
-    SwtSequence::SwtOperation getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data);
+    SwtSequence::SwtOperation getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Operation operation, std::optional<double> data);
 
     vector<SwtSequence::SwtOperation> processRequest(const WinCCRequest& req);
 

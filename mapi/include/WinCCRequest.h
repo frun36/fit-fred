@@ -10,9 +10,9 @@
 
 class WinCCRequest {
 public:
+    enum class Operation { Read, Write };
+    
     struct Command {
-        enum class Operation { Read, Write };
-        
         std::string name;
         Operation operation;
         std::optional<double> value; // this assumes only single-valued writes
@@ -27,6 +27,7 @@ public:
 
 private:
     std::vector<Command> m_commands;
+    std::optional<Operation> m_reqType = std::nullopt;
 
 public:
     explicit WinCCRequest(const std::string& input);

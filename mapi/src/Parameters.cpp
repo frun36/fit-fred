@@ -51,8 +51,8 @@ vector<SwtSequence::SwtOperation> Parameters::processRequest(const WinCCRequest&
         // Convert to SWT, adding a read after every write
         SwtSequence::SwtOperation operation = getSwtOperationForParameter(m_parameterMap[cmd.name], cmd.operation, cmd.value);
         operations.push_back(operation);
-        if(cmd.operation != WinCCRequest::Command::Operation::Read)
-            operations.push_back(getSwtOperationForParameter(m_parameterMap[cmd.name], WinCCRequest::Command::Operation::Read, std::nullopt));
+        if(cmd.operation != WinCCRequest::Operation::Read)
+            operations.push_back(getSwtOperationForParameter(m_parameterMap[cmd.name], WinCCRequest::Operation::Read, std::nullopt));
         
         // Store requested parameter name
         m_currRequestedParameterNames[operation.address].push_back(cmd.name);
@@ -61,7 +61,7 @@ vector<SwtSequence::SwtOperation> Parameters::processRequest(const WinCCRequest&
     return operations;
 }
 
-SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data) {
+SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Operation operation, std::optional<double> data) {
     const std::string& parameterName = parameter.name;
     uint32_t baseAddress = parameter.baseAddress;
 
@@ -70,7 +70,7 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
         throw std::runtime_error(parameterName + ": regblock operations unsupported");
     }
 
-    if (operation == WinCCRequest::Command::Operation::Read)
+    if (operation == WinCCRequest::Operation::Read)
     {
         return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
     }

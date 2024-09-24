@@ -6,11 +6,11 @@
 
 // #include <Database/databaseinterface.h>
 
-class Parameter {
+class ParameterInfo {
 public:
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
-        Unsigned, Signed16, Signed32
+        Unsigned, Signed
     };
 
 private:
@@ -27,11 +27,13 @@ private:
     bool m_isReadonly;
 
 public:
-    // Parameter(std::vector<MultiBase*>) {
+    // ParameterInfo(std::vector<MultiBase*>) {
     //     // to be implemented when database structure is certain
     // }
 
-    Parameter(
+    ParameterInfo() = default;
+
+    ParameterInfo(
         std::string name, 
         uint32_t baseAddress, 
         uint8_t startBit, 
@@ -72,13 +74,17 @@ public:
         return m_endBit;
     }
 
+    uint8_t getBitLength() const {
+        return m_endBit - m_startBit + 1;
+    }
+
     uint32_t getRegblockSize() const {
         return m_regblockSize;
     }
 
     double getPhysicalValue(uint32_t rawValue) const;
 
-    uint32_t getRawValue(double physicalValue);
+    uint32_t getRawValue(double physicalValue) const;
 
     // Currently no value validation!
 

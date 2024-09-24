@@ -23,7 +23,6 @@ class SwtSequence
         bool expectResponse;
     };
 
-    
     SwtSequence():m_buffer("reset\n"){}
     SwtSequence(const std::vector<SwtOperation>& operations);
 

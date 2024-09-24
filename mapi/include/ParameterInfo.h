@@ -18,7 +18,7 @@ struct ParameterInfo {
         uint32_t baseAddress, 
         uint8_t startBit, 
         uint8_t bitLength, 
-        uint32_t regblockSize, 
+        uint32_t regBlockSize, 
         ValueEncoding valueEncoding,
         double minValue,
         double maxValue,

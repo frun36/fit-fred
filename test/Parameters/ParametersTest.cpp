@@ -26,20 +26,42 @@ TEST(ParametersTest, SignedRegRead) {
     EXPECT_EQ(signedRegReadRes, "SIGNED_REG,-1\n");
 }
 
-TEST(ParametersTest, UnsignedHalfReadSignedHalfWrite) {
+TEST(ParametersTest, Halves) {
     Parameters p(testMap);
 
-    string unsignedHalfReadSignedHalfWriteReq = p.processInputMessage("UNSIGNED_HALF,READ\nSIGNED_HALF,WRITE,-12");
-    string expectedUnsignedHalfReadSignedHalfWriteReq = SwtSequence({
-        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
+    string unsignedHalfReadReq = p.processInputMessage("UNSIGNED_HALF,READ\n");
+    string expectedUnsignedHalfReadReq = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true)
+    }).getSequence();
+    EXPECT_EQ(unsignedHalfReadReq, expectedUnsignedHalfReadReq);
+
+    string unsignedHalfReadRes = p.processOutputMessage("success\n0\n0x00000000001aaaa0007");
+    EXPECT_EQ(unsignedHalfReadRes, "UNSIGNED_HALF,43690\n");
+    
+    string signedHalfWriteReq = p.processInputMessage("SIGNED_HALF,WRITE,-12");
+    string expectedSignedHalfWriteReq = SwtSequence({
         SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, {0xffff0000, 0x0000fff4}, false),
         SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true)
     }).getSequence();
+    EXPECT_EQ(signedHalfWriteReq, expectedSignedHalfWriteReq);
 
-    EXPECT_EQ(unsignedHalfReadSignedHalfWriteReq, expectedUnsignedHalfReadSignedHalfWriteReq);
+    string signedHalfWriteRes = p.processOutputMessage("success\n0\n0\n0x00000000001aaaafff4");
+    EXPECT_EQ(signedHalfWriteRes, "SIGNED_HALF,-12\n");
 
-    string unsignedHalfReadSignedHalfWriteRes = p.processOutputMessage("success\n0\n0x00000000001aaaa0007\n0\n0\n0x00000000001aaaafff4");
-    EXPECT_EQ(unsignedHalfReadSignedHalfWriteRes, "UNSIGNED_HALF,43690\nSIGNED_HALF,7\nUNSIGNED_HALF,43690\nSIGNED_HALF,-12\n");   
+
+    string bothReadReq = p.processInputMessage("SIGNED_HALF,READ\nUNSIGNED_HALF,READ");
+    string expectedBothReadReq = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true)
+    }).getSequence();
+    EXPECT_EQ(bothReadReq, expectedBothReadReq);
+    
+    string bothWriteReq = p.processInputMessage("SIGNED_HALF,WRITE,-21133\nUNSIGNED_HALF,WRITE,0xAD72");
+    string expectedBothWriteReq = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, {0x0000ffff, 0xad710000}, false),
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, {0xffff0000, 0x0000ad72}, false),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true)
+    }).getSequence();
+    EXPECT_EQ(bothReadReq, expectedBothReadReq);
 }
 
 TEST(ParametersTest, ReadonlyWrite) {

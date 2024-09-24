@@ -37,4 +37,8 @@ public:
     }
 
     static std::optional<double> stringToDouble(std::string str);
+
+    bool isWrite() const {
+        return m_reqType.has_value() && m_reqType.value() == Operation::Write;
+    }
 };

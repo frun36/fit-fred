@@ -48,16 +48,19 @@ vector<SwtSequence::SwtOperation> Parameters::processRequest(const WinCCRequest&
     m_currRequestedParameterNames.clear();
     vector<SwtSequence::SwtOperation> operations;
     for (const auto& cmd : req.getCommands()) {
-        // Convert to SWT, adding a read after every write
         SwtSequence::SwtOperation operation = getSwtOperationForParameter(m_parameterMap[cmd.name], cmd.operation, cmd.value);
-        operations.push_back(operation);
-        if(cmd.operation != WinCCRequest::Operation::Read)
-            operations.push_back(getSwtOperationForParameter(m_parameterMap[cmd.name], WinCCRequest::Operation::Read, std::nullopt));
         
         // Store requested parameter name
         m_currRequestedParameterNames[operation.address].push_back(cmd.name);
+        
+        // Add write operations
+        if (req.isWrite())
+            operations.push_back(operation);
     }
 
+    for (const auto& pair : m_currRequestedParameterNames)
+        operations.push_back(SwtSequence::SwtOperation(SwtSequence::Operation::Read, pair.first, {}, true));
+    
     return operations;
 }
 

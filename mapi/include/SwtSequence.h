@@ -16,7 +16,7 @@ class SwtSequence
 
     struct SwtOperation
     {
-        SwtOperation() = default;
+        // SwtOperation() = default;
         SwtOperation( Operation type, uint32_t address, std::array<uint32_t,2> data=std::array<uint32_t,2>(), bool expectResponse=false);
         Operation type;
         uint32_t address;

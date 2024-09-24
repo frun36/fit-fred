@@ -72,6 +72,9 @@ SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const Paramete
         return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
 
     // WRITE operation
+    if(parameter.isReadonly())
+        throw std::runtime_error(parameterName + ": attempted WRITE on read-only parameter");
+
     if(!data.has_value())
         throw std::runtime_error(parameterName + ": no data for WRITE operation");
 

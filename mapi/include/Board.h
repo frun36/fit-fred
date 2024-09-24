@@ -16,6 +16,8 @@ public:
     bool doesExist(const std::string&);
 
     double calculatePhysical(const std::string& param, uint32_t raw);
+    double calculatePhysical64(const std::string& param, uint64_t raw);
+    
     uint32_t calculateRaw(const std::string& param, double physcial);
     uint64_t calculateRaw64(const std::string& param, double physical);
 

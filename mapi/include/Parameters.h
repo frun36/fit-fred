@@ -20,5 +20,7 @@ public:
 
     SwtSequence::SwtOperation getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Command::Operation operation, std::optional<double> data);
 
-    vector<SwtSequence::SwtOperation> handleRequest(const WinCCRequest& req);
+    vector<SwtSequence::SwtOperation> processRequest(const WinCCRequest& req);
+
+    string generateErrorForAll(string message) const;
 };

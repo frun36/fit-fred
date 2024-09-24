@@ -3,13 +3,6 @@
 
 namespace {
 
-TEST(ParameterInterpretationTest, Encoding) {
-    EXPECT_EQ(ParameterInfo::fromNBitSigned(0x0000ffef, 16), -17.);
-    EXPECT_EQ(ParameterInfo::asNBitSigned(-17., 12), 0x00000fef);
-    EXPECT_EQ(ParameterInfo::fromNBitSigned(0x8000DAA7, 32), -2147427673.);
-    EXPECT_EQ(ParameterInfo::asNBitSigned(-8., 4), 0x00000008);
-}
-
 TEST(ParameterInterpretationTest, Unsigned) {
     ParameterInfo p(
         "UNSIGNED_TEST",

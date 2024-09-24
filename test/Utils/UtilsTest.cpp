@@ -4,9 +4,9 @@
 #include <random>
 #include <limits>
 #include <cmath>
-#include"Utils.h"
+#include"utils.h"
 
-TEST(TwoComplementsTest, EncodeDecode)
+TEST(TwosComplementTest, EncodeDecode)
 {
     // Create a random number generator
     std::mt19937 rng(12345); // Fixed seed for reproducibility
@@ -34,8 +34,8 @@ TEST(TwoComplementsTest, EncodeDecode)
         {
             int32_t originalValue = dist(rng);
 
-            uint32_t encodedValue = TwoComplementsEncode<int32_t>(originalValue, bitsNumber);
-            int32_t decodedValue = TwoComplementsDecode<int32_t>(encodedValue, bitsNumber);
+            uint32_t encodedValue = twosComplementEncode<int32_t>(originalValue, bitsNumber);
+            int32_t decodedValue = twosComplementDecode<int32_t>(encodedValue, bitsNumber);
 
             ASSERT_EQ(decodedValue, originalValue) << "Failed at bitsNumber=" << bitsNumber << ", value=" << originalValue;
         }

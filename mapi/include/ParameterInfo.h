@@ -95,20 +95,4 @@ public:
     bool isReadonly() const {
         return m_isReadonly;
     }
-
-    static double fromNBitSigned(uint32_t bits, uint8_t n = 32) {
-        uint32_t mask = (1U << (n - 1)) - 1;
-        double base = ((bits >> (n - 1)) & 1) ? -static_cast<double>(1U << (n-1)) : 0.;
-        return base + static_cast<double>(mask & bits);
-    }
-
-    static uint32_t asNBitSigned(double value, uint8_t n = 32) {
-        uint32_t result = 0;
-        if(value < 0) {
-            result |= (1U << (n-1));
-            value += static_cast<double>(1U << (n-1));
-        }
-
-        return result | static_cast<uint32_t>(value);
-    }
 };

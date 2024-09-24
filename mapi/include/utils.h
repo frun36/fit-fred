@@ -3,14 +3,14 @@
 #include<cstdint>
 
 template<typename IntegerType>
-uint32_t TwoComplementsEncode(IntegerType value, uint32_t bitsNumber)
+uint32_t twosComplementEncode(IntegerType value, uint32_t bitsNumber)
 {
     //uint32_t mask = (bitsNumber == 32) ? 0xFFFFFFFFu : ((1u << bitsNumber) - 1u);
     return static_cast<uint32_t>(value) & ( (bitsNumber == 32u) ? 0xFFFFFFFFu : ((1u << bitsNumber) - 1u) );
 }
 
 template<typename IntegerType>
-IntegerType TwoComplementsDecode(uint32_t code, uint32_t bitsNumber)
+IntegerType twosComplementDecode(uint32_t code, uint32_t bitsNumber)
 {
     if (bitsNumber == 32u)
     {
@@ -36,5 +36,5 @@ constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)
 constexpr double maxUINT(uint8_t first, uint8_t last)
 {
     if( (last - first + 1u) == 32u) return __UINT32_MAX__;
-    return (1u << (last-first+1u)) - 1u;
+    return (1u << (last - first + 1u)) - 1u;
 }

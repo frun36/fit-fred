@@ -1,0 +1,4 @@
+[global]
+name = "TCM-mock"
+register_file = "registers/fee_a0123456789_c0123456789.csv"
+alf = { name = "ALF-LOCAL-DCS" }

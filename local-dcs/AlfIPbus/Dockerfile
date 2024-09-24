@@ -10,3 +10,5 @@ RUN git submodule update --init --recursive
 RUN cmake -S . -B build/
 RUN cmake --build build
 RUN cp bin/AlfIPbus /usr/local/bin
+
+ENTRYPOINT [ "/bin/bash" ]

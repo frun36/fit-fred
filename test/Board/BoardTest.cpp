@@ -73,7 +73,7 @@ TEST(BoardTest, EmplaceAndRetrieveParameter) {
     EXPECT_TRUE(result); // Emplace should succeed
 
     // Try to retrieve the parameter
-    Board::ParameterInfo& retrievedParam = board.get("Param1");
+    Board::ParameterInfo& retrievedParam = board.at("Param1");
     EXPECT_EQ(retrievedParam.name, "Param1");
     EXPECT_EQ(retrievedParam.baseAddress, 0x1000u);
     EXPECT_EQ(retrievedParam.startBit, 0u);
@@ -107,7 +107,7 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
     {
         std::cout<<"Parameter not found\n";
     }
-    std::cout << "Variables number:  "<< board.get(param.name).rawToPhysic.variables.size();
+    std::cout << "Variables number:  "<< board.at(param.name).rawToPhysic.variables.size();
 
     uint32_t rawValue = 0x1234;
     double physicalValue = board.calculatePhysical(param.name, rawValue);
@@ -322,7 +322,7 @@ TEST(BoardTest, ParameterDoesNotExist) {
     Board board("TestBoard", 0x1000);
 
     // Attempt to retrieve a non-existent parameter
-    EXPECT_THROW(board.get("NonExistentParam"), std::runtime_error);
+    EXPECT_THROW(board.at("NonExistentParam"), std::out_of_range);
 
     // Attempt to calculate physical value for a non-existent parameter
     EXPECT_THROW(board.calculatePhysical("NonExistentParam", 0x1234), std::runtime_error);

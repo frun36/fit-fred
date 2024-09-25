@@ -50,17 +50,12 @@ bool Board::emplace(const ParameterInfo& info)
 
 Board::ParameterInfo& Board::operator[](const std::string& param)
 {
-    return get(param);
+    return at(param);
 }
 
-Board::ParameterInfo& Board::get(const std::string& param)
+Board::ParameterInfo& Board::at(const std::string& param)
 {
-    auto itr = m_parameters.find(param);
-    if(itr == m_parameters.end())
-    {
-        throw std::runtime_error(param + " does not exist!");   
-    }
-    return itr->second;
+    return m_parameters.at(param);
 }
 
 bool Board::doesExist(const std::string& param)
@@ -75,7 +70,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters[param];
+    ParameterInfo& info = m_parameters.at(param);
     int64_t decoded = 0;
 
     if(info.valueEncoding == ParameterInfo::ValueEncoding::Unsigned){
@@ -99,11 +94,11 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
         }
         else if(m_parameters.find(var) != m_parameters.end())
         {
-            values.emplace_back(m_parameters[var].getStoredValue());
+            values.emplace_back(m_parameters.at(var).getStoredValue());
         }
         else if(m_mainBoard != nullptr && m_mainBoard->doesExist(var))
         {
-            values.emplace_back(m_mainBoard->get(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else
         {
@@ -124,7 +119,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters[param];
+    ParameterInfo& info = m_parameters.at(param);
 
     if(info.physicToRaw.equation == "")
     {
@@ -144,11 +139,11 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
         }
         else if(m_parameters.find(var) != m_parameters.end())
         {
-            values.emplace_back(m_parameters[var].getStoredValue());
+            values.emplace_back(m_parameters.at(var).getStoredValue());
         }
         else if(m_mainBoard != nullptr && m_mainBoard->doesExist(var))
         {
-            values.emplace_back(m_mainBoard->get(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else
         {
@@ -171,7 +166,7 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters[param];
+    ParameterInfo& info = m_parameters.at(param);
     if(info.physicToRaw.equation == "")
     {
         if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
@@ -190,11 +185,11 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
         }
         else if(m_parameters.find(var) != m_parameters.end())
         {
-            values.emplace_back(m_parameters[var].getStoredValue());
+            values.emplace_back(m_parameters.at(var).getStoredValue());
         }
         else if(m_mainBoard != nullptr && m_mainBoard->doesExist(var))
         {
-            values.emplace_back(m_mainBoard->get(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else
         {
@@ -217,7 +212,7 @@ double Board::calculatePhysical64(const std::string& param, uint64_t raw)
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters[param];
+    ParameterInfo& info = m_parameters.at(param);
     int64_t decoded = 0;
 
     if(info.valueEncoding == ParameterInfo::ValueEncoding::Unsigned){
@@ -242,11 +237,11 @@ double Board::calculatePhysical64(const std::string& param, uint64_t raw)
         }
         else if(m_parameters.find(var) != m_parameters.end())
         {
-            values.emplace_back(m_parameters[var].getStoredValue());
+            values.emplace_back(m_parameters.at(var).getStoredValue());
         }
         else if(m_mainBoard != nullptr && m_mainBoard->doesExist(var))
         {
-            values.emplace_back(m_mainBoard->get(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else
         {

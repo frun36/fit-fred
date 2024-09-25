@@ -18,7 +18,7 @@ public:
         std::vector<std::string> variables;
     };
 
-    ParameterInfo() = default;
+    ParameterInfo() = delete;
     ParameterInfo(
         std::string name_, 
         uint32_t baseAddress_, 
@@ -68,7 +68,7 @@ public:
     bool emplace(const ParameterInfo&);
 
     ParameterInfo& operator[](const std::string&);
-    ParameterInfo& get(const std::string&);
+    ParameterInfo& at(const std::string&);
     bool doesExist(const std::string&);
 
     double calculatePhysical(const std::string& param, uint32_t raw);

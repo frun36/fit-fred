@@ -73,7 +73,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
         throw std::runtime_error(parameter.name + ": regblock operations unsupported");
     }
 	if(command.operation == WinCCRequest::Operation::Read){
-		return SwtSequence::SwtOperation(SwtSequence::Operation::Read, parameter.baseAddress,{}, true);
+		return std::move(SwtSequence::SwtOperation(SwtSequence::Operation::Read, parameter.baseAddress,{}, true));
 	}
 
     if(parameter.isReadonly){
@@ -87,29 +87,33 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
 	uint32_t rawValue = m_board->calculateRaw(parameter.name, command.value.value());
 
     if (parameter.bitLength == 32){
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, {rawValue});
+        return std::move( SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, {rawValue}) );
 	}
 
-    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress, 
-                                    {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue});
+    return std::move(
+		SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress, 
+                                    {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue})
+		);
 }
 
-std::string BasicRequestHandler::processMessageFromALF(std::string alfresponse)
+std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
 {
     WinCCResponse response;
+	std:list<ErrorRaport> raport;
 
     try {
         AlfResponseParser alfMsg(alfresponse);
 
         if(!alfMsg.isSuccess()) {
-            return handleErrorInALFResponse("ALF communication failed");
+            raport.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
+			return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
         }
 
         for (const auto& line : alfMsg) {
             switch(line.type)
             {
                 case AlfResponseParser::Line::Type::ResponseToRead:
-                    unpackReadResponse(line, response);
+                    unpackReadResponse(line, response, raport);
                 break;
                 case AlfResponseParser::Line::Type::ResponseToWrite:
                 break;
@@ -117,21 +121,29 @@ std::string BasicRequestHandler::processMessageFromALF(std::string alfresponse)
         }
 
     } catch (const std::exception& e) {
-        return handleErrorInALFResponse(("Invalid response from ALF: " + string(e.what()));
+		raport.emplace_back("SEQUENCE", e.what());
+        return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
     }
 
-    return response.getContents();
+	return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
 }
 
-void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response)
+void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorRaport>& raport)
 {
     for(auto& parameterToHandle: m_registerTasks[read.frame.address])
     {
+		try{
+
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
         if(parameterToHandle.toComapare.has_value()){
-            
+			raport.emplace_back(parameterToHandle.name, "WRITE FAILED: " + std::to_string(value) + " EXPECTED" + std::to_string(parameterToHandle.toComapare.value()));
         }
         response.addParameter(parameterToHandle.name, {value});
         m_board->at(parameterToHandle.name).storeValue(value);
+
+		}
+		catch (const std::exception& e) {
+		raport.emplace_back(parameterToHandle.name, e.what());
+		}
     }
 }

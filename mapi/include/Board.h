@@ -72,6 +72,7 @@ public:
     Board(std::string name, uint32_t address);
 
     bool emplace(const ParameterInfo&);
+    bool emplace(ParameterInfo&& info);
 
     ParameterInfo& operator[](const std::string&);
     ParameterInfo& at(const std::string&);

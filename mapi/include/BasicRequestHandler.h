@@ -14,8 +14,27 @@ class Board;
 class BasicRequestHandler
 {
 public:
+BasicRequestHandler(std::shared_ptr<Board> board): m_board(board)
+{
+
+}
+
+struct ErrorRaport{
+  ErrorRaport() = default;
+  ErrorRaport(const std::string& param, const std::string& message):
+  parameterName(param), mess(message)
+  {}
+
+  std::string parameterName;
+  std::string mess;
+
+  std::string what(){
+    return "ERROR - " + parameterName + ": " + mess; 
+  }
+};
+
 SwtSequence& processMessageFromWinCC(std::string);
-std::string processMessageFromALF(std::string);
+std::pair<WinCCResponse,std::list<ErrorRaport>>  processMessageFromALF(std::string);
 
 protected:
 struct ParameterToHandle{
@@ -27,7 +46,7 @@ void resetExecutionData();
 void mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge);
 SwtSequence::SwtOperation createSwtOperation(const WinCCRequest::Command& command);
 
-void unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response);
+void unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorRaport>& raport);
 
 virtual std::string handleErrorInALFResponse(std::string);
 

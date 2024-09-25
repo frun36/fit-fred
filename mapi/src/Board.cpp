@@ -48,6 +48,15 @@ bool Board::emplace(const ParameterInfo& info)
     return m_parameters.emplace(info.name, info).second;
 }
 
+bool Board::emplace(ParameterInfo&& info)
+{
+    if(info.baseAddress < m_address)
+    {
+        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failed, address lower than board base address");
+    }
+    return m_parameters.emplace(info.name, std::move(info)).second;
+}
+
 Board::ParameterInfo& Board::operator[](const std::string& param)
 {
     return at(param);

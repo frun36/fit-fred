@@ -331,6 +331,32 @@ TEST(BoardTest, ParameterDoesNotExist) {
     EXPECT_THROW(board.calculateRaw("NonExistentParam", 42.0), std::runtime_error);
 }
 
+TEST(BoardTest, ParameterWithoutStoredValue) {
+    Board board("TestBoard", 0x1000);
+        Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned64", { "ParamSigned64" } };
+
+    Board::ParameterInfo param(
+        "ParamSigned64",
+        0x1000,
+        0,
+        64,
+        2,
+        Board::ParameterInfo::ValueEncoding::Signed,
+        -2147483648.0,
+        2147483647.0,
+        rawToPhysic,
+        physicToRaw,
+        false,
+        false
+    );
+
+    board.emplace(param);
+
+    // Attempt to retrieve a non-existent parameter
+    EXPECT_THROW(board.at(param.name).getStoredValue(), std::runtime_error);
+}
+
 TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
     Board board("TestBoard", 0x1000);
 
@@ -355,34 +381,44 @@ TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
     EXPECT_THROW(board.emplace(param), std::runtime_error);
 }
 
-TEST(BoardTest, RandomizedCalculatePhysicalAndRaw) {
-   
+TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
     Board board("RandomBoard", 0x1000);
+
     std::mt19937 rng(123); // Fixed seed for reproducibility
     std::uniform_int_distribution<uint8_t> bitLengthDist(1, 32);
+    std::uniform_int_distribution<uint8_t> startBitDist(0, 31);
 
-    // Test with 1000 random parameters
+    // Test with 100 random parameters
     for (int i = 0; i < 100; ++i) {
-
         // Random bit length between 1 and 32
         uint8_t bitLength = bitLengthDist(rng);
 
+        // Maximum possible startBit to prevent overflow
+        uint8_t maxStartBit = 32 - bitLength;
+        std::uniform_int_distribution<uint8_t> adjustedStartBitDist(0, maxStartBit);
+        uint8_t startBit = adjustedStartBitDist(rng);
+
         // Calculate min and max values based on bitLength
-        double minValue = -(1LL << (bitLength - 1));
-        double maxValue = (1LL << (bitLength - 1)) - 1;
+        int64_t minValue = -(1LL << (bitLength - 1));
+        int64_t maxValue = (1LL << (bitLength - 1)) - 1;
 
-        Board::ParameterInfo::Equation rawToPhysic = { "RandomParam" + std::to_string(i), { "RandomParam" + std::to_string(i) } };
-        Board::ParameterInfo::Equation physicToRaw = { "RandomParam" + std::to_string(i), { "RandomParam" + std::to_string(i) } };
+        // Variable name
+        std::string varName = "RandomParam" + std::to_string(i);
 
+        // Define the equations
+        Board::ParameterInfo::Equation rawToPhysic = { varName + " * 2 - 1", { varName } };
+        Board::ParameterInfo::Equation physicToRaw = { "(" + varName + " + 1) / 2", { varName } };
+
+        // Create the parameter
         Board::ParameterInfo param(
-            "RandomParam" + std::to_string(i),
+            varName,
             0x1000,
-            0,
+            startBit,
             bitLength,
             1,
             Board::ParameterInfo::ValueEncoding::Signed,
-            minValue,
-            maxValue,
+            static_cast<double>(minValue),
+            static_cast<double>(maxValue),
             rawToPhysic,
             physicToRaw,
             false,
@@ -392,21 +428,121 @@ TEST(BoardTest, RandomizedCalculatePhysicalAndRaw) {
         EXPECT_TRUE(board.emplace(param));
 
         // Random signed integer value within the representable range
-        std::uniform_int_distribution<int32_t> signedDist(static_cast<int32_t>(minValue), static_cast<int32_t>(maxValue));
-        int32_t randomValue = signedDist(rng);
+        std::uniform_int_distribution<int64_t> signedDist(minValue, maxValue);
+        int64_t rawValue = signedDist(rng);
 
-        // Encode the value
-        uint32_t rawValue = twosComplementEncode<int32_t>(randomValue, bitLength);
+        // Encode the raw value
+        uint32_t encodedRawValue = twosComplementEncode<int32_t>(static_cast<int32_t>(rawValue), bitLength);
+
+        // Shift the encoded raw value according to the startBit
+        uint32_t shiftedEncodedRawValue = encodedRawValue << startBit;
 
         // Calculate physical value from raw
-        double physicalValue = board.calculatePhysical(param.name, rawValue << param.startBit);
-        EXPECT_EQ(static_cast<int32_t>(physicalValue), randomValue) << "Failed at bitLength=" << static_cast<int>(bitLength);
+        double physicalValue = board.calculatePhysical(param.name, shiftedEncodedRawValue);
+
+        // Expected physical value: physicalValue = rawValue * 2 - 1
+        double expectedPhysicalValue = static_cast<double>(rawValue) * 2.0 - 1.0;
+
+        EXPECT_EQ(physicalValue, expectedPhysicalValue) << "Failed at bitLength=" << static_cast<int>(bitLength)
+                                                        << ", startBit=" << static_cast<int>(startBit);
 
         // Calculate raw value from physical
         uint32_t calculatedRaw = board.calculateRaw(param.name, physicalValue);
-        EXPECT_EQ(calculatedRaw >> param.startBit, rawValue) << "Failed at bitLength=" << static_cast<int>(bitLength);
+
+        // Extract the raw value by shifting back
+        uint32_t extractedRawValue = calculatedRaw >> startBit;
+
+        // Expected raw value: expectedRawValue = (physicalValue + 1) / 2
+        double expectedRawValueDouble = (physicalValue + 1.0) / 2.0;
+        int64_t expectedRawValue = static_cast<int64_t>(expectedRawValueDouble);
+
+        // Encode expectedRawValue
+        uint32_t expectedEncodedRawValue = twosComplementEncode<int32_t>(static_cast<int32_t>(expectedRawValue), bitLength);
+
+        EXPECT_EQ(extractedRawValue, expectedEncodedRawValue) << "Failed at bitLength=" << static_cast<int>(bitLength)
+                                                              << ", startBit=" << static_cast<int>(startBit);
     }
 }
+
+
+#include <chrono>
+
+TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
+    // Create a Board instance
+    Board board("PerformanceBoard", 0x1000);
+
+    // Define the equations (simple identity function for testing)
+    Board::ParameterInfo::Equation rawToPhysic = { "Param*2", { "Param" } };
+    Board::ParameterInfo::Equation physicToRaw = { "Param/2", { "Param" } };
+
+    // Create a parameter
+    Board::ParameterInfo param(
+        "Param",
+        0x1000,
+        4,
+        8,
+        1,
+        Board::ParameterInfo::ValueEncoding::Signed,
+        -32768.0,
+        32767.0,
+        rawToPhysic,
+        physicToRaw,
+        false,
+        false
+    );
+
+    // Emplace the parameter into the board
+    bool emplaced = board.emplace(param);
+    ASSERT_TRUE(emplaced) << "Failed to emplace parameter into the board.";
+
+    // Variables to hold the total duration
+    std::chrono::duration<double, std::milli> durationCalculatePhysical(0);
+    std::chrono::duration<double, std::milli> durationCalculateRaw(0);
+
+    // Number of iterations
+    const int iterations = 10000;
+
+    // Values to test
+    uint32_t rawValue = 0x0120;
+    double physicalValue = static_cast<int8_t>(rawValue>>4)*2; // 0x1234 in decimal
+
+
+    // Measure time for calculatePhysical
+    for (int i = 0; i < iterations; ++i) {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        double result = board.calculatePhysical("Param", rawValue);
+        auto endTime = std::chrono::high_resolution_clock::now();
+
+        // Verify the result
+        ASSERT_EQ(result, physicalValue);
+
+        durationCalculatePhysical += endTime - startTime;
+    }
+
+    // Measure time for calculateRaw
+    for (int i = 0; i < iterations; ++i) {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        uint32_t result = board.calculateRaw("Param", physicalValue);
+        auto endTime = std::chrono::high_resolution_clock::now();
+
+        // Verify the result
+        ASSERT_EQ(result, rawValue);
+
+        durationCalculateRaw += endTime - startTime;
+    }
+
+    // Output the results
+    std::cout << "Total time for calculatePhysical over " << iterations << " iterations: "
+              << durationCalculatePhysical.count() << " ms" << std::endl;
+    std::cout << "Average time per call: "
+              << (durationCalculatePhysical.count() / iterations) << " ms" << std::endl;
+
+    std::cout << "Total time for calculateRaw over " << iterations << " iterations: "
+              << durationCalculateRaw.count() << " ms" << std::endl;
+    std::cout << "Average time per call: "
+              << (durationCalculateRaw.count() / iterations) << " ms" << std::endl;
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

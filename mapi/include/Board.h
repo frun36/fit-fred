@@ -3,7 +3,7 @@
 #include<string>
 #include<vector>
 #include<memory>
-
+#include<optional>
 class Board
 {
 public:
@@ -56,11 +56,17 @@ public:
         }
         m_value = value;
     }
-    double getStoredValue() const {return m_value;}
+    double getStoredValue() const {
+        if(!m_value.has_value())
+        {
+            throw std::runtime_error(name + ": tried to access non-existing stored value");
+        }
+        return *m_value;
+    }
     bool boundCheck(double value) const {return(value < minValue || value > maxValue);}
 
     private:
-        double m_value;
+        std::optional<double> m_value;
     };
 
     Board(std::string name, uint32_t address);

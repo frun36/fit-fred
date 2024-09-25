@@ -34,7 +34,7 @@ Board::ParameterInfo::ParameterInfo(
         physicToRaw(physicToRaw_),
         isFifo(isFifo_),
         isReadonly(isReadonly_),
-        m_value(0.0) {}
+        m_value(std::nullopt) {}
 
 
 
@@ -77,7 +77,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
         decoded = static_cast<int64_t>(raw);
     }
     else{
-        decoded = twosComplementDecode<int32_t>(getBitField(raw, info.startBit, info.bitLength), info.bitLength);
+        decoded = static_cast<int64_t>(twosComplementDecode<int32_t>(getBitField(raw, info.startBit, info.bitLength), info.bitLength));
     }
 
     if(info.rawToPhysic.equation == "")
@@ -150,7 +150,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.rawToPhysic.equation, info.rawToPhysic.variables, values));
+    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.physicToRaw.equation, info.physicToRaw.variables, values));
     
     if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
         return twosComplementEncode(calculated, info.bitLength) << info.startBit;
@@ -196,7 +196,7 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
-    int64_t calculated = static_cast<int64_t>(Utility::calculateEquation(info.rawToPhysic.equation, info.rawToPhysic.variables, values));
+    int64_t calculated = static_cast<int64_t>(Utility::calculateEquation(info.physicToRaw.equation, info.physicToRaw.variables, values));
     
     if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
         return twosComplementEncode<int64_t, uint64_t>(calculated, info.bitLength) << info.startBit;

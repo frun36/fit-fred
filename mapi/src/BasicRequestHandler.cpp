@@ -142,14 +142,12 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
 		try{
 
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
-        if(parameterToHandle.toCompare.has_value()){
-			if (value != parameterToHandle.toCompare.value()) {
-        		report.emplace_back(
+        if(parameterToHandle.toCompare.has_value() && value != parameterToHandle.toCompare.value()){
+        	report.emplace_back(
             		parameterToHandle.name,
             		"WRITE FAILED: Received " + std::to_string(value) +
             		", Expected " + std::to_string(parameterToHandle.toCompare.value())
         			);
-    		}
 		}
         response.addParameter(parameterToHandle.name, {value});
         m_board->at(parameterToHandle.name).storeValue(value);

@@ -6,9 +6,10 @@
 #include<memory>
 #include"SwtSequence.h"
 #include"AlfResponseParser.h"
+#include"WinCCRequest.h"
+#include"WinCCResponse.h"
 
 class Board;
-class WinCCResponse;
 
 class BasicRequestHandler
 {

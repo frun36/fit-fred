@@ -1,6 +1,4 @@
 #include"BasicRequestHandler.h"
-#include"WinCCRequest.h"
-#include"WinCCResponse.h"
 #include"Board.h"
 #include"AlfResponseParser.h"
 #include"utils.h"

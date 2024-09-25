@@ -20,18 +20,18 @@ public:
 
     ParameterInfo() = delete;
     ParameterInfo(
-        std::string name_, 
-        uint32_t baseAddress_, 
-        uint8_t startBit_, 
-        uint8_t bitLength_, 
-        uint32_t regBlockSize_, 
-        ValueEncoding valueEncoding_,
-        double minValue_,
-        double maxValue_,
-        Equation rawToPhysic_,
-        Equation physicToRaw_,
-        bool isFifo_,
-        bool isReadonly_
+        std::string name, 
+        uint32_t baseAddress, 
+        uint8_t startBit, 
+        uint8_t bitLength, 
+        uint32_t regBlockSize, 
+        ValueEncoding valueEncoding,
+        double minValue,
+        double maxValue,
+        Equation rawToPhysic,
+        Equation physicToRaw,
+        bool isFifo,
+        bool isReadonly
     ) ;
 
     const std::string name{0};
@@ -52,7 +52,7 @@ public:
     void storeValue(double value)
     {
         if (value < minValue || value > maxValue) {
-        throw std::out_of_range(name + "Value is out of allowed range.");
+        throw std::out_of_range(name + ": value is out of allowed range");
         }
         m_value = value;
     }

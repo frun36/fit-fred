@@ -9,31 +9,31 @@ Board::Board(std::string name, uint32_t address): m_name(name), m_address(addres
 }
 
 Board::ParameterInfo::ParameterInfo(
-        std::string name_, 
-        uint32_t baseAddress_, 
-        uint8_t startBit_, 
-        uint8_t bitLength_, 
-        uint32_t regBlockSize_, 
-        ValueEncoding valueEncoding_,
-        double minValue_,
-        double maxValue_,
-        Equation rawToPhysic_,
-        Equation physicToRaw_,
-        bool isFifo_,
-        bool isReadonly_
+        std::string name, 
+        uint32_t baseAddress, 
+        uint8_t startBit, 
+        uint8_t bitLength, 
+        uint32_t regBlockSize, 
+        ValueEncoding valueEncoding,
+        double minValue,
+        double maxValue,
+        Equation rawToPhysic,
+        Equation physicToRaw,
+        bool isFifo,
+        bool isReadonly
     ) : 
-        name(name_), 
-        baseAddress(baseAddress_), 
-        startBit(startBit_), 
-        bitLength(bitLength_), 
-        regBlockSize(regBlockSize_),
-        valueEncoding(valueEncoding_),
-        minValue(minValue_),
-        maxValue(maxValue_),
-        rawToPhysic(rawToPhysic_),
-        physicToRaw(physicToRaw_),
-        isFifo(isFifo_),
-        isReadonly(isReadonly_),
+        name(name), 
+        baseAddress(baseAddress), 
+        startBit(startBit), 
+        bitLength(bitLength), 
+        regBlockSize(regBlockSize),
+        valueEncoding(valueEncoding),
+        minValue(minValue),
+        maxValue(maxValue),
+        rawToPhysic(rawToPhysic),
+        physicToRaw(physicToRaw),
+        isFifo(isFifo),
+        isReadonly(isReadonly),
         m_value(std::nullopt) {}
 
 
@@ -43,7 +43,7 @@ bool Board::emplace(const ParameterInfo& info)
 {
     if(info.baseAddress < m_address)
     {
-        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failer, address lower than board base address");
+        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failed, address lower than board base address");
     }
     return m_parameters.emplace(info.name, info).second;
 }

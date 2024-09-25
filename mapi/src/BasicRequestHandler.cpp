@@ -9,9 +9,11 @@ void BasicRequestHandler::resetExecutionData()
     m_operations.clear();
 }
 
-SwtSequence& BasicRequestHandler::processMessageFromWinCC(std::string mess)
+SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess)
 {
 	resetExecutionData();
+	SwtSequence sequence;
+
     try
     {
 	WinCCRequest request(mess);
@@ -30,16 +32,23 @@ SwtSequence& BasicRequestHandler::processMessageFromWinCC(std::string mess)
 		}	
 	}
 
+	for(auto& operation: m_operations){
+		sequence.addOperation(operation.second);
+	}
+
 	if(request.isWrite()){
 		for(auto& rmw: m_operations){
-			m_sequence.addOperation(SwtSequence::Operation::Read, rmw.first, {}, true);
+			sequence.addOperation(SwtSequence::Operation::Read, rmw.first, {}, true);
 		}
 	}
+
     }
     catch (const std::exception& e) {
-        throw;
+		resetExecutionData();
+        throw e;
     }
 
+	return sequence;
 }
 
 void BasicRequestHandler::mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge)
@@ -73,7 +82,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
         throw std::runtime_error(parameter.name + ": regblock operations unsupported");
     }
 	if(command.operation == WinCCRequest::Operation::Read){
-		return std::move(SwtSequence::SwtOperation(SwtSequence::Operation::Read, parameter.baseAddress,{}, true));
+		return SwtSequence::SwtOperation(SwtSequence::Operation::Read, parameter.baseAddress,{}, true);
 	}
 
     if(parameter.isReadonly){
@@ -87,33 +96,31 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
 	uint32_t rawValue = m_board->calculateRaw(parameter.name, command.value.value());
 
     if (parameter.bitLength == 32){
-        return std::move( SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, {rawValue}) );
+        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, {rawValue});
 	}
 
-    return std::move(
-		SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress, 
+    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress, 
                                     {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue})
-		);
 }
 
-std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
+std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
 {
     WinCCResponse response;
-	std:list<ErrorRaport> raport;
+	std:list<ErrorReport> report;
 
     try {
         AlfResponseParser alfMsg(alfresponse);
 
         if(!alfMsg.isSuccess()) {
-            raport.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
-			return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
+            report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
+			return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
         }
 
         for (const auto& line : alfMsg) {
             switch(line.type)
             {
                 case AlfResponseParser::Line::Type::ResponseToRead:
-                    unpackReadResponse(line, response, raport);
+                    unpackReadResponse(line, response, report);
                 break;
                 case AlfResponseParser::Line::Type::ResponseToWrite:
                 break;
@@ -121,29 +128,35 @@ std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>> BasicReques
         }
 
     } catch (const std::exception& e) {
-		raport.emplace_back("SEQUENCE", e.what());
-        return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
+		report.emplace_back("SEQUENCE", e.what());
+        return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
     }
 
-	return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorRaport>>(std::move(response), std::move(raport));
+	return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
 }
 
-void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorRaport>& raport)
+void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
 {
     for(auto& parameterToHandle: m_registerTasks[read.frame.address])
     {
 		try{
 
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
-        if(parameterToHandle.toComapare.has_value()){
-			raport.emplace_back(parameterToHandle.name, "WRITE FAILED: " + std::to_string(value) + " EXPECTED" + std::to_string(parameterToHandle.toComapare.value()));
-        }
+        if(parameterToHandle.toCompare.has_value()){
+			if (value != parameterToHandle.toCompare.value()) {
+        		report.emplace_back(
+            		parameterToHandle.name,
+            		"WRITE FAILED: Received " + std::to_string(value) +
+            		", Expected " + std::to_string(parameterToHandle.toCompare.value())
+        			);
+    		}
+		}
         response.addParameter(parameterToHandle.name, {value});
         m_board->at(parameterToHandle.name).storeValue(value);
 
 		}
 		catch (const std::exception& e) {
-		raport.emplace_back(parameterToHandle.name, e.what());
+		report.emplace_back(parameterToHandle.name, e.what());
 		}
     }
 }

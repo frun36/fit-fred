@@ -106,7 +106,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
 std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
 {
     WinCCResponse response;
-	std:list<ErrorReport> report;
+	std::list<ErrorReport> report;
 
     try {
         AlfResponseParser alfMsg(alfresponse);
@@ -137,7 +137,7 @@ std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicReques
 
 void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
 {
-    for(auto& parameterToHandle: m_registerTasks[read.frame.address])
+    for(auto& parameterToHandle: m_registerTasks.at(read.frame.address))
     {
 		try{
 
@@ -156,7 +156,7 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
 
 		}
 		catch (const std::exception& e) {
-		report.emplace_back(parameterToHandle.name, e.what());
+			report.emplace_back(parameterToHandle.name, e.what());
 		}
     }
 }

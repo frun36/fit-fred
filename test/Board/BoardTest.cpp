@@ -14,40 +14,6 @@
 #include "utils.h" // For twosComplementEncode, twosComplementDecode, getBitField
 #include "Parser/utility.h" // For Utility::calculateEquation
 
-// Board class implementation (as per your code)
-// Include the Board class definition and method implementations
-// ...
-
-// For the purpose of this test, I'll include the Board class as per your implementation
-// Ensure that you include the actual implementation in your test environment
-
-// Begin unit tests
-// Include necessary headers
-#include <gtest/gtest.h>
-#include <string>
-#include <unordered_map>
-#include <memory>
-#include <stdexcept>
-#include <cstdint>
-#include <vector>
-#include <random>
-
-// Include the definitions of Board and Board::ParameterInfo
-// Replace these includes with the actual paths or code
-#include "Board.h"
-#include "utils.h"
-#include "Parser/utility.h"
-
-// For the purpose of this test code, I'll include minimal definitions
-
-// Board::ParameterInfo definition (as per your implementation)
-
-
-// Mock utility functions
-// ... (As before)
-
-// Begin unit tests
-
 TEST(BoardTest, EmplaceAndRetrieveParameter) {
     Board board("TestBoard", 0x1000);
 

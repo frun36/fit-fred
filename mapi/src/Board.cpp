@@ -64,7 +64,13 @@ Board::ParameterInfo& Board::operator[](const std::string& param)
 
 Board::ParameterInfo& Board::at(const std::string& param)
 {
-    return m_parameters.at(param);
+    try{
+        Board::ParameterInfo& ref = m_parameters.at(param);
+        return ref;
+    }
+    catch (const std::out_of_range&) {
+        throw std::runtime_error("Parameter " + param + " not found on the board.");
+    }
 }
 
 bool Board::doesExist(const std::string& param)

@@ -5,24 +5,30 @@
 #include<cstdint>
 #include<memory>
 #include"SwtSequence.h"
+#include"AlfResponseParser.h"
 
 class Board;
+class WinCCResponse;
 
 class BasicRequestHandler
 {
 public:
+SwtSequence& processMessageFromWinCC(std::string);
+std::string processMessageFromALF(std::string);
+
+protected:
 struct ParameterToHandle{
   std::string name;
   std::optional<double> toComapare;
 };
 
-SwtSequence& processMessageFromWinCC(std::string);
-std::string processMessageFromALF(std::string);
-
-protected:
 void resetExecutionData();
 void mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge);
 SwtSequence::SwtOperation createSwtOperation(const WinCCRequest::Command& command);
+
+void unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response);
+
+virtual std::string handleErrorInALFResponse(std::string);
 
 typedef std::list<ParameterToHandle> ToHandleList;
 

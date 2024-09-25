@@ -2,10 +2,20 @@
 #include"WinCCRequest.h"
 #include"WinCCResponse.h"
 #include"Board.h"
+#include"AlfResponseParser.h"
+#include"utils.h"
+
+void BasicRequestHandler::resetExecutionData()
+{
+    m_registerTasks.clear();
+    m_operations.clear();
+}
 
 SwtSequence& BasicRequestHandler::processMessageFromWinCC(std::string mess)
 {
 	resetExecutionData();
+    try
+    {
 	WinCCRequest request(mess);
 
  	for (const auto& cmd : request.getCommands()) {
@@ -27,6 +37,10 @@ SwtSequence& BasicRequestHandler::processMessageFromWinCC(std::string mess)
 			m_sequence.addOperation(SwtSequence::Operation::Read, rmw.first, {}, true);
 		}
 	}
+    }
+    catch (const std::exception& e) {
+        throw;
+    }
 
 }
 
@@ -82,3 +96,44 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
                                     {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue});
 }
 
+std::string BasicRequestHandler::processMessageFromALF(std::string alfresponse)
+{
+    WinCCResponse response;
+
+    try {
+        AlfResponseParser alfMsg(alfresponse);
+
+        if(!alfMsg.isSuccess()) {
+            return handleErrorInALFResponse("ALF communication failed");
+        }
+
+        for (const auto& line : alfMsg) {
+            switch(line.type)
+            {
+                case AlfResponseParser::Line::Type::ResponseToRead:
+                    unpackReadResponse(line, response);
+                break;
+                case AlfResponseParser::Line::Type::ResponseToWrite:
+                break;
+            }
+        }
+
+    } catch (const std::exception& e) {
+        return handleErrorInALFResponse(("Invalid response from ALF: " + string(e.what()));
+    }
+
+    return response.getContents();
+}
+
+void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response)
+{
+    for(auto& parameterToHandle: m_registerTasks[read.frame.address])
+    {
+        double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
+        if(parameterToHandle.toComapare.has_value()){
+            
+        }
+        response.addParameter(parameterToHandle.name, {value});
+        m_board->at(parameterToHandle.name).storeValue(value);
+    }
+}

@@ -29,8 +29,16 @@ WinCCRequest::Command::Command(const std::string& line) {
 WinCCRequest::WinCCRequest(const std::string& input) {
     std::vector<std::string> lines = Utility::splitString(input, "\n"); // CRLF for Windows-based WinCC?
 
-    for (const auto& line: lines)
-        m_commands.push_back(Command(line));
+    for (const auto& line: lines) {
+        Command cmd(line);
+
+        if(!m_reqType.has_value())
+            m_reqType = cmd.operation;
+        else if (m_reqType.value() != cmd.operation)
+            throw std::runtime_error(cmd.name + ": attempted operation mixing in single request");
+
+        m_commands.push_back(cmd);
+    }
 }
 
 std::optional<double> WinCCRequest::stringToDouble(std::string str) {

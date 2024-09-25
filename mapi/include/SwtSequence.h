@@ -59,6 +59,7 @@ class SwtSequence
     /*
         Creates mask for RMW bits operation */
     static void createMask(uint32_t firstBit, uint32_t lastBit, uint32_t value, uint32_t* data);
+    static uint32_t createANDMask(uint32_t firstBit, uint32_t bitLength);
 
     /*
         Creates mask in an internal buffer and returns pointer to it. */

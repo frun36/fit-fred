@@ -125,6 +125,11 @@ void SwtSequence::createMask(uint32_t firstBit, uint32_t bitLength, uint32_t val
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
+uint32_t SwtSequence::createANDMask(uint32_t firstBit, uint32_t bitLength)
+{
+    return ~( ( 0xFFFFFFFFu >> ( 32 - bitLength ) ) << firstBit );
+}
+
 const uint32_t*  SwtSequence::passMasks(uint32_t firstBit, uint32_t bitLength, uint32_t value) 
 {
     createMask(firstBit, bitLength, value, m_mask.data());

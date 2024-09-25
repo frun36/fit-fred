@@ -1,32 +1,22 @@
 #include "ParameterInfo.h"
-#include"Parser/utility.h"
 #include"utils.h"
-ParameterInfo::ParameterInfo(
-        std::string name_, 
-        uint32_t baseAddress_, 
-        uint8_t startBit_, 
-        uint8_t bitLength_, 
-        uint32_t regBlockSize_, 
-        ValueEncoding valueEncoding_,
-        double minValue_,
-        double maxValue_,
-        Equation rawToPhysic_,
-        Equation physicToRaw_,
-        bool isFifo_,
-        bool isReadonly_
-    ) : 
-        name(name_), 
-        baseAddress(baseAddress_), 
-        startBit(startBit_), 
-        bitLength(bitLength_), 
-        regBlockSize(regBlockSize_),
-        valueEncoding(valueEncoding_),
-        minValue(minValue_),
-        maxValue(maxValue_),
-        rawToPhysic(equationPIM_),
-        physicToRaw(equationPOM_),
-        isFifo(isFifo_),
-        isReadonly(isReadonly_),
-        m_value(0.0) {}
 
+double ParameterInfo::calculatePhysicalValue(uint32_t rawValue) const {
+    rawValue = getBitField(rawValue, startBit, bitLength);
+    if(valueEncoding != ValueEncoding::Unsigned)
+        return multiplier * static_cast<double>(twosComplementDecode<int32_t>(rawValue, bitLength));
+    else
+        return multiplier * static_cast<double>(rawValue);
+}
 
+uint32_t ParameterInfo::calculateRawValue(double physicalValue) const {
+    double scaled = physicalValue / multiplier;
+    if(scaled > ((1u << bitLength) - 1u))
+        throw std::runtime_error(name + ": physical value is too large to fit in the bit field");
+
+    int32_t singedValue = static_cast<int32_t>(scaled);
+    if(valueEncoding != ValueEncoding::Unsigned)
+       return twosComplementEncode(singedValue, bitLength) << startBit;
+
+    return  static_cast<uint32_t>(singedValue) << startBit;
+}

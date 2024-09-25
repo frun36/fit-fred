@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <stdexcept>
-#include<vector>
+
 // #include <Database/databaseinterface.h>
 
 struct ParameterInfo {
@@ -12,26 +12,32 @@ struct ParameterInfo {
         Unsigned, Signed
     };
 
-    struct Equation{
-        std::string equation;
-        std::vector<std::string> variables;
-    };
-
-    ParameterInfo() = delete;
+    ParameterInfo() = default;
     ParameterInfo(
-        std::string name_, 
-        uint32_t baseAddress_, 
-        uint8_t startBit_, 
-        uint8_t bitLength_, 
-        uint32_t regBlockSize_, 
-        ValueEncoding valueEncoding_,
-        double minValue_,
-        double maxValue_,
-        Equation rawToPhysic_,
-        Equation physicToRaw_,
-        bool isFifo_,
-        bool isReadonly_
-    ) ;
+        std::string name, 
+        uint32_t baseAddress, 
+        uint8_t startBit, 
+        uint8_t bitLength, 
+        uint32_t regBlockSize, 
+        ValueEncoding valueEncoding,
+        double minValue,
+        double maxValue,
+        double multiplier,
+        bool isFifo,
+        bool isReadonly
+    ) : 
+        name(name), 
+        baseAddress(baseAddress), 
+        startBit(startBit), 
+        bitLength(bitLength), 
+        regBlockSize(regBlockSize),
+        valueEncoding(valueEncoding),
+        minValue(minValue),
+        maxValue(maxValue),
+        multiplier(multiplier),
+        isFifo(isFifo),
+        isReadonly(isReadonly),
+        m_value(0.0) {}
 
     const std::string name{0};
     const uint32_t baseAddress{0};
@@ -41,22 +47,16 @@ struct ParameterInfo {
     const ValueEncoding valueEncoding{ValueEncoding::Unsigned};
     const double minValue{0};
     const double maxValue{0};
-
-    Equation rawToPhysic;
-    Equation physicToRaw;
-    
+    const double multiplier{0};
     const bool isFifo{false};
     const bool isReadonly{false};
 
-    void storeValue(double value)
-    {
-        if (value < minValue || value > maxValue) {
-        throw std::out_of_range("Value is out of allowed range.");
-        }
-        m_value = value;
-    }
+    double calculatePhysicalValue(uint32_t rawValue) const;
+    uint32_t calculateRawValue(double physicalValue) const;
+
+    void storeValue(double value){m_value = value;}
     double getStoredValue() const {return m_value;}
 
-private:
+public:
     double m_value;
 };

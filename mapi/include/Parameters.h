@@ -14,6 +14,4 @@ public:
     Parameters(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
-
-    bool getReturnError() const { return returnError; }
 };

@@ -133,7 +133,7 @@ TEST(ParametersTest, ProcessOutputMessage_SuccessfulResponse) {
     std::string output = parameters.processOutputMessage(alfResponse);
 
     // Assert
-    EXPECT_FALSE(parameters.getReturnError());
+    EXPECT_FALSE(parameters.returnError);
     EXPECT_FALSE(output.empty());
     // Optionally, check the output content
 }
@@ -152,7 +152,7 @@ TEST(ParametersTest, ProcessOutputMessage_ErrorResponse) {
     std::string output = parameters.processOutputMessage(alfResponse);
 
     // Assert
-    EXPECT_TRUE(parameters.getReturnError());
+    EXPECT_TRUE(parameters.returnError);
     EXPECT_FALSE(output.empty());
     EXPECT_NE(output.find("ERROR - GBTRxReady: WRITE FAILED"), std::string::npos);
 }
@@ -169,5 +169,5 @@ TEST(ParametersTest, ProcessInputMessage_ExceptionHandling) {
         parameters.processInputMessage(inputMessage);
     }, std::exception);
 
-    EXPECT_FALSE(parameters.getReturnError());
+    EXPECT_FALSE(parameters.returnError);
 }

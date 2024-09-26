@@ -10,7 +10,7 @@ string Parameters::processInputMessage(string msg) {
     try {
         SwtSequence sequence = processMessageFromWinCC(msg);
         return sequence.getSequence();
-    } catch (const runtime_error& e) {
+    } catch (const std::exception& e) {
         throw;
     }
 }

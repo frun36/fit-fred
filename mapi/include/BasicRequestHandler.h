@@ -8,8 +8,7 @@
 #include"AlfResponseParser.h"
 #include"WinCCRequest.h"
 #include"WinCCResponse.h"
-
-class Board;
+#include"Board.h"
 
 class BasicRequestHandler
 {
@@ -38,6 +37,8 @@ std::pair<WinCCResponse,std::list<ErrorReport>>  processMessageFromALF(std::stri
 
 protected:
 struct ParameterToHandle{
+  ParameterToHandle(const std::string& name_, const std::optional<double>& toCompare_): name(name_), toCompare(toCompare_) {}
+  ParameterToHandle(const std::string& name_, std::optional<double>&& toCompare_): name(name_), toCompare(toCompare_) {}
   std::string name;
   std::optional<double> toCompare;
 };
@@ -47,8 +48,6 @@ void mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperat
 SwtSequence::SwtOperation createSwtOperation(const WinCCRequest::Command& command);
 
 void unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report);
-
-virtual std::string handleErrorInALFResponse(std::string);
 
 typedef std::list<ParameterToHandle> ToHandleList;
 

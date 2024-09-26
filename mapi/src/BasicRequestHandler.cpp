@@ -65,7 +65,7 @@ void BasicRequestHandler::mergeOperation(SwtSequence::SwtOperation& operation, S
 		break;		
 		case SwtSequence::Operation::RMWbits:
 		{
-			operation.data[0] |= toMerge.data[0];
+			operation.data[0] &= toMerge.data[0];
 			operation.data[1] |= toMerge.data[1];
 		}
 		break;
@@ -100,7 +100,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
 	}
 
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress, 
-                                    {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue})
+                                    {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue});
 }
 
 std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
@@ -148,6 +148,8 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
             		"WRITE FAILED: Received " + std::to_string(value) +
             		", Expected " + std::to_string(parameterToHandle.toCompare.value())
         			);
+			 m_board->at(parameterToHandle.name).storeValue(value);
+			 continue;
 		}
         response.addParameter(parameterToHandle.name, {value});
         m_board->at(parameterToHandle.name).storeValue(value);

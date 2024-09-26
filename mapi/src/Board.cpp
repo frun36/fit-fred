@@ -89,7 +89,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     int64_t decoded = 0;
 
     if(info.valueEncoding == ParameterInfo::ValueEncoding::Unsigned){
-        decoded = static_cast<int64_t>(raw);
+        decoded = static_cast<int64_t>(getBitField(raw, info.startBit, info.bitLength));
     }
     else{
         decoded = static_cast<int64_t>(twosComplementDecode<int32_t>(getBitField(raw, info.startBit, info.bitLength), info.bitLength));

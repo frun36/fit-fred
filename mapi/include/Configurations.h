@@ -4,7 +4,9 @@
 #include "Parser/utility.h"
 #include "unordered_map"
 #include "SwtSequence.h"
+#include "BasicRequestHandler.h"
 #include <optional>
+#include <cstring>
 
 /*
 Control Server - void fileRead() from FITelectronics.h
@@ -48,19 +50,22 @@ struct ConfigurationInfo {
 };
 
 
-class Configurations : public Iterativemapi {
+class Configurations : public Iterativemapi, public BasicRequestHandler {
     unordered_map<string, ConfigurationInfo> m_knownConfigurations;
 
 
-    optional<int16_t> m_currDelayA;
-    optional<int16_t> m_currDelayC;
+    optional<int16_t> m_currDelayA = nullopt;
+    optional<int16_t> m_currDelayC = nullopt;
     int16_t m_delayDifference;
+    const ConfigurationInfo* m_currCfg = nullptr;
 
+    enum class State { Idle, ApplyDelays, ApplyData } m_currState = State::Idle;
 
+    static constexpr char* INTERNAL_PREFIX = "_INTERNAL:";
 
     optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC) {
         if(!delayA.has_value() && !delayC.has_value())
-            return std::nullopt;
+            return nullopt;
 
         string request;
         
@@ -78,26 +83,39 @@ class Configurations : public Iterativemapi {
             m_currDelayC = delayC;
         }
 
-        // return created request
+        
     }
 
 
-    string processInputMessage(string name) override {
-        Utility::removeWhiteSpaces(name);
-        if (m_knownConfigurations.count(name) == 0)
-            throw std::runtime_error(name + ": no such configuration found");
-        
-        const ConfigurationInfo& cfg = m_knownConfigurations[name];
+    string processInputMessage(string msg) override {
+        if (m_currState != State::Idle && strncmp(msg.c_str(), INTERNAL_PREFIX, strlen(INTERNAL_PREFIX)) != 0)
+            throw std::runtime_error(msg + ": another configuration is already in progress");
 
-        optional<SwtSequence> delaySequence = processDelayInput(cfg.delayA, cfg.delayC);
+        optional<SwtSequence> delaySequence;
+        switch (m_currState) {
+            case State::Idle:
+                Utility::removeWhiteSpaces(msg);
+                if (m_knownConfigurations.count(msg) == 0)
+                    throw std::runtime_error(msg + ": no such configuration found");
+                m_currCfg = &m_knownConfigurations[msg];
+                delaySequence = processDelayInput(m_currCfg->delayA, m_currCfg->delayC);
+                if(delaySequence.has_value()) {
+                    m_currState = State::ApplyDelays;
+                    return delaySequence->getSequence();
+                }
+                break;
 
-        if(delaySequence.has_value()) {
-
-        }     
-
+            case State::ApplyDelays:
+            case State::ApplyData:
+                return m_currCfg->seq.getSequence();
+        }
     }
 
     string processOutputMessage(string msg) override {
-        
+        // parse alf response
+        // generate response
+        // if delays - send request for data
+        // if data - ok
+        // reset and counters?
     }
 };

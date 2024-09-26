@@ -9,31 +9,31 @@ Board::Board(std::string name, uint32_t address): m_name(name), m_address(addres
 }
 
 Board::ParameterInfo::ParameterInfo(
-        std::string name, 
-        uint32_t baseAddress, 
-        uint8_t startBit, 
-        uint8_t bitLength, 
-        uint32_t regBlockSize, 
-        ValueEncoding valueEncoding,
-        double minValue,
-        double maxValue,
-        Equation rawToPhysic,
-        Equation physicToRaw,
-        bool isFifo,
-        bool isReadonly
+        std::string name_, 
+        uint32_t baseAddress_, 
+        uint8_t startBit_, 
+        uint8_t bitLength_, 
+        uint32_t regBlockSize_, 
+        ValueEncoding valueEncoding_,
+        double minValue_,
+        double maxValue_,
+        Equation electronicToPhysic_,
+        Equation physicToRaw_,
+        bool isFifo_,
+        bool isReadonly_
     ) : 
-        name(name), 
-        baseAddress(baseAddress), 
-        startBit(startBit), 
-        bitLength(bitLength), 
-        regBlockSize(regBlockSize),
-        valueEncoding(valueEncoding),
-        minValue(minValue),
-        maxValue(maxValue),
-        rawToPhysic(rawToPhysic),
-        physicToRaw(physicToRaw),
-        isFifo(isFifo),
-        isReadonly(isReadonly),
+        name(name_), 
+        baseAddress(baseAddress_), 
+        startBit(startBit_), 
+        bitLength(bitLength_), 
+        regBlockSize(regBlockSize_),
+        valueEncoding(valueEncoding_),
+        minValue(minValue_),
+        maxValue(maxValue_),
+        electronicToPhysic(electronicToPhysic_),
+        physicToElectronic(physicToRaw_),
+        isFifo(isFifo_),
+        isReadonly(isReadonly_),
         m_value(std::nullopt) {}
 
 
@@ -48,6 +48,15 @@ bool Board::emplace(const ParameterInfo& info)
     return m_parameters.emplace(info.name, info).second;
 }
 
+bool Board::emplace(ParameterInfo&& info)
+{
+    if(info.baseAddress < m_address)
+    {
+        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failed, address lower than board base address");
+    }
+    return m_parameters.emplace(info.name, std::move(info)).second;
+}
+
 Board::ParameterInfo& Board::operator[](const std::string& param)
 {
     return at(param);
@@ -55,7 +64,13 @@ Board::ParameterInfo& Board::operator[](const std::string& param)
 
 Board::ParameterInfo& Board::at(const std::string& param)
 {
-    return m_parameters.at(param);
+    try{
+        Board::ParameterInfo& ref = m_parameters.at(param);
+        return ref;
+    }
+    catch (const std::out_of_range&) {
+        throw std::out_of_range("Parameter " + param + " not found on the board.");
+    }
 }
 
 bool Board::doesExist(const std::string& param)
@@ -74,19 +89,19 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     int64_t decoded = 0;
 
     if(info.valueEncoding == ParameterInfo::ValueEncoding::Unsigned){
-        decoded = static_cast<int64_t>(raw);
+        decoded = static_cast<int64_t>(getBitField(raw, info.startBit, info.bitLength));
     }
     else{
         decoded = static_cast<int64_t>(twosComplementDecode<int32_t>(getBitField(raw, info.startBit, info.bitLength), info.bitLength));
     }
 
-    if(info.rawToPhysic.equation == "")
+    if(info.electronicToPhysic.equation == "")
     {
         return decoded;
     }
 
     std::vector<double> values;
-    for(const auto& var: info.rawToPhysic.variables)
+    for(const auto& var: info.electronicToPhysic.variables)
     {
         if(var == info.name) 
         {
@@ -105,11 +120,11 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
-    if(values.size() !=  info.rawToPhysic.variables.size())
+    if(values.size() !=  info.electronicToPhysic.variables.size())
     {
         throw std::runtime_error("Parameter " + param + ": parsing equation failed!");
     }
-    return Utility::calculateEquation(info.rawToPhysic.equation, info.rawToPhysic.variables, values);
+    return Utility::calculateEquation(info.electronicToPhysic.equation, info.electronicToPhysic.variables, values);
 }
 
 uint32_t Board::calculateRaw(const std::string& param, double physical) 
@@ -121,7 +136,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
 
     ParameterInfo& info = m_parameters.at(param);
 
-    if(info.physicToRaw.equation == "")
+    if(info.physicToElectronic.equation == "")
     {
         if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
             return twosComplementEncode(static_cast<int32_t>(physical), info.bitLength) << info.startBit;
@@ -130,7 +145,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
     }
 
     std::vector<double> values;
-    for(const auto& var: info.rawToPhysic.variables)
+    for(const auto& var: info.electronicToPhysic.variables)
     {
         if(var == info.name) 
         {
@@ -150,7 +165,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.physicToRaw.equation, info.physicToRaw.variables, values));
+    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
     
     if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
         return twosComplementEncode(calculated, info.bitLength) << info.startBit;
@@ -167,7 +182,7 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
     }
 
     ParameterInfo& info = m_parameters.at(param);
-    if(info.physicToRaw.equation == "")
+    if(info.physicToElectronic.equation == "")
     {
         if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
             return twosComplementEncode<int64_t, uint64_t>(static_cast<int64_t>(physical), info.bitLength) << info.startBit;
@@ -176,7 +191,7 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
     }
 
     std::vector<double> values;
-    for(const auto& var: info.rawToPhysic.variables)
+    for(const auto& var: info.electronicToPhysic.variables)
     {
         if(var == info.name) 
         {
@@ -196,7 +211,7 @@ uint64_t Board::calculateRaw64(const std::string& param, double physical)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
-    int64_t calculated = static_cast<int64_t>(Utility::calculateEquation(info.physicToRaw.equation, info.physicToRaw.variables, values));
+    int64_t calculated = static_cast<int64_t>(Utility::calculateEquation(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
     
     if(info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned){
         return twosComplementEncode<int64_t, uint64_t>(calculated, info.bitLength) << info.startBit;
@@ -222,13 +237,13 @@ double Board::calculatePhysical64(const std::string& param, uint64_t raw)
         decoded = twosComplementDecode<int64_t>(getBitField(raw, info.startBit, info.bitLength), info.bitLength);
     }
 
-    if(info.rawToPhysic.equation == "")
+    if(info.electronicToPhysic.equation == "")
     {
         return decoded;
     }
 
     std::vector<double> values;
-    for(const auto& var: info.rawToPhysic.variables)
+    for(const auto& var: info.electronicToPhysic.variables)
     {
         if(var == info.name) 
         {
@@ -249,5 +264,5 @@ double Board::calculatePhysical64(const std::string& param, uint64_t raw)
         }
     }
 
-    return Utility::calculateEquation(info.rawToPhysic.equation, info.rawToPhysic.variables, values);
+    return Utility::calculateEquation(info.electronicToPhysic.equation, info.electronicToPhysic.variables, values);
 }

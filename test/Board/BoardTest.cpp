@@ -14,45 +14,11 @@
 #include "utils.h" // For twosComplementEncode, twosComplementDecode, getBitField
 #include "Parser/utility.h" // For Utility::calculateEquation
 
-// Board class implementation (as per your code)
-// Include the Board class definition and method implementations
-// ...
-
-// For the purpose of this test, I'll include the Board class as per your implementation
-// Ensure that you include the actual implementation in your test environment
-
-// Begin unit tests
-// Include necessary headers
-#include <gtest/gtest.h>
-#include <string>
-#include <unordered_map>
-#include <memory>
-#include <stdexcept>
-#include <cstdint>
-#include <vector>
-#include <random>
-
-// Include the definitions of Board and Board::ParameterInfo
-// Replace these includes with the actual paths or code
-#include "Board.h"
-#include "utils.h"
-#include "Parser/utility.h"
-
-// For the purpose of this test code, I'll include minimal definitions
-
-// Board::ParameterInfo definition (as per your implementation)
-
-
-// Mock utility functions
-// ... (As before)
-
-// Begin unit tests
-
 TEST(BoardTest, EmplaceAndRetrieveParameter) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "x", { "Param1" } };
-    Board::ParameterInfo::Equation physicToRaw = { "x", { "Param1" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "x", { "Param1" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "x", { "Param1" } };
 
     Board::ParameterInfo param(
         "Param1",
@@ -63,8 +29,8 @@ TEST(BoardTest, EmplaceAndRetrieveParameter) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         65535.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -83,8 +49,8 @@ TEST(BoardTest, EmplaceAndRetrieveParameter) {
 TEST(BoardTest, CalculatePhysicalUnsigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamUnsigned", { "ParamUnsigned" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamUnsigned", { "ParamUnsigned" } };
 
     Board::ParameterInfo param(
         "ParamUnsigned",
@@ -95,8 +61,8 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         65535.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -107,7 +73,7 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
     {
         std::cout<<"Parameter not found\n";
     }
-    std::cout << "Variables number:  "<< board.at(param.name).rawToPhysic.variables.size();
+    std::cout << "Variables number:  "<< board.at(param.name).electronicToPhysic.variables.size();
 
     uint32_t rawValue = 0x1234;
     double physicalValue = board.calculatePhysical(param.name, rawValue);
@@ -118,8 +84,8 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
 TEST(BoardTest, CalculatePhysicalSigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned", { "ParamSigned" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned", { "ParamSigned" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned", { "ParamSigned" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned", { "ParamSigned" } };
 
     Board::ParameterInfo param(
         "ParamSigned",
@@ -130,8 +96,8 @@ TEST(BoardTest, CalculatePhysicalSigned) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -32768.0,
         32767.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -147,8 +113,8 @@ TEST(BoardTest, CalculatePhysicalSigned) {
 TEST(BoardTest, CalculateRawUnsigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamUnsigned", { "ParamUnsigned" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamUnsigned", { "ParamUnsigned" } };
 
     Board::ParameterInfo param(
         "ParamUnsigned",
@@ -159,8 +125,8 @@ TEST(BoardTest, CalculateRawUnsigned) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         65535.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -176,8 +142,8 @@ TEST(BoardTest, CalculateRawUnsigned) {
 TEST(BoardTest, CalculateRawSigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned", { "ParamSigned" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned", { "ParamSigned" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned", { "ParamSigned" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned", { "ParamSigned" } };
 
     Board::ParameterInfo param(
         "ParamSigned",
@@ -188,8 +154,8 @@ TEST(BoardTest, CalculateRawSigned) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -32768.0,
         32767.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -205,8 +171,8 @@ TEST(BoardTest, CalculateRawSigned) {
 TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamUnsigned64", { "ParamUnsigned64" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamUnsigned64", { "ParamUnsigned64" } };
 
     Board::ParameterInfo param(
         "ParamUnsigned64",
@@ -217,8 +183,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         4294967295.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -234,8 +200,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
 TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned64", { "ParamSigned64" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned64", { "ParamSigned64" } };
 
     Board::ParameterInfo param(
         "ParamSigned64",
@@ -246,8 +212,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -2147483648.0,
         2147483647.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -263,8 +229,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
 TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamUnsigned64", { "ParamUnsigned64" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamUnsigned64", { "ParamUnsigned64" } };
 
     Board::ParameterInfo param(
         "ParamUnsigned64",
@@ -275,8 +241,8 @@ TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         4294967295.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -292,8 +258,8 @@ TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
 TEST(BoardTest, DISABLED_CalculateRaw64Signed) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned64", { "ParamSigned64" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned64", { "ParamSigned64" } };
 
     Board::ParameterInfo param(
         "ParamSigned64",
@@ -304,8 +270,8 @@ TEST(BoardTest, DISABLED_CalculateRaw64Signed) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -2147483648.0,
         2147483647.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -333,8 +299,8 @@ TEST(BoardTest, ParameterDoesNotExist) {
 
 TEST(BoardTest, ParameterWithoutStoredValue) {
     Board board("TestBoard", 0x1000);
-        Board::ParameterInfo::Equation rawToPhysic = { "ParamSigned64", { "ParamSigned64" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamSigned64", { "ParamSigned64" } };
+        Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned64", { "ParamSigned64" } };
 
     Board::ParameterInfo param(
         "ParamSigned64",
@@ -345,8 +311,8 @@ TEST(BoardTest, ParameterWithoutStoredValue) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -2147483648.0,
         2147483647.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -360,8 +326,8 @@ TEST(BoardTest, ParameterWithoutStoredValue) {
 TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
     Board board("TestBoard", 0x1000);
 
-    Board::ParameterInfo::Equation rawToPhysic = { "ParamInvalid", { "ParamInvalid" } };
-    Board::ParameterInfo::Equation physicToRaw = { "ParamInvalid", { "ParamInvalid" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamInvalid", { "ParamInvalid" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "ParamInvalid", { "ParamInvalid" } };
 
     Board::ParameterInfo param(
         "ParamInvalid",
@@ -372,8 +338,8 @@ TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
         Board::ParameterInfo::ValueEncoding::Unsigned,
         0.0,
         65535.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );
@@ -406,8 +372,8 @@ TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
         std::string varName = "RandomParam" + std::to_string(i);
 
         // Define the equations
-        Board::ParameterInfo::Equation rawToPhysic = { varName + " * 2 - 1", { varName } };
-        Board::ParameterInfo::Equation physicToRaw = { "(" + varName + " + 1) / 2", { varName } };
+        Board::ParameterInfo::Equation electronicToPhysic = { varName + " * 2 - 1", { varName } };
+        Board::ParameterInfo::Equation physicToElectronic = { "(" + varName + " + 1) / 2", { varName } };
 
         // Create the parameter
         Board::ParameterInfo param(
@@ -419,8 +385,8 @@ TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
             Board::ParameterInfo::ValueEncoding::Signed,
             static_cast<double>(minValue),
             static_cast<double>(maxValue),
-            rawToPhysic,
-            physicToRaw,
+            electronicToPhysic,
+            physicToElectronic,
             false,
             false
         );
@@ -472,8 +438,8 @@ TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
     Board board("PerformanceBoard", 0x1000);
 
     // Define the equations (simple identity function for testing)
-    Board::ParameterInfo::Equation rawToPhysic = { "Param*2", { "Param" } };
-    Board::ParameterInfo::Equation physicToRaw = { "Param/2", { "Param" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "Param*2", { "Param" } };
+    Board::ParameterInfo::Equation physicToElectronic = { "Param/2", { "Param" } };
 
     // Create a parameter
     Board::ParameterInfo param(
@@ -485,8 +451,8 @@ TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
         Board::ParameterInfo::ValueEncoding::Signed,
         -32768.0,
         32767.0,
-        rawToPhysic,
-        physicToRaw,
+        electronicToPhysic,
+        physicToElectronic,
         false,
         false
     );

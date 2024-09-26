@@ -16,6 +16,7 @@ public:
     struct Equation{
         std::string equation;
         std::vector<std::string> variables;
+        static Equation Empty() {return {"", std::vector<std::string>()};}
     };
 
     ParameterInfo() = delete;
@@ -28,8 +29,8 @@ public:
         ValueEncoding valueEncoding,
         double minValue,
         double maxValue,
-        Equation rawToPhysic,
-        Equation physicToRaw,
+        Equation electronicToPhysic,
+        Equation physicToElectronic,
         bool isFifo,
         bool isReadonly
     ) ;
@@ -43,8 +44,8 @@ public:
     const double minValue{0};
     const double maxValue{0};
 
-    Equation rawToPhysic;
-    Equation physicToRaw;
+    Equation electronicToPhysic;
+    Equation physicToElectronic;
     
     const bool isFifo{false};
     const bool isReadonly{false};
@@ -72,6 +73,7 @@ public:
     Board(std::string name, uint32_t address);
 
     bool emplace(const ParameterInfo&);
+    bool emplace(ParameterInfo&& info);
 
     ParameterInfo& operator[](const std::string&);
     ParameterInfo& at(const std::string&);

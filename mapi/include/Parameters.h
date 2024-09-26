@@ -4,7 +4,6 @@
 #include <string>
 
 #include "Fred/Mapi/mapi.h"
-#include "ParameterInfo.h"
 #include "SwtSequence.h"
 #include "WinCCRequest.h"
 #include "BasicRequestHandler.h"

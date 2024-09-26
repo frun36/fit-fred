@@ -6,98 +6,28 @@
 #include <algorithm>
 
 string Parameters::processInputMessage(string msg) {
+    returnError = false;
     try {
-        WinCCRequest req(msg);
-        vector<SwtSequence::SwtOperation> operations = processRequest(req);
-        SwtSequence seq(operations);
-        return seq.getSequence();
+        SwtSequence sequence = processMessageFromWinCC(msg);
+        return sequence.getSequence();
     } catch (const runtime_error& e) {
         throw;
     }
 }
 
 string Parameters::processOutputMessage(string msg) {
-    try {
-        AlfResponseParser alfMsg(msg);
-
-        if(!alfMsg.isSuccess()) {
-            returnError = true;
-            return generateErrorForAll("ALF communication failed"); // provide more info about parameters
-        }
-        
-        WinCCResponse response;
-
-        for (const auto& line : alfMsg) {
-            if (line.frame.prefix == 0x000) { // response to read operation
-                const vector<string>& parametersToUpdate = m_currRequestedParameterNames[line.frame.address];
-                
-                for (const auto& name: parametersToUpdate)
-                    response.addParameter(name, {m_parameterMap[name].calculatePhysicalValue(line.frame.data)});
-            }
-        }
-
-        return response.getContents();
-
-    } catch (const runtime_error& e) {
+    auto parsedResponse = processMessageFromALF(msg);
+    if(parsedResponse.second.size() != 0)
+    {
         returnError = true;
-        return generateErrorForAll("Invalid response from ALF: " + string(e.what()));
+        std::stringstream error;
+        for(auto& report: parsedResponse.second)
+        {
+            error << report.what() << '\n';
+        }
+        error << parsedResponse.first.getContents();
+        return error.str();
     }
+    return parsedResponse.first.getContents();
 }
 
-vector<SwtSequence::SwtOperation> Parameters::processRequest(const WinCCRequest& req) {
-    m_currRequestedParameterNames.clear();
-    vector<SwtSequence::SwtOperation> operations;
-    for (const auto& cmd : req.getCommands()) {
-        SwtSequence::SwtOperation operation = getSwtOperationForParameter(m_parameterMap[cmd.name], cmd.operation, cmd.value);
-        
-        // Store requested parameter name
-        m_currRequestedParameterNames[operation.address].push_back(cmd.name);
-        
-        // Add write operations
-        if (req.isWrite())
-            operations.push_back(operation);
-    }
-
-    for (const auto& pair : m_currRequestedParameterNames)
-        operations.push_back(SwtSequence::SwtOperation(SwtSequence::Operation::Read, pair.first, {}, true));
-    
-    return operations;
-}
-
-SwtSequence::SwtOperation Parameters::getSwtOperationForParameter(const ParameterInfo& parameter, WinCCRequest::Operation operation, std::optional<double> data) {
-    const std::string& parameterName = parameter.name;
-    uint32_t baseAddress = parameter.baseAddress;
-
-    if (parameter.regBlockSize != 1)
-    {
-        throw std::runtime_error(parameterName + ": regblock operations unsupported");
-    }
-
-    if (operation == WinCCRequest::Operation::Read)
-    {
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Read, baseAddress, {}, true);
-    }
-
-    // WRITE operation
-    if(parameter.isReadonly)
-        throw std::runtime_error(parameterName + ": attempted WRITE on read-only parameter");
-
-    if(!data.has_value())
-        throw std::runtime_error(parameterName + ": no data for WRITE operation");
-
-    if (parameter.bitLength == 32)
-        return SwtSequence::SwtOperation(SwtSequence::Operation::Write, baseAddress, { parameter.calculateRawValue(data.value()) });
-
-    // needs RMW
-    std::array<uint32_t, 2> masks;
-    SwtSequence::createMask(parameter.startBit, parameter.bitLength, parameter.calculateRawValue(data.value()) >> parameter.startBit, masks.data());
-    return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, baseAddress, masks);
-}
-
-string Parameters::generateErrorForAll(string message) const {
-    string result = "";
-    for (const auto& pair : m_currRequestedParameterNames)
-        for (const std::string& name : pair.second)
-            result += name + ": " + message + "\n";
-    return result;
-}

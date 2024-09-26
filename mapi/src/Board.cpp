@@ -69,7 +69,7 @@ Board::ParameterInfo& Board::at(const std::string& param)
         return ref;
     }
     catch (const std::out_of_range&) {
-        throw std::runtime_error("Parameter " + param + " not found on the board.");
+        throw std::out_of_range("Parameter " + param + " not found on the board.");
     }
 }
 

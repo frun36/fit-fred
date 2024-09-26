@@ -17,6 +17,7 @@ BasicRequestHandler(std::shared_ptr<Board> board): m_board(board)
 {
 
 }
+virtual ~BasicRequestHandler() = default;
 
 struct ErrorReport{
   ErrorReport() = default;

@@ -15,8 +15,8 @@ std::shared_ptr<Board> createTestBoard()
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TestBoard", 0x0);
     {
-        Board::ParameterInfo::Equation rawToPhysic = { "BoardTemperature*0.1", { "BoardTemperature" } };
-        Board::ParameterInfo::Equation physicToRaw = { "BoardTemperature/0.1", { "BoardTemperature" } };
+        Board::ParameterInfo::Equation electronicToPhysic = { "BoardTemperature*0.1", { "BoardTemperature" } };
+        Board::ParameterInfo::Equation physicToElectronic = { "BoardTemperature/0.1", { "BoardTemperature" } };
 
         Board::ParameterInfo param(
             "BoardTemperature",
@@ -27,8 +27,8 @@ std::shared_ptr<Board> createTestBoard()
             Board::ParameterInfo::ValueEncoding::Signed,
             0.0,
             65535.0,
-            rawToPhysic,
-            physicToRaw,
+            electronicToPhysic,
+            physicToElectronic,
             false,
             true
         );

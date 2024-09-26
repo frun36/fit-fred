@@ -29,8 +29,8 @@ public:
         ValueEncoding valueEncoding,
         double minValue,
         double maxValue,
-        Equation rawToPhysic,
-        Equation physicToRaw,
+        Equation electronicToPhysic,
+        Equation physicToElectronic,
         bool isFifo,
         bool isReadonly
     ) ;
@@ -44,8 +44,8 @@ public:
     const double minValue{0};
     const double maxValue{0};
 
-    Equation rawToPhysic;
-    Equation physicToRaw;
+    Equation electronicToPhysic;
+    Equation physicToElectronic;
     
     const bool isFifo{false};
     const bool isReadonly{false};

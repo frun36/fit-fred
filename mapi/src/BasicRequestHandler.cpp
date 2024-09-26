@@ -103,7 +103,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
                                     {SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue});
 }
 
-std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicRequestHandler::processMessageFromALF(std::string alfresponse)
+BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(std::string alfresponse)
 {
     WinCCResponse response;
 	std::list<ErrorReport> report;
@@ -113,7 +113,7 @@ std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicReques
 
         if(!alfMsg.isSuccess()) {
             report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
-			return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
+			return {std::move(response), std::move(report)};
         }
 
         for (const auto& line : alfMsg) {
@@ -129,10 +129,10 @@ std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>> BasicReques
 
     } catch (const std::exception& e) {
 		report.emplace_back("SEQUENCE", e.what());
-        return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
+        return {std::move(response), std::move(report)};
     }
 
-	return std::pair<WinCCResponse,std::list<BasicRequestHandler::ErrorReport>>(std::move(response), std::move(report));
+	return {std::move(response), std::move(report)};
 }
 
 void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)

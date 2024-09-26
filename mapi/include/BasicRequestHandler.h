@@ -33,8 +33,14 @@ struct ErrorReport{
   }
 };
 
+struct ParsedResponse{
+  ParsedResponse(WinCCResponse&& response_, std::list<ErrorReport>&& errors_): response(response_), errors(errors_) {}
+  WinCCResponse response;
+  std::list<ErrorReport> errors;
+};
+
 SwtSequence processMessageFromWinCC(std::string);
-std::pair<WinCCResponse,std::list<ErrorReport>>  processMessageFromALF(std::string);
+ParsedResponse processMessageFromALF(std::string);
 
 protected:
 struct ParameterToHandle{

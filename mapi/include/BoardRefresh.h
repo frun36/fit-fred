@@ -1,18 +1,16 @@
 #pragma once
-#include<indefinitemapi.h>
+
 #include<list>
 #include<unordered_map>
 #include<chrono>
+#include "Fred/Mapi/mapi.h"
+#include"BasicRequestHandler.h"
 
-#include"SwtSequence.h"
-
-class BoardRefresh: public IndefiniteMapi
-{
+class BoardRefresh: public Mapi, BasicRequestHandler{
 public:
-    BoardRefresh(std::list<std::string> parameters);
+    BoardRefresh(std::shared_ptr<Board> board, std::list<std::string> toRefresh);
+    std::string processInputMessage(string msg) override;
+    std::string processOutputMessage(string msg) override;
 private:
-    void processExecution();
-
     SwtSequence m_request;
-    const std::chrono::milliseconds m_sleepPeriod{1000};
 };

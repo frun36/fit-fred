@@ -1,12 +1,16 @@
 #pragma once
 
+#include "Mapi/mapi.h"
 #include "Mapi/iterativemapi.h"
+#include "Mapi/mapigroup.h"
+#include "Database/databaseinterface.h"
 #include "Parser/utility.h"
 #include "unordered_map"
 #include "SwtSequence.h"
 #include "BasicRequestHandler.h"
 #include <optional>
 #include <cstring>
+#include <memory>
 
 /*
 Control Server - void fileRead() from FITelectronics.h
@@ -43,21 +47,68 @@ For PMs enabled in PM_MASK_SPI and if (doApply)
 If everything was successful, create log entry
 */
 
-struct ConfigurationInfo {
-    const SwtSequence seq;
-    const optional<int16_t> delayA;
-    const optional<int16_t> delayC;
+class Configurations : public Mapigroup {
+    unordered_map<string, unique_ptr<BoardConfiguration>> m_boardCofigurationServices;
+    unordered_map<string, vector<string>> m_boardsInConfigurations;
+
+    Configurations(Fred* fred, const unordered_map<string, Board>& boards) {
+        for (const auto& boardPair : boards) {
+            const string& boardName = boardPair.first;
+            if (boardName == "TCM")
+                m_boardCofigurationServices[boardName] = make_unique<TcmConfigurations>();
+            else
+                m_boardCofigurationServices[boardName] = make_unique<PmConfigurations>();
+        }
+
+
+        auto names = DatabaseInterface::executeQuery("SELECT UNIQUE configuration_name FROM configurations");
+
+        for (const auto& wrappedConfigurationName : names) {
+            const string& configurationName = wrappedConfigurationName[0]->getString();
+
+            auto boardNames = DatabaseInterface::executeQuery("SELECT UNIQUE board_name FROM configurations WHERE configuration_name = " + configurationName);
+
+            for (const auto& wrappedBoardName : boardNames) {
+                const string& boardName = wrappedBoardName[0]->getString();
+                m_boardsInConfigurations[configurationName].push_back(boardName);
+
+                auto configurationInfo = 
+                    DatabaseInterface::executeQuery("SELECT * FROM configurations WHERE configuration_name = " + configurationName + " && board_name = " + boardName);
+                
+                m_boardCofigurationServices[boardName]->registerConfiguration(configurationInfo);
+            }
+        }
+    }
 };
 
+class BoardConfiguration : public BasicRequestHandler {
+public:
+    struct ConfigurationInfo {
+        const SwtSequence seq;
+        const optional<int16_t> delayA;
+        const optional<int16_t> delayC;
+    };
 
-class Configurations : public Iterativemapi, public BasicRequestHandler {
+    virtual const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const = 0;
+    virtual void registerConfiguration(vector<vector<MultiBase*>>) = 0;
+};
+
+class TcmConfigurations : public Iterativemapi, public BoardConfiguration {
     unordered_map<string, ConfigurationInfo> m_knownConfigurations;
 
+    const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const override {
+        return m_knownConfigurations;
+    }
+
+    void registerConfiguration(vector<vector<MultiBase*>>) override {
+        //
+    }
 
     optional<int16_t> m_currDelayA = nullopt;
     optional<int16_t> m_currDelayC = nullopt;
     int16_t m_delayDifference;
     const ConfigurationInfo* m_currCfg = nullptr;
+    optional<ParsedResponse> m_delayResponse;
 
     enum class State { Idle, ApplyDelays, ApplyData } m_currState = State::Idle;
 
@@ -83,7 +134,7 @@ class Configurations : public Iterativemapi, public BasicRequestHandler {
             m_currDelayC = delayC;
         }
 
-        
+        return processMessageFromWinCC(request);   
     }
 
 
@@ -112,10 +163,50 @@ class Configurations : public Iterativemapi, public BasicRequestHandler {
     }
 
     string processOutputMessage(string msg) override {
+        auto response = processMessageFromALF(msg);
+
+        switch (m_currState) {
+            case State::ApplyDelays:
+
+        }
+
         // parse alf response
         // generate response
         // if delays - send request for data
         // if data - ok
         // reset and counters?
+    }
+};
+
+class PmConfigurations : public Mapi, public BoardConfiguration {
+    const unordered_map<string, ConfigurationInfo>& m_knownConfigurations;
+
+    const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const override {
+        return m_knownConfigurations;
+    }
+
+    void registerConfiguration(vector<vector<MultiBase*>>) override {
+        //
+    }
+    
+    string processInputMessage(string msg) {
+        Utility::removeWhiteSpaces(msg);
+        if (m_knownConfigurations.count(msg) == 0)
+            throw std::runtime_error(msg + ": no such configuration found");
+        
+        return m_knownConfigurations.at(msg).seq.getSequence();
+    }
+
+    string processOutputMessage(string msg) {
+        auto parsedResponse = processMessageFromALF(msg);
+        if(parsedResponse.errors.size() != 0) {
+            returnError = true;
+            std::stringstream error;
+            for (auto& report: parsedResponse.errors)
+                error << report.what() << '\n';
+            error << parsedResponse.response.getContents();
+            return error.str();
+        }
+        return parsedResponse.response.getContents();
     }
 };

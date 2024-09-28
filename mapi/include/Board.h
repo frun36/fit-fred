@@ -42,14 +42,14 @@ public:
         RefreshType refreshType = RefreshType::NOT
     ) ;
 
-    const std::string name{0};
-    const uint32_t baseAddress{0};
-    const uint8_t startBit{0};
-    const uint8_t bitLength{0};
-    const size_t regBlockSize{1};
-    const ValueEncoding valueEncoding{ValueEncoding::Unsigned};
-    const double minValue{0};
-    const double maxValue{0};
+        const std::string name{0};
+        const uint32_t baseAddress{0};
+        const uint8_t startBit{0};
+        const uint8_t bitLength{0};
+        const size_t regBlockSize{1};
+        const ValueEncoding valueEncoding{ValueEncoding::Unsigned};
+        const double minValue{0};
+        const double maxValue{0};
 
     Equation electronicToPhysic;
     Equation physicToElectronic;
@@ -73,8 +73,8 @@ public:
     }
     bool boundCheck(double value) const {return(value < minValue || value > maxValue);}
 
-    private:
-        std::optional<double> m_value;
+        private:
+            std::optional<double> m_value;
     };
 
     Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<EnvironmentFEE> settings=nullptr);

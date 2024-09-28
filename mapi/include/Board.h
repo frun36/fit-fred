@@ -2,8 +2,10 @@
 #include<unordered_map>
 #include<string>
 #include<vector>
+#include<cstdint>
 #include<memory>
 #include<optional>
+
 class Board
 {
 public:
@@ -11,6 +13,9 @@ public:
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
         Unsigned, Signed
+    };
+    enum class RefreshType {
+        CNT, SYNC, NOT
     };
 
     struct Equation{
@@ -20,6 +25,7 @@ public:
     };
 
     ParameterInfo() = delete;
+    ParameterInfo(const ParameterInfo& base, uint32_t boardAddress);
     ParameterInfo(
         std::string name, 
         uint32_t baseAddress, 
@@ -32,7 +38,8 @@ public:
         Equation electronicToPhysic,
         Equation physicToElectronic,
         bool isFifo,
-        bool isReadonly
+        bool isReadonly,
+        RefreshType refreshType = RefreshType::NOT
     ) ;
 
     const std::string name{0};
@@ -49,6 +56,8 @@ public:
     
     const bool isFifo{false};
     const bool isReadonly{false};
+
+    const RefreshType refreshType;
 
     void storeValue(double value)
     {
@@ -77,6 +86,7 @@ public:
 
     ParameterInfo& operator[](const std::string&);
     ParameterInfo& at(const std::string&);
+    const std::unordered_map<std::string, ParameterInfo>& getParameters() const {return m_parameters;}
     bool doesExist(const std::string&);
 
     double calculatePhysical(const std::string& param, uint32_t raw);

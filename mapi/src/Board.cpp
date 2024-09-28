@@ -8,6 +8,23 @@ Board::Board(std::string name, uint32_t address): m_name(name), m_address(addres
 
 }
 
+Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t boardAddress):
+        name(base.name), 
+        baseAddress(base.baseAddress + boardAddress), 
+        startBit(base.startBit), 
+        bitLength(base.bitLength), 
+        regBlockSize(base.regBlockSize),
+        valueEncoding(base.valueEncoding),
+        minValue(base.minValue),
+        maxValue(base.maxValue),
+        electronicToPhysic(base.electronicToPhysic),
+        physicToElectronic(base.physicToElectronic),
+        isFifo(base.isFifo),
+        isReadonly(base.isReadonly),
+        m_value(std::nullopt),
+        refreshType(base.refreshType)
+{}
+
 Board::ParameterInfo::ParameterInfo(
         std::string name_, 
         uint32_t baseAddress_, 
@@ -20,7 +37,8 @@ Board::ParameterInfo::ParameterInfo(
         Equation electronicToPhysic_,
         Equation physicToRaw_,
         bool isFifo_,
-        bool isReadonly_
+        bool isReadonly_,
+        RefreshType refreshType_
     ) : 
         name(name_), 
         baseAddress(baseAddress_), 
@@ -34,27 +52,20 @@ Board::ParameterInfo::ParameterInfo(
         physicToElectronic(physicToRaw_),
         isFifo(isFifo_),
         isReadonly(isReadonly_),
-        m_value(std::nullopt) {}
+        m_value(std::nullopt),
+        refreshType(refreshType_) {}
 
 
 
 
 bool Board::emplace(const ParameterInfo& info)
 {
-    if(info.baseAddress < m_address)
-    {
-        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failed, address lower than board base address");
-    }
-    return m_parameters.emplace(info.name, info).second;
+    return m_parameters.emplace(info.name, ParameterInfo(info, m_address)).second;
 }
 
 bool Board::emplace(ParameterInfo&& info)
 {
-    if(info.baseAddress < m_address)
-    {
-        throw std::runtime_error("Attempt to add " + info.name + " to board " + m_name + " failed, address lower than board base address");
-    }
-    return m_parameters.emplace(info.name, std::move(info)).second;
+    return m_parameters.emplace(info.name, ParameterInfo(info, m_address)).second;
 }
 
 Board::ParameterInfo& Board::operator[](const std::string& param)

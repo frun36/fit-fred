@@ -1,4 +1,5 @@
 #include "mapifactory.h"
+#include "FitData.h"
 
 MapiFactory::MapiFactory(Fred *fred) {
     this->fred = fred;
@@ -18,6 +19,10 @@ MapiFactory::~MapiFactory() {
 }
 
 void MapiFactory::generateObjects() {
-    
+    FitData boardsData;
+    if(boardsData.isReady() == false)
+    {
+        Print::PrintError("Configuration failed! Aborting");
+    }
 }
 

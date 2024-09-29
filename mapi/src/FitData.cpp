@@ -12,6 +12,18 @@ FitData::FitData():m_ready(false)
         return;
     }
 
+    Print::PrintInfo("Fetching TCM register map");
+    auto parametersTCM = DatabaseInterface::executeQuery(
+                        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'"   
+    );
+    Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
+    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
+    if(parametersTCM.size() != 1)
+    {
+        Print::PrintError("TCM register data have not been found!");
+        return;
+    }
+
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
                        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'PM'" );
@@ -23,17 +35,6 @@ FitData::FitData():m_ready(false)
     }
     m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
 
-    Print::PrintInfo("Fetching TCM register map");
-    auto parametersTCM = DatabaseInterface::executeQuery(
-                        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'"   
-    );
-    Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
-    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
-    if(parametersTCM.size() == 0)
-    {
-        Print::PrintError("TCM register data have not been found!");
-        return;
-    }
 
     //Print::PrintInfo("Fetching Histogram register map");
     //auto parameterstHistogramPM = DatabaseInterface::executeQuery(
@@ -58,30 +59,39 @@ FitData::FitData():m_ready(false)
         return;
     }
 
+    std::shared_ptr<Board> TCM{nullptr};
+
     for(auto& deviceRow : connectedDevices)
     {
         ConnectedDevicesTable::Device device(deviceRow);
-	Print::PrintInfo("Registering " + device.name);
+	    Print::PrintInfo("Registering " + device.name);
         switch (device.type)
         {
         case ConnectedDevicesTable::Device::BoardType::PM:
         {
+            if(TCM.get() == nullptr)
+            {
+                Print::PrintVerbose("PM row occured before TCM row!");
+                return;
+            }
+
             switch (device.side)
             {
             case ConnectedDevicesTable::Device::Side::A:
-                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index*AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"]));
+                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index*AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
                 break;
             
             case ConnectedDevicesTable::Device::Side::C:
-                 m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index*AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"]));
+                 m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index*AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
                  break;
             }
+
         }
         break;
 
         case ConnectedDevicesTable::Device::BoardType::TCM:
         {
-             m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"]));
+            TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
         }
         break;
         }
@@ -102,9 +112,9 @@ std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<Multi
     return board;
 }
 
-std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard)
+std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
 {
-    std::shared_ptr<Board> board = std::make_shared<Board>(name, address);
+    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main);
     for(const auto& parameter: templateBoard->getParameters())
     {
         board->emplace(parameter.second);

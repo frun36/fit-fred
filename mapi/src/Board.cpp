@@ -3,7 +3,8 @@
 #include"utils.h"
 #include"Parser/utility.h"
 
-Board::Board(std::string name, uint32_t address): m_name(name), m_address(address), m_mainBoard(nullptr)
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main): 
+m_name(name), m_address(address), m_mainBoard(main)
 {
 
 }

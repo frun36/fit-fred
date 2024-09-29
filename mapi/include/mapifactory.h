@@ -1,7 +1,7 @@
 #include "Fred/fred.h"
 #include "Fred/Mapi/mapi.h"
 #include "Alfred/print.h"
-
+#include"Parameters.h"
 #include <exception>
 #include <stdexcept>
 #include <string>
@@ -13,6 +13,7 @@ private:
     Fred* fred;
 
     vector<Mapi*> mapiObjects;
+    std::vector<Parameters> parametersObject;
     
     void generateObjects();
 public:

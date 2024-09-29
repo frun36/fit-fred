@@ -17,10 +17,12 @@ class FitData
     static constexpr uint32_t BaseAddressPMC = 0x1600;
     static constexpr uint32_t AddressSpaceSizePM = 0x0200;
 
+    std::unordered_map<std::string, std::shared_ptr<Board>> getBoards() {return m_boards;}
+
     private:
     bool m_ready;
     std::shared_ptr<Board> parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable);
-    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard);
+    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main=nullptr);
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;

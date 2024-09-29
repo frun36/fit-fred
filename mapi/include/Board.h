@@ -79,7 +79,7 @@ public:
         std::optional<double> m_value;
     };
 
-    Board(std::string name, uint32_t address);
+    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);

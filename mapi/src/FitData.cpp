@@ -11,24 +11,52 @@ FitData::FitData():m_ready(false)
         Print::PrintError("DB connection failed");
         return;
     }
-    
+
+    Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
                         "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"PM\"" );
+    if(parametersPM.size() == 0)
+    {
+        Print::PrintError("PM register data have not been found!");
+        return;
+    }
+
     m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
 
+    Print::PrintInfo("Fetching TCM register map");
     auto parametersTCM = DatabaseInterface::executeQuery(
                         "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"TCM\""   
     );
     m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
 
+    if(parametersTCM.size() == 0)
+    {
+        Print::PrintError("TCM register data have not been found!");
+        return;
+    }
+
+    Print::PrintInfo("Fetching Histogram register map");
     auto parameterstHistogramPM = DatabaseInterface::executeQuery(
                         "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"PM_HIST\""   
     );
     m_templateBoards.emplace("PM_HIST", parseTemplateBoard(parameterstHistogramPM)); 
 
+     if(parameterstHistogramPM.size() == 0)
+    {
+        Print::PrintError("Histogram PM register data have not been found!");
+        return;
+    }
+
+    Print::PrintInfo("Fetching information about connected devices");
     auto connectedDevices = DatabaseInterface::executeQuery(
                         "SELECT * FROM CONNECTED_DEVICES"   
     );
+
+    if(connectedDevices.size() == 0)
+    {
+        Print::PrintError("Lacking data about connected devices");
+        return;
+    }
 
     for(auto& deviceRow : connectedDevices)
     {

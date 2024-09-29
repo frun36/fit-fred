@@ -14,7 +14,7 @@ FitData::FitData():m_ready(false)
 
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
-                       "SELECT * FROM PARAMETERS WHERE BOARD_TYPE = 'PM'" );
+                       "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'PM'" );
     Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
     if(parametersPM.size() == 0)
     {
@@ -25,33 +25,33 @@ FitData::FitData():m_ready(false)
 
     Print::PrintInfo("Fetching TCM register map");
     auto parametersTCM = DatabaseInterface::executeQuery(
-                        "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"TCM\""   
+                        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'"   
     );
+    Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
     m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
-
     if(parametersTCM.size() == 0)
     {
         Print::PrintError("TCM register data have not been found!");
         return;
     }
 
-    Print::PrintInfo("Fetching Histogram register map");
-    auto parameterstHistogramPM = DatabaseInterface::executeQuery(
-                        "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"PM_HIST\""   
-    );
-    m_templateBoards.emplace("PM_HIST", parseTemplateBoard(parameterstHistogramPM)); 
+    //Print::PrintInfo("Fetching Histogram register map");
+    //auto parameterstHistogramPM = DatabaseInterface::executeQuery(
+    //                    "SELECT * FROM PARAMETERS WHERE BOARD_TYPE = 'PM_HIST'"   
+    //);
+    //m_templateBoards.emplace("PM_HIST", parseTemplateBoard(parameterstHistogramPM)); 
 
-     if(parameterstHistogramPM.size() == 0)
-    {
-        Print::PrintError("Histogram PM register data have not been found!");
-        return;
-    }
+    //if(parameterstHistogramPM.size() == 0)
+    //{
+    //    Print::PrintError("Histogram PM register data have not been found!");
+    //    return;
+    //}
 
     Print::PrintInfo("Fetching information about connected devices");
     auto connectedDevices = DatabaseInterface::executeQuery(
                         "SELECT * FROM CONNECTED_DEVICES"   
     );
-
+    Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if(connectedDevices.size() == 0)
     {
         Print::PrintError("Lacking data about connected devices");
@@ -61,6 +61,7 @@ FitData::FitData():m_ready(false)
     for(auto& deviceRow : connectedDevices)
     {
         ConnectedDevicesTable::Device device(deviceRow);
+	Print::PrintInfo("Registering " + device.name);
         switch (device.type)
         {
         case ConnectedDevicesTable::Device::BoardType::PM:
@@ -94,8 +95,10 @@ std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<Multi
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0);
     for(auto& row : boardTable)
     {
+	Print::PrintVerbose("Parsing parameter: " + row[ParametersTable::Parameter::Name]->getString());
         board->emplace(ParametersTable::Parameter::buildParameter(row));
     }
+    Print::PrintVerbose("Board parsed successfully");
     return board;
 }
 
@@ -120,10 +123,10 @@ bool ParametersTable::parseBoolean(MultiBase* field){
 }
 
 uint32_t ParametersTable::parseHex(MultiBase* field){
-    std::string hex(std::move(field->getString()));
+    std::string hex(field->getString());
     uint32_t word = 0;
     uint32_t shift = 0;
-    for(uint32_t pos = hex.length()-1; pos >= 0; pos--)
+    for(int32_t pos = hex.length()-1; pos >= 0; pos-=1)
     {
         if (hex[pos] >= '0' && hex[pos] <= '9')
             word += (1u<<(4*pos)) * static_cast<uint32_t>(hex[pos] - '0');
@@ -159,7 +162,6 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
     Board::ParameterInfo::ValueEncoding encoding = parseBoolean(dbRow[IsSigned]) ? 
                         Board::ParameterInfo::ValueEncoding::Signed :
                         Board::ParameterInfo::ValueEncoding::Unsigned;
-
     return {
             dbRow[Parameter::Name]->getString(),
             parseHex(dbRow[Parameter::BaseAddress]),
@@ -188,6 +190,7 @@ Board::ParameterInfo::Equation ParametersTable::Parameter::parseEquation(std::st
         {
             throw std::runtime_error("Invalid equation, missing }");
         }
+	left=right;
         parsed.variables.emplace_back(equation.substr(left+1, right-left-1));
     }
     equation.erase(std::remove(equation.begin(), equation.end(),'{'), equation.end());

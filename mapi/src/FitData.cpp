@@ -15,12 +15,12 @@ FitData::FitData():m_ready(false)
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
                         "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"PM\"" );
+    Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
     if(parametersPM.size() == 0)
     {
         Print::PrintError("PM register data have not been found!");
         return;
     }
-
     m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
 
     Print::PrintInfo("Fetching TCM register map");

@@ -18,7 +18,7 @@ FitData::FitData():m_ready(false)
     );
     Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
     m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
-    if(parametersTCM.size() != 1)
+    if(parametersTCM.size() == 0)
     {
         Print::PrintError("TCM register data have not been found!");
         return;

@@ -14,7 +14,7 @@ FitData::FitData():m_ready(false)
 
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
-                        "SELECT * FROM PARAMETERS WHERE BOARD_TYPE EQUALS \"PM\"" );
+                       "SELECT * FROM PARAMETERS WHERE BOARD_TYPE = 'PM'" );
     Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
     if(parametersPM.size() == 0)
     {

@@ -6,7 +6,7 @@
 FitData::FitData():m_ready(false)
 {
     Print::PrintInfo("Fetching configuration from data base - start");
-    if(DatabaseInterface::isConnected())
+    if(DatabaseInterface::isConnected() == false)
     {
         Print::PrintError("DB connection failed");
         return;

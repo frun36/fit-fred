@@ -200,8 +200,8 @@ Board::ParameterInfo::Equation ParametersTable::Parameter::parseEquation(std::st
         {
             throw std::runtime_error("Invalid equation, missing }");
         }
-	left=right;
         parsed.variables.emplace_back(equation.substr(left+1, right-left-1));
+        left=right;
     }
     equation.erase(std::remove(equation.begin(), equation.end(),'{'), equation.end());
     equation.erase(std::remove(equation.begin(), equation.end(),'}'), equation.end());

@@ -61,9 +61,6 @@ public:
 
     void storeValue(double value)
     {
-        if (value < minValue || value > maxValue) {
-        throw std::out_of_range(name + ": value is out of allowed range");
-        }
         m_value = value;
     }
     double getStoredValue() const {

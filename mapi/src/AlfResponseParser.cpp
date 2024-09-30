@@ -28,13 +28,13 @@ AlfResponseParser::Line::Line(std::string_view hex, int64_t len): length(len)
     }
     else
     {
-        throw std::runtime_error(std::to_string(len) + hex.data());
+        throw std::runtime_error("Invalid line: " + std::to_string(len) + hex.data());
     }
 }
 
 AlfResponseParser::iterator::iterator(std::string_view sequence): m_sequence(sequence)
 {
-    if(m_sequence.at(0) == '\0'){
+    if(m_sequence.at(0) == '\0' || m_sequence.at(0) == '\n'){
         m_currentLine = std::nullopt;
     }
     else{
@@ -76,13 +76,13 @@ AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
     {
         throw std::runtime_error("Iterator points to end(), cannot increment");
     }
-    if(m_sequence[m_currentLine->length] != '\0'){  
+    if(m_sequence[m_currentLine->length] != '\0' && m_sequence[m_currentLine->length+1] != '\0'){  
         m_sequence = m_sequence.data() + m_currentLine->length+1;
         m_currentLine = Line(m_sequence, getLineLen());
         return *this;
     }
 
-    m_sequence = m_sequence.data() + m_currentLine->length - 1;
+    m_sequence = ( m_sequence[m_currentLine->length] == '\0')? m_sequence.data() + m_currentLine->length - 1: m_sequence.data() + m_currentLine->length;
     m_currentLine = std::nullopt;
     return *this;
 }

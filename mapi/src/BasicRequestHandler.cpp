@@ -2,6 +2,7 @@
 #include"Board.h"
 #include"AlfResponseParser.h"
 #include"utils.h"
+#include "Alfred/print.h"
 
 void BasicRequestHandler::resetExecutionData()
 {
@@ -24,6 +25,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess)
 		Board::ParameterInfo& info = m_board->at(cmd.name);
 
 		m_registerTasks[info.baseAddress].emplace_back(info.name, cmd.value);
+		
 		if(m_operations.find(info.baseAddress) != m_operations.end()){
 			mergeOperation(m_operations.at(info.baseAddress), operation);
 		}
@@ -110,13 +112,12 @@ BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(s
 
     try {
         AlfResponseParser alfMsg(alfresponse);
-
         if(!alfMsg.isSuccess()) {
             report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
 			return {std::move(response), std::move(report)};
         }
 
-        for (const auto& line : alfMsg) {
+        for (auto line : alfMsg) {
             switch(line.type)
             {
                 case AlfResponseParser::Line::Type::ResponseToRead:
@@ -124,6 +125,8 @@ BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(s
                 break;
                 case AlfResponseParser::Line::Type::ResponseToWrite:
                 break;
+				default:
+				throw std::runtime_error("Unsupported ALF response");
             }
         }
 

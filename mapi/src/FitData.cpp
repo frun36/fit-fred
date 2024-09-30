@@ -2,6 +2,8 @@
 #include<string>
 #include"FitData.h"
 #include "Alfred/print.h"
+#include<sstream>
+#include<iomanip>
 
 FitData::FitData():m_ready(false)
 {
@@ -133,20 +135,11 @@ bool ParametersTable::parseBoolean(MultiBase* field){
 }
 
 uint32_t ParametersTable::parseHex(MultiBase* field){
+    std::stringstream ss;
+    ss << field->getString();
     std::string hex(field->getString());
-    uint32_t word = 0;
-    uint32_t shift = 0;
-    for(int32_t pos = hex.length()-1; pos >= 0; pos-=1)
-    {
-        if (hex[pos] >= '0' && hex[pos] <= '9')
-            word += (1u<<(4*pos)) * static_cast<uint32_t>(hex[pos] - '0');
-        else if (hex[pos] >= 'A' && hex[pos] <= 'F')
-            word += (1u<<(4*pos)) * static_cast<uint32_t>(hex[pos] - 'A' + 10);
-        else if (hex[pos] >= 'a' && hex[pos] <= 'f')
-            word += (1u<<(4*pos)) * static_cast<uint32_t>(hex[pos] - 'a' + 10);
-        else
-            throw std::invalid_argument("Invalid hexadecimal character");
-    }
+    uint32_t word=0;
+    ss >> std::hex >> word;
     return word;
 }
 

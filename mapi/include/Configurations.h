@@ -28,8 +28,8 @@ TCM - if(doApply)
  ! 0xE - RMW to not change bits 4..7 and 10 (hist. control), only write 0..3 and 8..9
  - Add remaining params, transceive
  ! if we changed CH_MASK_A or CH_MASK_C - sleep 10 ms
- ! apply_RESET_ERRORS() - ?
- ! apply_COUNTERS_UPD_RATE() if reg50 changed - ?
+ ! apply_RESET_ERRORS() - *
+ ! apply_COUNTERS_UPD_RATE() if reg50 changed - **
 
 For each PM - parsing
  - for each of TypePM allPMs[20]
@@ -39,16 +39,33 @@ For PMs enabled in PM_MASK_SPI and if (doApply)
  - generate packet, update value if it changed
 
 
+* apply_RESET_ERRORS()
+for TCM and each PM
+ - GBTunit::controlAddress = 0xD8
+ - RMWbits: 0xFFFF00FF, 0x00000000 (clear all reset bits)
+ - RMWbits: 0xFFFFFFFF, set: readoutFSM (14), GBTRxError (11), errorReport (15)
+ - RMWbits: 0xFFBF00FF, 0x00000000 (clear all reset bits and unlock)
+then write 0x4 to 0xF
+
 ** apply_COUNTERS_UPD_RATE()
  - write 0 to 0x50 (counters read interval)
  - emptyCountBuffers();
  - readCountersDirectly();
  - write chosen value to 0x50 if in range - 0: no update; 1: 0.1s; 2: 0.2s, 3: 0.5s, 4: 1s; 5: 2s; 6: 5s; 7: 10s
 If everything was successful, create log entry
+
+
+Configurations DB structure:
+CONFIGURATIONS:
+CONFIGURATION_NAME
+BOARD_NAME
+PARAMETER_ID
+PARAMETER_VALUE
+
 */
 
 class Configurations : public Mapigroup {
-    unordered_map<string, unique_ptr<BoardConfiguration>> m_boardCofigurationServices;
+    unordered_map<string, unique_ptr<BoardConfigurations>> m_boardCofigurationServices;
     unordered_map<string, vector<string>> m_boardsInConfigurations;
 
     Configurations(Fred* fred, const unordered_map<string, Board>& boards) {
@@ -73,35 +90,85 @@ class Configurations : public Mapigroup {
                 m_boardsInConfigurations[configurationName].push_back(boardName);
 
                 auto configurationInfo = 
-                    DatabaseInterface::executeQuery("SELECT * FROM configurations WHERE configuration_name = " + configurationName + " && board_name = " + boardName);
+                    DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = " + configurationName + " AND board_name = " + boardName);
                 
-                m_boardCofigurationServices[boardName]->registerConfiguration(configurationInfo);
+                m_boardCofigurationServices[boardName]->registerConfiguration(configurationName, configurationInfo);
             }
         }
     }
 };
 
-class BoardConfiguration : public BasicRequestHandler {
+class BoardConfigurations : public BasicRequestHandler {
 public:
     struct ConfigurationInfo {
         const SwtSequence seq;
         const optional<int16_t> delayA;
         const optional<int16_t> delayC;
+
+        ConfigurationInfo(const SwtSequence& seq, optional<int16_t> delayA, optional<int16_t> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
     };
 
-    virtual const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const = 0;
-    virtual void registerConfiguration(vector<vector<MultiBase*>>) = 0;
+protected:
+    virtual unordered_map<string, ConfigurationInfo>& getKnownConfigurations() = 0;
+
+public:
+    void registerConfiguration(const string& name, vector<vector<MultiBase*>> dbData) {
+        vector<SwtSequence::SwtOperation> sequenceVec;
+        optional<int16_t> delayA = nullopt;
+        optional<int16_t> delayC = nullopt;
+
+        for(const auto& row : dbData) {
+            if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
+                throw runtime_error("Invalid CONFIGURATIONS data row");
+            
+            string parameterName = row[0]->getString();
+            double parameterValue = row[1]->getDouble();
+            if (parameterName == "DELAY_A")
+                delayA = parameterValue;
+            else if (parameterName == "DELAY_C")
+                delayC = parameterValue;
+            else
+                sequenceVec.push_back(createSwtOperation(WinCCRequest::Command(parameterName, WinCCRequest::Operation::Write, parameterValue)));
+        }
+
+        getKnownConfigurations().insert_or_assign(name, ConfigurationInfo(SwtSequence(sequenceVec), delayA, delayC));
+    }
 };
 
-class TcmConfigurations : public Iterativemapi, public BoardConfiguration {
-    unordered_map<string, ConfigurationInfo> m_knownConfigurations;
+class PmConfigurations : public Mapi, public BoardConfigurations {
+    unordered_map<string, ConfigurationInfo>& m_knownConfigurations;
 
-    const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const override {
+    unordered_map<string, ConfigurationInfo>& getKnownConfigurations() override {
         return m_knownConfigurations;
     }
+    
+    string processInputMessage(string msg) {
+        Utility::removeWhiteSpaces(msg);
+        if (m_knownConfigurations.count(msg) == 0)
+            throw std::runtime_error(msg + ": no such configuration found");
+        
+        return m_knownConfigurations.at(msg).seq.getSequence();
+    }
 
-    void registerConfiguration(vector<vector<MultiBase*>>) override {
-        //
+    string processOutputMessage(string msg) {
+        auto parsedResponse = processMessageFromALF(msg);
+        if(parsedResponse.errors.size() != 0) {
+            returnError = true;
+            std::stringstream error;
+            for (auto& report: parsedResponse.errors)
+                error << report.what() << '\n';
+            error << parsedResponse.response.getContents();
+            return error.str();
+        }
+        return parsedResponse.response.getContents();
+    }
+};
+
+class TcmConfigurations : public Iterativemapi, public BoardConfigurations {
+    unordered_map<string, ConfigurationInfo> m_knownConfigurations;
+
+    unordered_map<string, ConfigurationInfo>& getKnownConfigurations() override {
+        return m_knownConfigurations;
     }
 
     optional<int16_t> m_currDelayA = nullopt;
@@ -168,6 +235,8 @@ class TcmConfigurations : public Iterativemapi, public BoardConfiguration {
         switch (m_currState) {
             case State::ApplyDelays:
 
+
+
         }
 
         // parse alf response
@@ -175,38 +244,5 @@ class TcmConfigurations : public Iterativemapi, public BoardConfiguration {
         // if delays - send request for data
         // if data - ok
         // reset and counters?
-    }
-};
-
-class PmConfigurations : public Mapi, public BoardConfiguration {
-    const unordered_map<string, ConfigurationInfo>& m_knownConfigurations;
-
-    const unordered_map<string, ConfigurationInfo>& getKnownConfigurations() const override {
-        return m_knownConfigurations;
-    }
-
-    void registerConfiguration(vector<vector<MultiBase*>>) override {
-        //
-    }
-    
-    string processInputMessage(string msg) {
-        Utility::removeWhiteSpaces(msg);
-        if (m_knownConfigurations.count(msg) == 0)
-            throw std::runtime_error(msg + ": no such configuration found");
-        
-        return m_knownConfigurations.at(msg).seq.getSequence();
-    }
-
-    string processOutputMessage(string msg) {
-        auto parsedResponse = processMessageFromALF(msg);
-        if(parsedResponse.errors.size() != 0) {
-            returnError = true;
-            std::stringstream error;
-            for (auto& report: parsedResponse.errors)
-                error << report.what() << '\n';
-            error << parsedResponse.response.getContents();
-            return error.str();
-        }
-        return parsedResponse.response.getContents();
     }
 };

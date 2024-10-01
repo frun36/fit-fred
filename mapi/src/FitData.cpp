@@ -155,11 +155,15 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
 
     Board::ParameterInfo::RefreshType refreshType =  Board::ParameterInfo::RefreshType::NOT;
 
+    if(dbRow[Parameter::RefreshType] != NULL){
+
     if(dbRow[Parameter::RefreshType]->getString() == RefreshCNT){
         refreshType = Board::ParameterInfo::RefreshType::CNT;
     }
     else if (dbRow[Parameter::RefreshType]->getString() == RefreshSYNC){
         refreshType = Board::ParameterInfo::RefreshType::SYNC;
+    }
+    
     }
 
     Board::ParameterInfo::ValueEncoding encoding = parseBoolean(dbRow[IsSigned]) ? 

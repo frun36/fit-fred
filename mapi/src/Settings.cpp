@@ -1,6 +1,16 @@
 #include"Settings.h"
 #include"Parser/utility.h"
 
+void Settings::emplace(Settings::Setting&& setting)
+{
+    m_settings.emplace(setting.name, setting);
+}
+
+void Settings::emplace(const Settings::Setting& setting)
+{
+    m_settings.emplace(setting.name, setting);
+}
+
 bool Settings::doesExist(const std::string& name)
 {
     return m_settings.find(name) != m_settings.end();

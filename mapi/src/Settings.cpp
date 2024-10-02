@@ -27,6 +27,11 @@ double Settings::updateSetting(const std::string& name)
     return setting.value;
 }
 
+void Settings::setSettingValue(const std::string& name, double val)
+{
+    m_settings.at(name).value = val;
+}
+
 double Settings::getSetting(const std::string& name)
 {
     return m_settings.at(name).value;

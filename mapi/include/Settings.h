@@ -13,7 +13,7 @@ public:
         {
 
         }
-        
+
         std::string name;
         double value;
         Equation equation;
@@ -23,6 +23,7 @@ public:
     void emplace(const Setting&);
     void emplace(Setting&&);
     double updateSetting(const std::string& name);
+    void setSettingValue(const std::string& name, double val);
     double getSetting(const std::string& name);
 
 private:

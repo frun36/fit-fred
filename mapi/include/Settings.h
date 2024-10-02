@@ -8,7 +8,12 @@ class Settings
 {
 public:    
     struct Setting{
-        Setting(std::string name, Equation equation);
+        Setting(std::string name_, Equation equation_): 
+            name(name_), equation(equation_)
+        {
+
+        }
+        
         std::string name;
         double value;
         Equation equation;

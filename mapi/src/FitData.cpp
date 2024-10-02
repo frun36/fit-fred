@@ -156,6 +156,7 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
     m_settings = std::make_shared<Settings>();
     for(auto& row: settingsTable)
     {
+        Print::PrintVerbose("Parsing " + row[SettingsTable::Setting::Name]->getString());
         m_settings->emplace(
             Settings::Setting(row[SettingsTable::Setting::Name]->getString(), parseEquation(row[SettingsTable::Setting::Equation]->getString()))
             );

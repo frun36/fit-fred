@@ -58,7 +58,7 @@ public:
         static constexpr const char* ExprTRUE = "Y";
         static constexpr const char* ExprFALSE = "N";
 
-        static Board::ParameterInfo::Equation parseEquation(std::string eq);
+        static Board::Equation parseEquation(std::string eq);
         static Board::ParameterInfo buildParameter(std::vector<MultiBase*>&);    
     };
  

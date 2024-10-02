@@ -145,12 +145,12 @@ uint32_t ParametersTable::parseHex(MultiBase* field){
 
 Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<MultiBase*>& dbRow)
 {
-    Board::ParameterInfo::Equation electronicToPhysic = (dbRow[Parameter::EqElectronicToPhysic] == NULL) ?  
-                        Board::ParameterInfo::Equation::Empty() 
+    Board::Equation electronicToPhysic = (dbRow[Parameter::EqElectronicToPhysic] == NULL) ?  
+                        Board::Equation::Empty() 
                         : parseEquation(dbRow[Parameter::EqElectronicToPhysic]->getString());
 
-    Board::ParameterInfo::Equation physicToElectronic = (dbRow[Parameter::EqPhysicToElectronic] == NULL) ?  
-                        Board::ParameterInfo::Equation::Empty() 
+    Board::Equation physicToElectronic = (dbRow[Parameter::EqPhysicToElectronic] == NULL) ?  
+                        Board::Equation::Empty() 
                         : parseEquation(dbRow[Parameter::EqPhysicToElectronic]->getString());
 
     Board::ParameterInfo::RefreshType refreshType =  Board::ParameterInfo::RefreshType::NOT;
@@ -187,9 +187,9 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
     
 }
 
-Board::ParameterInfo::Equation ParametersTable::Parameter::parseEquation(std::string equation)
+Board::Equation ParametersTable::Parameter::parseEquation(std::string equation)
 {
-    Board::ParameterInfo::Equation parsed;
+    Board::Equation parsed;
     size_t left = 0;
     size_t right = 0;
     while((left = equation.find('{', left)) != std::string::npos){

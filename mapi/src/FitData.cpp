@@ -61,6 +61,13 @@ FitData::FitData():m_ready(false)
         return;
     }
 
+    Print::PrintInfo("Fetching information about unit defintion and others settings");
+    auto settings = DatabaseInterface::executeQuery(
+                "SELECT * FROM FEE_SETTINGS"
+    );
+    Print::PrintInfo("Fetched " + std::to_string(settings.size()) + " rows");
+    parseSettings(settings);
+
     std::shared_ptr<Board> TCM{nullptr};
 
     for(auto& deviceRow : connectedDevices)
@@ -102,6 +109,25 @@ FitData::FitData():m_ready(false)
     m_ready = true;
 }
 
+Equation FitData::parseEquation(std::string equation)
+{
+    Equation parsed;
+    size_t left = 0;
+    size_t right = 0;
+    while((left = equation.find('{', left)) != std::string::npos){
+        if((right = equation.find('}', left)) == std::string::npos)
+        {
+            throw std::runtime_error("Invalid equation, missing }");
+        }
+        parsed.variables.emplace_back(equation.substr(left+1, right-left-1));
+        left=right;
+    }
+    equation.erase(std::remove(equation.begin(), equation.end(),'{'), equation.end());
+    equation.erase(std::remove(equation.begin(), equation.end(),'}'), equation.end());
+    parsed.equation = std::move(equation);
+    return parsed;
+}
+
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0);
@@ -116,13 +142,28 @@ std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<Multi
 
 std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
 {
-    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main);
+    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main, m_settings);
     for(const auto& parameter: templateBoard->getParameters())
     {
         board->emplace(parameter.second);
     }
 
     return board;
+}
+
+void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
+{
+    m_settings = std::make_shared<Settings>();
+    for(auto& row: settingsTable)
+    {
+        m_settings->emplace(
+            Settings::Setting(row[SettingsTable::Setting::Name]->getString(), parseEquation(row[SettingsTable::Setting::Equation]->getString()))
+            );
+    }
+    for(auto& row: settingsTable)
+    {
+        m_settings->updateSetting(row[SettingsTable::Setting::Name]->getString());
+    }
 }
 
 
@@ -145,13 +186,13 @@ uint32_t ParametersTable::parseHex(MultiBase* field){
 
 Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<MultiBase*>& dbRow)
 {
-    Board::Equation electronicToPhysic = (dbRow[Parameter::EqElectronicToPhysic] == NULL) ?  
-                        Board::Equation::Empty() 
-                        : parseEquation(dbRow[Parameter::EqElectronicToPhysic]->getString());
+    Equation electronicToPhysic = (dbRow[Parameter::EqElectronicToPhysic] == NULL) ?  
+                        Equation::Empty() 
+                        : FitData::parseEquation(dbRow[Parameter::EqElectronicToPhysic]->getString());
 
-    Board::Equation physicToElectronic = (dbRow[Parameter::EqPhysicToElectronic] == NULL) ?  
-                        Board::Equation::Empty() 
-                        : parseEquation(dbRow[Parameter::EqPhysicToElectronic]->getString());
+    Equation physicToElectronic = (dbRow[Parameter::EqPhysicToElectronic] == NULL) ?  
+                        Equation::Empty() 
+                        : FitData::parseEquation(dbRow[Parameter::EqPhysicToElectronic]->getString());
 
     Board::ParameterInfo::RefreshType refreshType =  Board::ParameterInfo::RefreshType::NOT;
 
@@ -185,25 +226,6 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
             refreshType
             };
     
-}
-
-Board::Equation ParametersTable::Parameter::parseEquation(std::string equation)
-{
-    Board::Equation parsed;
-    size_t left = 0;
-    size_t right = 0;
-    while((left = equation.find('{', left)) != std::string::npos){
-        if((right = equation.find('}', left)) == std::string::npos)
-        {
-            throw std::runtime_error("Invalid equation, missing }");
-        }
-        parsed.variables.emplace_back(equation.substr(left+1, right-left-1));
-        left=right;
-    }
-    equation.erase(std::remove(equation.begin(), equation.end(),'{'), equation.end());
-    equation.erase(std::remove(equation.begin(), equation.end(),'}'), equation.end());
-    parsed.equation = std::move(equation);
-    return parsed;
 }
 
 

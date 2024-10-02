@@ -6,6 +6,7 @@
 #include<memory>
 #include<optional>
 #include<list>
+#include"Equation.h"
 
 class Settings;
 
@@ -13,11 +14,6 @@ class Board
 {
 public:
     enum class Type {TCM, PM};
-    struct Equation{
-        std::string equation;
-        std::vector<std::string> variables;
-        static Equation Empty() {return {"", std::vector<std::string>()};}
-    };
 
     struct ParameterInfo {
     // The encoding system requires serious rethinking, based on the electronics

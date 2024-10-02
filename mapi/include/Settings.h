@@ -2,17 +2,13 @@
 #include<string>
 #include<list>
 #include<unordered_map>
+#include"Equation.h"
 
 class Settings
 {
 public:    
-    struct Equation{
-        std::string equation;
-        std::vector<std::string> variables;
-        static Equation Empty() {return {"", std::vector<std::string>()};}
-    };
-
     struct Setting{
+        Setting(std::string name, Equation equation);
         std::string name;
         double value;
         Equation equation;
@@ -20,6 +16,7 @@ public:
     
     bool doesExist(const std::string& name);
     void emplace(const Setting&);
+    void emplace(Setting&&);
     double updateSetting(const std::string& name);
     double getSetting(const std::string& name);
 

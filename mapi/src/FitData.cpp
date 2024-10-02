@@ -163,6 +163,7 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
     }
     for(auto& row: settingsTable)
     {
+        Print::PrintVerbose("Updating " + row[SettingsTable::Setting::Name]->getString());
         m_settings->updateSetting(row[SettingsTable::Setting::Name]->getString());
     }
 }

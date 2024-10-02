@@ -99,5 +99,5 @@ class SettingsTable
     {
         static constexpr columnIdx Name = 0;
         static constexpr columnIdx Equation = 0;
-    }
+    };
 };

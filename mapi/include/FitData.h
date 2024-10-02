@@ -98,6 +98,6 @@ class SettingsTable
     struct Setting
     {
         static constexpr columnIdx Name = 0;
-        static constexpr columnIdx Equation = 0;
+        static constexpr columnIdx Equation = 1;
     };
 };

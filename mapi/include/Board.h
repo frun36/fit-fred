@@ -2,24 +2,30 @@
 #include<unordered_map>
 #include<string>
 #include<vector>
+#include<cstdint>
 #include<memory>
 #include<optional>
+#include<list>
+#include"Equation.h"
+
+class Settings;
+
 class Board
 {
 public:
+    enum class Type {TCM, PM};
+
     struct ParameterInfo {
     // The encoding system requires serious rethinking, based on the electronics
     enum class ValueEncoding {
         Unsigned, Signed
     };
-
-    struct Equation{
-        std::string equation;
-        std::vector<std::string> variables;
-        static Equation Empty() {return {"", std::vector<std::string>()};}
+    enum class RefreshType {
+        CNT, SYNC, NOT
     };
 
     ParameterInfo() = delete;
+    ParameterInfo(const ParameterInfo& base, uint32_t boardAddress);
     ParameterInfo(
         std::string name, 
         uint32_t baseAddress, 
@@ -32,7 +38,8 @@ public:
         Equation electronicToPhysic,
         Equation physicToElectronic,
         bool isFifo,
-        bool isReadonly
+        bool isReadonly,
+        RefreshType refreshType = RefreshType::NOT
     ) ;
 
     const std::string name{0};
@@ -50,13 +57,13 @@ public:
     const bool isFifo{false};
     const bool isReadonly{false};
 
+    const RefreshType refreshType;
+
     void storeValue(double value)
     {
-        if (value < minValue || value > maxValue) {
-        throw std::out_of_range(name + ": value is out of allowed range");
-        }
         m_value = value;
     }
+
     double getStoredValue() const {
         if(!m_value.has_value())
         {
@@ -70,26 +77,26 @@ public:
         std::optional<double> m_value;
     };
 
-    Board(std::string name, uint32_t address);
+    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<Settings> settings=nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
 
     ParameterInfo& operator[](const std::string&);
     ParameterInfo& at(const std::string&);
+    const std::unordered_map<std::string, ParameterInfo>& getParameters() const {return m_parameters;}
     bool doesExist(const std::string&);
 
     double calculatePhysical(const std::string& param, uint32_t raw);
-    double calculatePhysical64(const std::string& param, uint64_t raw);
-    
     uint32_t calculateRaw(const std::string& param, double physcial);
-    uint64_t calculateRaw64(const std::string& param, double physical);
 
     uint32_t getAddress() const {return m_address;}
 
 private:
+    Type m_boardType;
     std::string m_name;
     uint32_t m_address;   
     std::shared_ptr<Board> m_mainBoard;
+    std::shared_ptr<Settings> m_settings;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

@@ -99,8 +99,10 @@ public:
 
     uint32_t getAddress() const {return m_address;}
 
-    Type type(){return m_boardType;}
+    Type type() { return m_boardType; }
     void setType(Type type) { m_boardType = type;}
+
+    const std::string& getName() const { return m_name; }
 
 private:
     Type m_boardType;

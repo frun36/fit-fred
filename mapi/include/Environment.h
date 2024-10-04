@@ -1,11 +1,12 @@
 #pragma once
+
 #include<vector>
 #include<string>
 #include<list>
 #include<unordered_map>
 #include"Equation.h"
 
-class Environment
+class EnvironmentFEE
 {
 public:    
     struct Variable{

@@ -1,10 +1,11 @@
+#pragma once
+
 #include<cmath>
 #include<memory>
 #include<unordered_map>
 
 #include"Database/databaseinterface.h"
 #include"Board.h"
-#include"Settings.h"
 
 typedef uint8_t columnIdx;
 
@@ -30,7 +31,7 @@ class FitData
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;
-    std::shared_ptr<Environment> m_settings;
+    std::shared_ptr<EnvironmentFEE> m_settings;
 };
 
 

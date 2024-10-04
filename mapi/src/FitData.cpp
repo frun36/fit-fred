@@ -154,7 +154,7 @@ std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uin
 
 void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
 {
-    m_settings = std::make_shared<Environment>();
+    m_settings = std::make_shared<EnvironmentFEE>();
     for(auto& row: settingsTable)
     {
         std::string name = row[SettingsTable::Variable::Name]->getString();
@@ -162,7 +162,7 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
         Print::PrintVerbose("Parsing " + name);
         Print::PrintVerbose("Equation: " + equation.equation);
         m_settings->emplace(
-            Environment::Variable(name, equation)
+            EnvironmentFEE::Variable(name, equation)
             );
     }
     for(auto& row: settingsTable)

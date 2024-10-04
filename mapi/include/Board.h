@@ -7,9 +7,8 @@
 #include<optional>
 #include<list>
 #include"Equation.h"
-#include"Settings.h"
+#include"Environment.h"
 
-class Environment;
 
 class Board
 {
@@ -78,7 +77,7 @@ public:
         std::optional<double> m_value;
     };
 
-    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<Environment> settings=nullptr);
+    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<EnvironmentFEE> settings=nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
@@ -99,6 +98,6 @@ private:
     std::string m_name;
     uint32_t m_address;   
     std::shared_ptr<Board> m_mainBoard;
-    std::shared_ptr<Environment> m_settings;
+    std::shared_ptr<EnvironmentFEE> m_settings;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

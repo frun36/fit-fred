@@ -1,10 +1,9 @@
 #include<stdexcept>
 #include"Board.h"
-#include"Settings.h"
 #include"utils.h"
 #include"Parser/utility.h"
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<Environment> settings): 
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
 {
 

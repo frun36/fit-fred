@@ -4,12 +4,13 @@
 #include<unordered_map>
 #include<chrono>
 #include<string_view>
+
 #include "Fred/Mapi/mapi.h"
 #include"BasicRequestHandler.h"
 
-class TCMStatus: public Mapi, BasicRequestHandler{
+class BoardStatus: public Mapi, BasicRequestHandler{
 public:
-    TCMStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh);
+    BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh);
     std::string processInputMessage(string msg) override;
     std::string processOutputMessage(string msg) override;
     

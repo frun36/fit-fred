@@ -1,7 +1,7 @@
-#include"TCMStatus.h"
+#include"BoardStatus.h"
 #include<sstream>
 
-TCMStatus::TCMStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh):
+BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh):
 BasicRequestHandler(board)
 {
     std::stringstream requestStream;
@@ -14,12 +14,12 @@ BasicRequestHandler(board)
     m_request = processMessageFromWinCC(request);
 }
 
-std::string TCMStatus::processInputMessage(std::string req)
+std::string BoardStatus::processInputMessage(std::string req)
 {
     return m_request.getSequence();
 }
 
-void TCMStatus::updateEnvironment()
+void BoardStatus::updateEnvironment()
 {
     m_board->setEnvironment(SYSTEM_CLOCK_VNAME, (m_board->at(ACTUAL_SYSTEM_CLOCK_NAME).getStoredValue() == EXTERNAL_CLOCK) ?
                 m_board->getEnvironment(EXTERNAL_CLOCK_VNAME):
@@ -28,7 +28,7 @@ void TCMStatus::updateEnvironment()
     m_board->updateEnvironment(TDC_VNAME);
 }
 
-void TCMStatus::calculateGBTRate(WinCCResponse& response)
+void BoardStatus::calculateGBTRate(WinCCResponse& response)
 {
     double frequency = 1000.0/ static_cast<double>(m_pomTimeInterval.count());
     double wordsRate = (m_board->at(WORDS_COUNT_NAME).getStoredValue() - m_gbtRate.wordsCount) * frequency;
@@ -39,13 +39,16 @@ void TCMStatus::calculateGBTRate(WinCCResponse& response)
     response.addParameter(GBT_EVENT_RATE_NAME, {eventsRate});
 }
 
-std::string TCMStatus::processOutputMessage(std::string msg)
+std::string BoardStatus::processOutputMessage(std::string msg)
 {
     m_currTimePoint = std::chrono::steady_clock::now();
     m_pomTimeInterval = std::chrono::duration_cast<std::chrono::milliseconds>(m_currTimePoint-m_lastTimePoint);
     
     auto parsedResponse = processMessageFromALF(msg);
-    updateEnvironment();
+    
+    if(m_board->type() == Board::Type::TCM){
+        updateEnvironment();
+    }
     calculateGBTRate(parsedResponse.response);
 
     if(parsedResponse.errors.size() != 0)

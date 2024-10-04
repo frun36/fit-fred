@@ -28,8 +28,9 @@ std::string TCMStatus::processOutputMessage(std::string msg)
     auto parsedResponse = processMessageFromALF(msg);
     
     m_board->setEnvironment(SYSTEM_CLOCK_VNAME, (m_board->at(ACTUAL_SYSTEM_CLOCK_NAME).getStoredValue() == EXTERNAL_CLOCK) ?
-                m_board->getEnvironment(EXTERNAL_CLOCK_VNAME)):
-                m_board->getEnvironment(INTERNAL_CLOCL_VNAME);
+                m_board->getEnvironment(EXTERNAL_CLOCK_VNAME):
+                m_board->getEnvironment(INTERNAL_CLOCL_VNAME)
+                );
     m_board->updateEnvironment(TDC_VNAME);
 
     if(parsedResponse.errors.size() != 0)

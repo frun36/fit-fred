@@ -14,15 +14,15 @@ public:
     std::string processOutputMessage(string msg) override;
     
 private:
-    constexpr const char* ACTUAL_SYSTEM_CLOCK_NAME = "BOARD_STATUS_ACTUAL_CLOCK_SOURCE";
+    static constexpr const char* ACTUAL_SYSTEM_CLOCK_NAME = "BOARD_STATUS_ACTUAL_CLOCK_SOURCE";
 
-    constexpr const char* EXTERNAL_CLOCK_VNAME = "LHC_CLOCK";
-    constexpr const char* INTERNAL_CLOCL_VNAME = "INTERNAL_CLOCK";
-    constexpr const char* SYSTEM_CLOCK_VNAME = "SYSTEM_CLOCK";
-    constexpr const char* TDC_VNAME = "TDC";
+    static constexpr const char* EXTERNAL_CLOCK_VNAME = "LHC_CLOCK";
+    static constexpr const char* INTERNAL_CLOCL_VNAME = "INTERNAL_CLOCK";
+    static constexpr const char* SYSTEM_CLOCK_VNAME = "SYSTEM_CLOCK";
+    static constexpr const char* TDC_VNAME = "TDC";
 
-    constexpr bool INTERNAL_CLOCK = false;
-    constexpr bool EXTERNAL_CLOCK = true;
+    static constexpr bool INTERNAL_CLOCK = false;
+    static constexpr bool EXTERNAL_CLOCK = true;
 
     SwtSequence m_request;
 

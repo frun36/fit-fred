@@ -88,6 +88,10 @@ public:
     const std::unordered_map<std::string, ParameterInfo>& getParameters() const {return m_parameters;}
     bool doesExist(const std::string&);
 
+    double getEnvironment(const std::string& variableName);
+    void setEnvironment(const std::string& variableName, double value);
+    void updateEnvironment(const std::string& variableName);
+
     double calculatePhysical(const std::string& param, uint32_t raw);
     uint32_t calculateRaw(const std::string& param, double physcial);
 

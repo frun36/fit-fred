@@ -19,39 +19,6 @@ std::string TCMStatus::processInputMessage(std::string req)
     return m_request.getSequence();
 }
 
-BasicRequestHandler::ParsedResponse TCMStatus::processMessageFromALF(std::string alfresponse)
-{
-    WinCCResponse response;
-	std::list<ErrorReport> report;
-
-    try {
-        AlfResponseParser alfMsg(alfresponse);
-        if(!alfMsg.isSuccess()) {
-            report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
-			return {std::move(response), std::move(report)};
-        }
-
-        for (auto line : alfMsg) {
-            switch(line.type)
-            {
-                case AlfResponseParser::Line::Type::ResponseToRead:
-                    unpackReadResponse(line, response, report);
-                break;
-                case AlfResponseParser::Line::Type::ResponseToWrite:
-                break;
-				default:
-				throw std::runtime_error("Unsupported ALF response");
-            }
-            if(line)
-        }
-
-    } catch (const std::exception& e) {
-		report.emplace_back("SEQUENCE", e.what());
-        return {std::move(response), std::move(report)};
-    }
-
-	return {std::move(response), std::move(report)};
-}
 
 std::string TCMStatus::processOutputMessage(std::string msg)
 {
@@ -60,6 +27,11 @@ std::string TCMStatus::processOutputMessage(std::string msg)
     
     auto parsedResponse = processMessageFromALF(msg);
     
+    m_board->setEnvironment(SYSTEM_CLOCK_VNAME, (m_board->at(ACTUAL_SYSTEM_CLOCK_NAME).getStoredValue() == EXTERNAL_CLOCK) ?
+                m_board->getEnvironment(EXTERNAL_CLOCK_VNAME)):
+                m_board->getEnvironment(INTERNAL_CLOCL_VNAME);
+    m_board->updateEnvironment(TDC_VNAME);
+
     if(parsedResponse.errors.size() != 0)
     {
         returnError = true;

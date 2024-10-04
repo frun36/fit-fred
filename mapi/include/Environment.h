@@ -24,9 +24,9 @@ public:
     bool doesExist(const std::string& name);
     void emplace(const Variable&);
     void emplace(Variable&&);
-    double updateSetting(const std::string& name);
-    void setSettingValue(const std::string& name, double val);
-    double getSetting(const std::string& name);
+    double updateVariable(const std::string& name);
+    void setVariable(const std::string& name, double val);
+    double getVariable(const std::string& name);
 
 private:
     std::unordered_map<std::string, Variable> m_settings;

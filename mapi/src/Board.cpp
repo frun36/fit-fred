@@ -90,6 +90,21 @@ bool Board::doesExist(const std::string& param)
     return m_parameters.find(param) != m_parameters.end();
 }
 
+double Board::getEnvironment(const std::string& variableName)
+{
+    return m_settings->getVariable(variableName);
+}
+
+void Board::setEnvironment(const std::string& variableName, double value)
+{
+    m_settings->setVariable(variableName, value);
+}
+
+void Board::updateEnvironment(const std::string& variableName)
+{
+    m_settings->updateVariable(variableName);
+}
+
 double Board::calculatePhysical(const std::string& param, uint32_t raw) 
 {
     if(m_parameters.find(param) == m_parameters.end())
@@ -125,7 +140,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else if(m_settings != nullptr && m_settings->doesExist(var)){
-            values.emplace_back(m_settings->getSetting(var));
+            values.emplace_back(m_settings->getVariable(var));
         }
         else{
             throw std::runtime_error("Parameter " + var + " does not exist!");
@@ -166,7 +181,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else if(m_settings != nullptr && m_settings->doesExist(var)){
-            values.emplace_back(m_settings->getSetting(var));
+            values.emplace_back(m_settings->getVariable(var));
         }
         else{
             throw std::runtime_error("Parameter " + var + " does not exist!");

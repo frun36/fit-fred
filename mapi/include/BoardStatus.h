@@ -18,9 +18,11 @@ private:
     static constexpr const char* ACTUAL_SYSTEM_CLOCK_NAME = "BOARD_STATUS_ACTUAL_CLOCK_SOURCE";
     static constexpr const char* WORDS_COUNT_NAME = "GBT_WORDS_COUNT";
     static constexpr const char* EVENTS_COUNT_NAME = "GBT_EVENTS_COUNT";
+    static constexpr const char* GBT_ERROR_REPORT_EMPTY = "GBT_ERROR_REPORT_EMPTY";
     
     static constexpr const char* GBT_WORD_RATE_NAME = "GBT_WORD_RATE";
     static constexpr const char* GBT_EVENT_RATE_NAME = "GBT_EVENT_RATE";
+    static constexpr const char* GBT_ERROR_NAME = "GBT_ERROR";
 
     static constexpr const char* EXTERNAL_CLOCK_VNAME = "LHC_CLOCK";
     static constexpr const char* INTERNAL_CLOCL_VNAME = "INTERNAL_CLOCK";
@@ -32,6 +34,7 @@ private:
 
     void updateEnvironment();
     void calculateGBTRate(WinCCResponse& response);
+    void checkGBTErrorReport(WinCCResponse& response);
 
     struct GBTRate{
         uint32_t wordsCount;

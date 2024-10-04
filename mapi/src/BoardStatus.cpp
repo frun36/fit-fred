@@ -39,16 +39,27 @@ void BoardStatus::calculateGBTRate(WinCCResponse& response)
     response.addParameter(GBT_EVENT_RATE_NAME, {eventsRate});
 }
 
+void BoardStatus::checkGBTErrorReport(WinCCResponse& response)
+{
+    if(m_board->at(GBT_ERROR_REPORT_EMPTY).getStoredValue() == 1){
+        return;
+    }
+    else{
+        response.addParameter(GBT_ERROR_NAME, {1});
+    }
+}
+
 std::string BoardStatus::processOutputMessage(std::string msg)
 {
     m_currTimePoint = std::chrono::steady_clock::now();
     m_pomTimeInterval = std::chrono::duration_cast<std::chrono::milliseconds>(m_currTimePoint-m_lastTimePoint);
     
     auto parsedResponse = processMessageFromALF(msg);
-    
+
     if(m_board->type() == Board::Type::TCM){
         updateEnvironment();
     }
+    checkGBTErrorReport(parsedResponse.response);
     calculateGBTRate(parsedResponse.response);
 
     if(parsedResponse.errors.size() != 0)

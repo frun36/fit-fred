@@ -78,21 +78,15 @@ class Configurations : public Mapigroup
             ConfigurationInfo(const SwtSequence& seq, optional<int16_t> delayA, optional<int16_t> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
         };
 
-       protected:
-        virtual unordered_map<string, ConfigurationInfo>& getKnownConfigurations() = 0;
+        ConfigurationInfo getConfigurationInfo(const string& name) const;
 
-       public:
-        void registerConfiguration(const string& name, vector<vector<MultiBase*>> dbData);
+        BoardConfigurations(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
     };
 
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
-        unordered_map<string, ConfigurationInfo>& m_knownConfigurations;
-
-        unordered_map<string, ConfigurationInfo>& getKnownConfigurations() override
-        {
-            return m_knownConfigurations;
-        }
+       public:
+        PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
 
         string processInputMessage(string msg);
         string processOutputMessage(string msg);
@@ -100,33 +94,46 @@ class Configurations : public Mapigroup
 
     class TcmConfigurations : public Iterativemapi, public BoardConfigurations
     {
-        unordered_map<string, ConfigurationInfo> m_knownConfigurations;
-
-        unordered_map<string, ConfigurationInfo>& getKnownConfigurations() override
-        {
-            return m_knownConfigurations;
-        }
-
-        optional<int16_t> m_currDelayA = nullopt;
-        optional<int16_t> m_currDelayC = nullopt;
-        int16_t m_delayDifference;
-        const ConfigurationInfo* m_currCfg = nullptr;
-        optional<ParsedResponse> m_delayResponse;
-
-        enum class State { Idle,
-                           ApplyDelays,
-                           ApplyData } m_currState = State::Idle;
-
-        static constexpr char* INTERNAL_PREFIX = "_INTERNAL:";
-
-        optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC);
-
+       public:
+        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
         string processInputMessage(string msg) override;
         string processOutputMessage(string msg) override;
+
+       private:
+        optional<string> m_configurationName = nullopt;
+        optional<ConfigurationInfo> m_configurationInfo = nullopt;
+        enum class State { Idle,
+                           ApplyingDelays,
+                           DelaysApplied,
+                           ApplyingData } m_state = State::Idle;
+
+        // ControlServer stores delays as i16, and waits for (MAX_DELAY_DIFFERENCE + 10) milliseconds - which is odd, since the delay range is in nanoseconds
+        optional<int16_t> m_delayA = nullopt;
+        optional<int16_t> m_delayC = nullopt;
+        int16_t m_delayDifference = 0;
+
+        optional<string> m_delayResponse = nullopt;
+
+        static constexpr char* ContinueMessage = "_CONTINUE";
+
+        optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC);
+        
+        void reset()
+        {
+            m_configurationName = nullopt;
+            m_configurationInfo = nullopt;
+            m_delayA = 0;
+            m_delayC = 0;
+            m_delayDifference = 0;
+            m_delayResponse = nullopt;
+            m_state = State::Idle;
+        }
     };
 
    public:
     Configurations(Fred* fred, const unordered_map<string, Board>& boards);
+
+    string processInputMessage(string msg) override;
 
    private:
     unordered_map<string, unique_ptr<BoardConfigurations>> m_boardCofigurationServices;

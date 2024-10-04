@@ -4,6 +4,7 @@
 #include<unordered_map>
 #include<cstdint>
 #include<memory>
+#include<sstream>
 #include"SwtSequence.h"
 #include"AlfResponseParser.h"
 #include"WinCCRequest.h"
@@ -25,18 +26,31 @@ struct ErrorReport{
   parameterName(param), mess(message)
   {}
 
-  std::string parameterName;
-  std::string mess;
+  const std::string parameterName;
+  const std::string mess;
 
-  std::string what(){
+  std::string what() const {
     return "ERROR - " + parameterName + ": " + mess; 
   }
 };
 
 struct ParsedResponse{
   ParsedResponse(WinCCResponse&& response_, std::list<ErrorReport>&& errors_): response(response_), errors(errors_) {}
-  WinCCResponse response;
-  std::list<ErrorReport> errors;
+  const WinCCResponse response;
+  const std::list<ErrorReport> errors;
+
+  bool isError() const { return errors.size() != 0; }
+
+  string getContents() const {
+    if (!isError())
+      return response.getContents();
+    
+    std::stringstream ss;
+    for (auto& report : errors)
+        ss << report.what() << '\n';
+    ss << response.getContents();
+    return ss.str();
+  }
 };
 
 SwtSequence processMessageFromWinCC(std::string);
@@ -52,7 +66,7 @@ struct ParameterToHandle{
 
 void resetExecutionData();
 void mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge);
-SwtSequence::SwtOperation createSwtOperation(const WinCCRequest::Command& command);
+SwtSequence::SwtOperation createSwtOperation(const WinCCRequest::Command& command) const;
 
 void unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report);
 

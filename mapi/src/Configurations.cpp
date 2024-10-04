@@ -1,4 +1,5 @@
 #include "Configurations.h"
+#include <cctype>
 
 Configurations::Configurations(Fred* fred, const unordered_map<string, Board>& boards)
 {
@@ -9,35 +10,44 @@ Configurations::Configurations(Fred* fred, const unordered_map<string, Board>& b
         else
             m_boardCofigurationServices[boardName] = make_unique<PmConfigurations>();
     }
-
-    auto names = DatabaseInterface::executeQuery("SELECT UNIQUE configuration_name FROM configurations");
-
-    for (const auto& wrappedConfigurationName : names) {
-        const string& configurationName = wrappedConfigurationName[0]->getString();
-
-        auto boardNames = DatabaseInterface::executeQuery("SELECT UNIQUE board_name FROM configurations WHERE configuration_name = " + configurationName);
-
-        for (const auto& wrappedBoardName : boardNames) {
-            const string& boardName = wrappedBoardName[0]->getString();
-            m_boardsInConfigurations[configurationName].push_back(boardName);
-
-            auto configurationInfo =
-                DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = " + configurationName + " AND board_name = " + boardName);
-
-            m_boardCofigurationServices[boardName]->registerConfiguration(configurationName, configurationInfo);
-        }
-    }
 }
 
-void Configurations::BoardConfigurations::registerConfiguration(const string& name, vector<vector<MultiBase*>> dbData)
+string Configurations::processInputMessage(string msg)
+{
+    if (!DatabaseInterface::isConnected())
+        throw runtime_error("No DB connection");
+
+    Utility::removeWhiteSpaces(msg);
+    const string& name = msg;
+
+    auto boardNamesData = DatabaseInterface::executeQuery("SELECT UNIQUE board_name FROM configurations WHERE configuration_name = " + name);
+    if (boardNamesData.empty())
+        throw runtime_error(name + ": configuration not found");
+
+    vector<pair<string, string>> requests(boardNamesData.size());
+    std::transform(boardNamesData.begin(), boardNamesData.end(), requests.begin(), [&name](const vector<MultiBase*>& entry) {
+        if (!entry[0]->isString())
+            throw runtime_error(name + ": invalid board name format in DB");
+
+        return make_pair(entry[0]->getString(), name);
+    });
+
+    newMapiGroupRequest(requests);
+    noRpcRequest = true;
+    return "";
+}
+
+Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name) const
 {
     vector<SwtSequence::SwtOperation> sequenceVec;
     optional<int16_t> delayA = nullopt;
     optional<int16_t> delayC = nullopt;
 
+    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = " + name + " AND board_name = " + m_board->getName());
+
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
-            throw runtime_error("Invalid CONFIGURATIONS data row");
+            throw runtime_error(name + ": invalid CONFIGURATIONS data row");
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();
@@ -49,30 +59,20 @@ void Configurations::BoardConfigurations::registerConfiguration(const string& na
             sequenceVec.push_back(createSwtOperation(WinCCRequest::Command(parameterName, WinCCRequest::Operation::Write, parameterValue)));
     }
 
-    getKnownConfigurations().insert_or_assign(name, ConfigurationInfo(SwtSequence(sequenceVec), delayA, delayC));
+    return ConfigurationInfo(SwtSequence(sequenceVec), delayA, delayC);
 }
 
-string Configurations::PmConfigurations::processInputMessage(string msg)
+string Configurations::PmConfigurations::processInputMessage(string name)
 {
-    Utility::removeWhiteSpaces(msg);
-    if (m_knownConfigurations.count(msg) == 0)
-        throw std::runtime_error(msg + ": no such configuration found");
-
-    return m_knownConfigurations.at(msg).seq.getSequence();
+    return getConfigurationInfo(name).seq.getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
 {
     auto parsedResponse = processMessageFromALF(msg);
-    if (parsedResponse.errors.size() != 0) {
+    if (parsedResponse.isError())
         returnError = true;
-        std::stringstream error;
-        for (auto& report : parsedResponse.errors)
-            error << report.what() << '\n';
-        error << parsedResponse.response.getContents();
-        return error.str();
-    }
-    return parsedResponse.response.getContents();
+    return parsedResponse.getContents();
 }
 
 optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC)
@@ -83,17 +83,17 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
     string request;
 
     if (delayA.has_value()) {
-        m_delayDifference = abs(delayA.value() - m_currDelayA.value_or(0));
+        m_delayDifference = abs(delayA.value() - m_delayA.value_or(0));
         request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
-        m_currDelayA = delayA;
+        m_delayA = delayA;
     }
 
     if (delayC.has_value()) {
-        int16_t cDelayDifference = abs(delayC.value() - m_currDelayC.value_or(0));
+        int16_t cDelayDifference = abs(delayC.value() - m_delayC.value_or(0));
         if (cDelayDifference > m_delayDifference)
             m_delayDifference = cDelayDifference;
         request += "DELAY_C,WRITE," + std::to_string(delayC.value()) + "\n";
-        m_currDelayC = delayC;
+        m_delayC = delayC;
     }
 
     return processMessageFromWinCC(request);
@@ -101,40 +101,66 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
 
 string Configurations::TcmConfigurations::processInputMessage(string msg)
 {
-    if (m_currState != State::Idle && strncmp(msg.c_str(), INTERNAL_PREFIX, strlen(INTERNAL_PREFIX)) != 0)
-        throw std::runtime_error(msg + ": another configuration is already in progress");
-
     optional<SwtSequence> delaySequence;
-    switch (m_currState) {
+    switch (m_state) {
         case State::Idle:
-            Utility::removeWhiteSpaces(msg);
-            if (m_knownConfigurations.count(msg) == 0)
-                throw std::runtime_error(msg + ": no such configuration found");
-            m_currCfg = &m_knownConfigurations[msg];
-            delaySequence = processDelayInput(m_currCfg->delayA, m_currCfg->delayC);
+            if (msg == ContinueMessage)
+                throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
+            m_configurationName.emplace(msg);
+            m_configurationInfo.emplace(getConfigurationInfo(msg));
+
+            delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
             if (delaySequence.has_value()) {
-                m_currState = State::ApplyDelays;
+                m_state = State::ApplyingDelays;
                 return delaySequence->getSequence();
+            } else {
+                m_state = State::ApplyingData;
+                return m_configurationInfo->seq.getSequence();
             }
             break;
 
-        case State::ApplyDelays:
-        case State::ApplyData:
-            return m_currCfg->seq.getSequence();
+        case State::DelaysApplied:
+            if (!m_configurationInfo.has_value())
+                throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
+
+            m_state = State::ApplyingData;
+            return m_configurationInfo->seq.getSequence();
+
+        default:
+            throw runtime_error("TcmConfigurations: invalid state in PIM");
     }
 }
 
 string Configurations::TcmConfigurations::processOutputMessage(string msg)
 {
-    auto response = processMessageFromALF(msg);
+    auto parsedResponse = processMessageFromALF(msg);
+    string response = parsedResponse.getContents();
+    switch (m_state) {
+        case State::ApplyingDelays:
+            if (parsedResponse.isError()) {
+                reset();
+                returnError = true;
+                return "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
+            }
 
-    switch (m_currState) {
-        case State::ApplyDelays:
+            m_delayResponse = response;
+            m_state = State::DelaysApplied;
+            newRequest(ContinueMessage);
+            noReturn = true;
+            return "";
+
+        case State::ApplyingData:
+            response = m_delayResponse.value_or("<no delay response>\n") + response;
+
+            if (parsedResponse.isError()) {
+                response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was applied partially\n" + response;
+                returnError = true;
+            }
+
+            reset();
+            return response;
+
+        default:
+            throw runtime_error("TcmConfigurations: invalid state in POM");
     }
-
-    // parse alf response
-    // generate response
-    // if delays - send request for data
-    // if data - ok
-    // reset and counters?
 }

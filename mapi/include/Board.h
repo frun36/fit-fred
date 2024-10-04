@@ -92,6 +92,8 @@ public:
 
     uint32_t getAddress() const {return m_address;}
 
+    const std::string& getName() const { return m_name; }
+
 private:
     Type m_boardType;
     std::string m_name;

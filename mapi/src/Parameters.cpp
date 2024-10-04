@@ -17,17 +17,8 @@ string Parameters::processInputMessage(string msg) {
 
 string Parameters::processOutputMessage(string msg) {
     auto parsedResponse = processMessageFromALF(msg);
-    if(parsedResponse.errors.size() != 0)
-    {
+    if (parsedResponse.isError())
         returnError = true;
-        std::stringstream error;
-        for(auto& report: parsedResponse.errors)
-        {
-            error << report.what() << '\n';
-        }
-        error << parsedResponse.response.getContents();
-        return error.str();
-    }
-    return parsedResponse.response.getContents();
+    return parsedResponse.getContents();
 }
 

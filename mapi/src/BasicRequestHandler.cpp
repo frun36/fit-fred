@@ -77,7 +77,7 @@ void BasicRequestHandler::mergeOperation(SwtSequence::SwtOperation& operation, S
 	}
 }
 
-SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCRequest::Command& command)
+SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCRequest::Command& command) const
 {
 	Board::ParameterInfo& parameter = m_board->at(command.name);
 	if (parameter.regBlockSize != 1){

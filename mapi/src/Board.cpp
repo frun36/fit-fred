@@ -4,7 +4,7 @@
 #include"utils.h"
 #include"Parser/utility.h"
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<Settings> settings): 
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<Environment> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
 {
 

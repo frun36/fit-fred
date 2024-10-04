@@ -30,7 +30,7 @@ class FitData
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;
-    std::shared_ptr<Settings> m_settings;
+    std::shared_ptr<Environment> m_settings;
 };
 
 
@@ -95,7 +95,7 @@ class ConnectedDevicesTable
 class SettingsTable
 {
     public:
-    struct Setting
+    struct Variable
     {
         static constexpr columnIdx Name = 0;
         static constexpr columnIdx Equation = 1;

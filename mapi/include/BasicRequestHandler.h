@@ -40,7 +40,7 @@ struct ParsedResponse{
 };
 
 SwtSequence processMessageFromWinCC(std::string);
-ParsedResponse processMessageFromALF(std::string);
+virtual ParsedResponse processMessageFromALF(std::string);
 
 protected:
 struct ParameterToHandle{

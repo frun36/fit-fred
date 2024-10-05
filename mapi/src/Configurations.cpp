@@ -1,14 +1,14 @@
 #include "Configurations.h"
 #include <cctype>
 
-Configurations::Configurations(Fred* fred, const unordered_map<string, Board>& boards)
+Configurations::Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards)
 {
     for (const auto& boardPair : boards) {
         const string& boardName = boardPair.first;
         if (boardName == "TCM")
-            m_boardCofigurationServices[boardName] = make_unique<TcmConfigurations>();
+            m_boardCofigurationServices[boardName] = make_unique<TcmConfigurations>(boards.at(boardName));
         else
-            m_boardCofigurationServices[boardName] = make_unique<PmConfigurations>();
+            m_boardCofigurationServices[boardName] = make_unique<PmConfigurations>(boards.at(boardName));
     }
 }
 

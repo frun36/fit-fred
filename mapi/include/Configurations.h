@@ -1,9 +1,15 @@
 #pragma once
 
-#include "Mapi/mapi.h"
-#include "Mapi/iterativemapi.h"
-#include "Mapi/mapigroup.h"
-#include "Database/databaseinterface.h"
+#include "Fred/Mapi/mapi.h"
+#include "Fred/Mapi/iterativemapi.h"
+#include "Fred/Mapi/mapigroup.h"
+
+#ifdef FIT_UNIT_TEST
+    #include "databaseinterfaceMock.h"
+#else
+    #include "Database/databaseinterface.h"
+#endif
+
 #include "Parser/utility.h"
 #include "unordered_map"
 #include "SwtSequence.h"
@@ -114,7 +120,7 @@ class Configurations : public Mapigroup
 
         optional<string> m_delayResponse = nullopt;
 
-        static constexpr char* ContinueMessage = "_CONTINUE";
+        static constexpr const char* ContinueMessage = "_CONTINUE";
 
         optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC);
         
@@ -131,7 +137,7 @@ class Configurations : public Mapigroup
     };
 
    public:
-    Configurations(Fred* fred, const unordered_map<string, Board>& boards);
+    Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards);
 
     string processInputMessage(string msg) override;
 

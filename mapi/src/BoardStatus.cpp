@@ -14,9 +14,41 @@ BasicRequestHandler(board)
     m_request = processMessageFromWinCC(request);
 }
 
-std::string BoardStatus::processInputMessage(std::string req)
+void BoardStatus::processExecution()
 {
-    return m_request.getSequence();
+    bool running = true;
+    while(running)
+    {
+        std::string fromWinCC = waitForRequest(running);
+        if(fromWinCC.size() == 0) continue;
+        std::string response = executeAlfSequence(m_request.getSequence());
+
+        m_currTimePoint = std::chrono::steady_clock::now();
+        m_pomTimeInterval = std::chrono::duration_cast<std::chrono::milliseconds>(m_currTimePoint-m_lastTimePoint);
+    
+        auto parsedResponse = processMessageFromALF(response);
+
+        if(m_board->type() == Board::Type::TCM){
+            updateEnvironment();
+        }
+        checkGBTErrorReport(parsedResponse.response);
+        calculateGBTRate(parsedResponse.response);
+
+        if(parsedResponse.errors.size() != 0){
+            returnError = true;
+            std::stringstream error;
+            for(auto& report: parsedResponse.errors)
+            {
+                error << report.what() << '\n';
+            }
+            error << parsedResponse.response.getContents();
+            publishError(error.str());
+        }
+        else{
+            publishAnswer(parsedResponse.response.getContents());
+        }
+        m_lastTimePoint = m_currTimePoint;
+    }
 }
 
 void BoardStatus::updateEnvironment()
@@ -49,29 +81,7 @@ void BoardStatus::checkGBTErrorReport(WinCCResponse& response)
     }
 }
 
-std::string BoardStatus::processOutputMessage(std::string msg)
+void BoardStatus::readGBTErrorFIFO(WinCCResponse& response)
 {
-    m_currTimePoint = std::chrono::steady_clock::now();
-    m_pomTimeInterval = std::chrono::duration_cast<std::chrono::milliseconds>(m_currTimePoint-m_lastTimePoint);
-    
-    auto parsedResponse = processMessageFromALF(msg);
 
-    if(m_board->type() == Board::Type::TCM){
-        updateEnvironment();
-    }
-    checkGBTErrorReport(parsedResponse.response);
-    calculateGBTRate(parsedResponse.response);
-
-    if(parsedResponse.errors.size() != 0)
-    {
-        returnError = true;
-        std::stringstream error;
-        for(auto& report: parsedResponse.errors)
-        {
-            error << report.what() << '\n';
-        }
-        error << parsedResponse.response.getContents();
-        return error.str();
-    }
-    return parsedResponse.response.getContents();
 }

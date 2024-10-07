@@ -6,13 +6,13 @@
 #include<string_view>
 
 #include "Fred/Mapi/mapi.h"
+#include "Fred/Mapi/indefinitemapi.h"
 #include"BasicRequestHandler.h"
 
-class BoardStatus: public Mapi, BasicRequestHandler{
+class BoardStatus: public IndefiniteMapi, BasicRequestHandler{
 public:
     BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh);
-    std::string processInputMessage(string msg) override;
-    std::string processOutputMessage(string msg) override;
+    void processExecution() final;
     
 private:
     static constexpr const char* ACTUAL_SYSTEM_CLOCK_NAME = "BOARD_STATUS_ACTUAL_CLOCK_SOURCE";
@@ -35,6 +35,7 @@ private:
     void updateEnvironment();
     void calculateGBTRate(WinCCResponse& response);
     void checkGBTErrorReport(WinCCResponse& response);
+    void readGBTErrorFIFO(WinCCResponse& response);
 
     struct GBTRate{
         uint32_t wordsCount;

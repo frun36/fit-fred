@@ -1,22 +1,35 @@
 #pragma once
 
+#include "SwtSequence.h"
+#include "BasicRequestHandler.h"
+#include <optional>
+#include <unordered_map>
+#include <cstring>
+#include <memory>
+
+#ifdef FIT_UNIT_TEST
+
+#include "../../test/mocks/include/databaseinterface.h"
+#include "../../test/mocks/include/mapi.h"
+#include "../../test/mocks/include/utility.h"
+#include "gtest/gtest.h"
+
+namespace
+{
+class ConfigurationsTest_Delays_Test;
+class ConfigurationsTest_PmPim_Test;
+class ConfigurationsTest_Tcm_Test;
+} // namespace
+
+#else
+
+#include "Parser/utility.h"
+#include "Database/databaseinterface.h"
 #include "Fred/Mapi/mapi.h"
 #include "Fred/Mapi/iterativemapi.h"
 #include "Fred/Mapi/mapigroup.h"
 
-#ifdef FIT_UNIT_TEST
-    #include "databaseinterfaceMock.h"
-#else
-    #include "Database/databaseinterface.h"
 #endif
-
-#include "Parser/utility.h"
-#include "unordered_map"
-#include "SwtSequence.h"
-#include "BasicRequestHandler.h"
-#include <optional>
-#include <cstring>
-#include <memory>
 
 /*
 Control Server - void fileRead() from FITelectronics.h
@@ -72,6 +85,12 @@ PARAMETER_VALUE
 
 class Configurations : public Mapigroup
 {
+#ifdef FIT_UNIT_TEST
+    FRIEND_TEST(::ConfigurationsTest, Delays);
+    FRIEND_TEST(::ConfigurationsTest, PmPim);
+    FRIEND_TEST(::ConfigurationsTest, Tcm);
+#endif
+
    private:
     class BoardConfigurations : public BasicRequestHandler
     {
@@ -84,13 +103,19 @@ class Configurations : public Mapigroup
             ConfigurationInfo(const SwtSequence& seq, optional<int16_t> delayA, optional<int16_t> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
         };
 
-        ConfigurationInfo getConfigurationInfo(const string& name) const;
+        ConfigurationInfo getConfigurationInfo(const string& name);
 
         BoardConfigurations(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
+
+        virtual ~BoardConfigurations() = default;
     };
 
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
+#ifdef FIT_UNIT_TEST
+        FRIEND_TEST(::ConfigurationsTest, Delays);
+        FRIEND_TEST(::ConfigurationsTest, PmPim);
+#endif
        public:
         PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
 
@@ -100,6 +125,10 @@ class Configurations : public Mapigroup
 
     class TcmConfigurations : public Iterativemapi, public BoardConfigurations
     {
+#ifdef FIT_UNIT_TEST
+        FRIEND_TEST(::ConfigurationsTest, Delays);
+        FRIEND_TEST(::ConfigurationsTest, Tcm);
+#endif
        public:
         TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
         string processInputMessage(string msg) override;
@@ -123,7 +152,7 @@ class Configurations : public Mapigroup
         static constexpr const char* ContinueMessage = "_CONTINUE";
 
         optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC);
-        
+
         void reset()
         {
             m_configurationName = nullopt;

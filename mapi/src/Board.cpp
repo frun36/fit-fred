@@ -1,8 +1,16 @@
 #include<stdexcept>
 #include"Board.h"
 #include"utils.h"
-#include"Alfred/print.h"
-#include"Parser/utility.h"
+
+#ifdef FIT_UNIT_TEST
+
+#include "../../../test/mocks/include/utility.h"
+
+#else
+
+#include "Parser/utility.h"
+
+#endif
 
 Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)

@@ -1,7 +1,9 @@
 #include "Configurations.h"
 #include <cctype>
+#include <unistd.h>
+#include <sstream>
 
-Configurations::Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards)
+Configurations::Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards) : Mapigroup(fred)
 {
     for (const auto& boardPair : boards) {
         const string& boardName = boardPair.first;
@@ -20,7 +22,7 @@ string Configurations::processInputMessage(string msg)
     Utility::removeWhiteSpaces(msg);
     const string& name = msg;
 
-    auto boardNamesData = DatabaseInterface::executeQuery("SELECT UNIQUE board_name FROM configurations WHERE configuration_name = " + name);
+    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configurations WHERE configuration_name = '" + name + "';");
     if (boardNamesData.empty())
         throw runtime_error(name + ": configuration not found");
 
@@ -37,14 +39,13 @@ string Configurations::processInputMessage(string msg)
     return "";
 }
 
-Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name) const
+Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name)
 {
     vector<SwtSequence::SwtOperation> sequenceVec;
     optional<int16_t> delayA = nullopt;
     optional<int16_t> delayC = nullopt;
-
-    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = " + name + " AND board_name = " + m_board->getName());
-
+    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "';");
+    stringstream request;
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
             throw runtime_error(name + ": invalid CONFIGURATIONS data row");
@@ -56,10 +57,10 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
         else if (parameterName == "DELAY_C")
             delayC = parameterValue;
         else
-            sequenceVec.push_back(createSwtOperation(WinCCRequest::Command(parameterName, WinCCRequest::Operation::Write, parameterValue)));
+            request << parameterName << ",WRITE," << parameterValue << "\n";
     }
 
-    return ConfigurationInfo(SwtSequence(sequenceVec), delayA, delayC);
+    return ConfigurationInfo(processMessageFromWinCC(request.str()), delayA, delayC);
 }
 
 string Configurations::PmConfigurations::processInputMessage(string name)
@@ -79,6 +80,8 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
 {
     if (!delayA.has_value() && !delayC.has_value())
         return nullopt;
+
+    m_delayDifference = 0;
 
     string request;
 
@@ -145,6 +148,7 @@ string Configurations::TcmConfigurations::processOutputMessage(string msg)
 
             m_delayResponse = response;
             m_state = State::DelaysApplied;
+            usleep((m_delayDifference + 10) * 1000);
             newRequest(ContinueMessage);
             noReturn = true;
             return "";

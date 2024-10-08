@@ -1,4 +1,5 @@
 #include"BoardStatus.h"
+#include"GBT.h"
 #include<sstream>
 
 BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh):
@@ -12,6 +13,12 @@ BasicRequestHandler(board)
     std::string request = requestStream.str();
     request.pop_back();
     m_request = processMessageFromWinCC(request);
+
+    Board::ParameterInfo& fifo = m_board->at(GBT_ERROR_REPORT_FIT0);
+    for(uint32_t idx = 0; idx < fifo.regBlockSize; idx++)
+    {
+        m_gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
+    }
 }
 
 void BoardStatus::processExecution()
@@ -74,14 +81,24 @@ void BoardStatus::calculateGBTRate(WinCCResponse& response)
 void BoardStatus::checkGBTErrorReport(WinCCResponse& response)
 {
     if(m_board->at(GBT_ERROR_REPORT_EMPTY).getStoredValue() == 1){
-        return;
+       return;
     }
     else{
         response.addParameter(GBT_ERROR_NAME, {1});
+        readGBTErrorFIFO(response);
     }
 }
 
 void BoardStatus::readGBTErrorFIFO(WinCCResponse& response)
 {
+    std::string alfResponse = executeAlfSequence(m_gbtErrorFifoRead.getSequence());
+    AlfResponseParser pareser(alfResponse);
 
+    uint32_t idx = 0;
+    GBTErrorReport report;
+
+    for(auto line: pareser)
+    {
+        report.buffer[idx++] = line.frame.data;
+    }
 }

@@ -19,6 +19,7 @@ private:
     static constexpr const char* WORDS_COUNT_NAME = "GBT_WORDS_COUNT";
     static constexpr const char* EVENTS_COUNT_NAME = "GBT_EVENTS_COUNT";
     static constexpr const char* GBT_ERROR_REPORT_EMPTY = "GBT_ERROR_REPORT_EMPTY";
+    static constexpr const char* GBT_ERROR_REPORT_FIT0 = "GBT_ERROR_REPORT";
     
     static constexpr const char* GBT_WORD_RATE_NAME = "GBT_WORD_RATE";
     static constexpr const char* GBT_EVENT_RATE_NAME = "GBT_EVENT_RATE";
@@ -42,7 +43,9 @@ private:
         uint32_t eventsCount;
     } m_gbtRate;
 
+    
     SwtSequence m_request;
+    SwtSequence m_gbtErrorFifoRead;
 
     std::chrono::milliseconds m_pomTimeInterval;
     std::chrono::time_point<std::chrono::steady_clock> m_lastTimePoint;

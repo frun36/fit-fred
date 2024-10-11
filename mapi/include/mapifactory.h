@@ -15,7 +15,7 @@ private:
 
     vector<Mapi*> mapiObjects;
     std::vector<Parameters> parametersObject;
-    std::vector<BoardStatus> statusObjects;
+    std::list<BoardStatus> statusObjects;
     
     void generateObjects();
 public:

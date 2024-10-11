@@ -114,6 +114,7 @@ private:
 class GBTRateMonitor
 {
 public:
+
     inline void updateTimePoint()
     {
         m_currTimePoint = std::chrono::steady_clock::now();

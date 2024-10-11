@@ -71,6 +71,11 @@ public:
         }
         return *m_value;
     }
+
+    std::optional<double> getStoredValueOptional() const {
+        return m_value;
+    }
+
     bool boundCheck(double value) const {return(value < minValue || value > maxValue);}
 
         private:

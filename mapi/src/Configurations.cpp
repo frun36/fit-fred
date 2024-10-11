@@ -76,7 +76,7 @@ string Configurations::PmConfigurations::processOutputMessage(string msg)
     return parsedResponse.getContents();
 }
 
-optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC)
+optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optional<double> delayA, optional<double> delayC)
 {
     if (!delayA.has_value() && !delayC.has_value())
         return nullopt;
@@ -86,17 +86,15 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
     string request;
 
     if (delayA.has_value()) {
-        m_delayDifference = abs(delayA.value() - m_delayA.value_or(0));
+        m_delayDifference = abs(delayA.value() - getDelayA().value_or(0));
         request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
-        m_delayA = delayA;
     }
 
     if (delayC.has_value()) {
-        int16_t cDelayDifference = abs(delayC.value() - m_delayC.value_or(0));
+        int16_t cDelayDifference = abs(delayC.value() - getDelayC().value_or(0));
         if (cDelayDifference > m_delayDifference)
             m_delayDifference = cDelayDifference;
         request += "DELAY_C,WRITE," + std::to_string(delayC.value()) + "\n";
-        m_delayC = delayC;
     }
 
     return processMessageFromWinCC(request);
@@ -107,7 +105,7 @@ string Configurations::TcmConfigurations::processInputMessage(string msg)
     optional<SwtSequence> delaySequence;
     switch (m_state) {
         case State::Idle:
-            if (msg == ContinueMessage)
+            if (msg == CONTINUE_MESSAGE)
                 throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
             m_configurationName.emplace(msg);
             m_configurationInfo.emplace(getConfigurationInfo(msg));
@@ -148,8 +146,9 @@ string Configurations::TcmConfigurations::processOutputMessage(string msg)
 
             m_delayResponse = response;
             m_state = State::DelaysApplied;
-            usleep((m_delayDifference + 10) * 1000);
-            newRequest(ContinueMessage);
+            // Time unit needs to be considered after electronics analysis
+            usleep((static_cast<useconds_t>(m_delayDifference) + 10) * 1000);
+            newRequest(CONTINUE_MESSAGE);
             noReturn = true;
             return "";
 

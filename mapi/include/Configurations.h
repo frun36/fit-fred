@@ -97,10 +97,10 @@ class Configurations : public Mapigroup
        public:
         struct ConfigurationInfo {
             const SwtSequence seq;
-            const optional<int16_t> delayA;
-            const optional<int16_t> delayC;
+            const optional<double> delayA;
+            const optional<double> delayC;
 
-            ConfigurationInfo(const SwtSequence& seq, optional<int16_t> delayA, optional<int16_t> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
+            ConfigurationInfo(const SwtSequence& seq, optional<double> delayA, optional<double> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
         };
 
         ConfigurationInfo getConfigurationInfo(const string& name);
@@ -130,7 +130,11 @@ class Configurations : public Mapigroup
         FRIEND_TEST(::ConfigurationsTest, Tcm);
 #endif
        public:
-        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
+        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
+        {
+            if (!board->doesExist("DELAY_A") || !board->doesExist("DELAY_C"))
+                throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
+        }
         string processInputMessage(string msg) override;
         string processOutputMessage(string msg) override;
 
@@ -142,23 +146,28 @@ class Configurations : public Mapigroup
                            DelaysApplied,
                            ApplyingData } m_state = State::Idle;
 
-        // ControlServer stores delays as i16, and waits for (MAX_DELAY_DIFFERENCE + 10) milliseconds - which is odd, since the delay range is in nanoseconds
-        optional<int16_t> m_delayA = nullopt;
-        optional<int16_t> m_delayC = nullopt;
-        int16_t m_delayDifference = 0;
+        // ControlServer stores delays as i16, and waits for (MAX_DELAY_DIFFERENCE + 10) milliseconds,
+        // which is odd, since the delay range is in nanoseconds
+        double m_delayDifference = 0;
+
+        optional<double> getDelayA() const {
+            return m_board->at("DELAY_A").getStoredValueOptional();
+        }
+
+        optional<double> getDelayC() const {
+            return m_board->at("DELAY_C").getStoredValueOptional();
+        }
 
         optional<string> m_delayResponse = nullopt;
 
-        static constexpr const char* ContinueMessage = "_CONTINUE";
+        static constexpr const char* CONTINUE_MESSAGE = "_CONTINUE";
 
-        optional<SwtSequence> processDelayInput(optional<int16_t> delayA, optional<int16_t> delayC);
+        optional<SwtSequence> processDelayInput(optional<double> delayA, optional<double> delayC);
 
         void reset()
         {
             m_configurationName = nullopt;
             m_configurationInfo = nullopt;
-            m_delayA = 0;
-            m_delayC = 0;
             m_delayDifference = 0;
             m_delayResponse = nullopt;
             m_state = State::Idle;

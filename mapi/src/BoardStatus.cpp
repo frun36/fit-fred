@@ -13,12 +13,6 @@ BasicRequestHandler(board)
     std::string request = requestStream.str();
     request.pop_back();
     m_request = processMessageFromWinCC(request);
-
-    Board::ParameterInfo& fifo = m_board->at(GBT_ERROR_REPORT_FIT0);
-    for(uint32_t idx = 0; idx < fifo.regBlockSize; idx++)
-    {
-        m_gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
-    }
 }
 
 void BoardStatus::processExecution()
@@ -30,16 +24,19 @@ void BoardStatus::processExecution()
         if(fromWinCC.size() == 0) continue;
         std::string response = executeAlfSequence(m_request.getSequence());
 
-        m_currTimePoint = std::chrono::steady_clock::now();
-        m_pomTimeInterval = std::chrono::duration_cast<std::chrono::milliseconds>(m_currTimePoint-m_lastTimePoint);
+        updateTimePoint();
     
         auto parsedResponse = processMessageFromALF(response);
 
         if(m_board->type() == Board::Type::TCM){
             updateEnvironment();
         }
-        checkGBTErrorReport(parsedResponse.response);
-        calculateGBTRate(parsedResponse.response);
+
+        WinCCResponse gbtErros = checkGBTErrors();
+
+        Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount.data());
+        Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount.data());
+        WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
         if(parsedResponse.errors.size() != 0){
             returnError = true;
@@ -52,9 +49,8 @@ void BoardStatus::processExecution()
             publishError(error.str());
         }
         else{
-            publishAnswer(parsedResponse.response.getContents());
+            publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
         }
-        m_lastTimePoint = m_currTimePoint;
     }
 }
 
@@ -67,38 +63,28 @@ void BoardStatus::updateEnvironment()
     m_board->updateEnvironment(TDC_VNAME);
 }
 
-void BoardStatus::calculateGBTRate(WinCCResponse& response)
+
+WinCCResponse BoardStatus::checkGBTErrors()
 {
-    double frequency = 1000.0/ static_cast<double>(m_pomTimeInterval.count());
-    double wordsRate = (m_board->at(WORDS_COUNT_NAME).getStoredValue() - m_gbtRate.wordsCount) * frequency;
-    double eventsRate =  (m_board->at(EVENTS_COUNT_NAME).getStoredValue() - m_gbtRate.eventsCount) * frequency;
-    m_gbtRate.wordsCount = m_board->at(WORDS_COUNT_NAME).getStoredValue();
-    m_gbtRate.eventsCount = m_board->at(EVENTS_COUNT_NAME).getStoredValue();
-    response.addParameter(GBT_WORD_RATE_NAME, {wordsRate});
-    response.addParameter(GBT_EVENT_RATE_NAME, {eventsRate});
-}
-
-void BoardStatus::checkGBTErrorReport(WinCCResponse& response)
-{
-    if(m_board->at(GBT_ERROR_REPORT_EMPTY).getStoredValue() == 1){
-       return;
-    }
-    else{
-        response.addParameter(GBT_ERROR_NAME, {1});
-        readGBTErrorFIFO(response);
-    }
-}
-
-void BoardStatus::readGBTErrorFIFO(WinCCResponse& response)
-{
-    std::string alfResponse = executeAlfSequence(m_gbtErrorFifoRead.getSequence());
-    AlfResponseParser pareser(alfResponse);
-
-    uint32_t idx = 0;
-    GBTErrorReport report;
-
-    for(auto line: pareser)
+    if(m_board->at(gbt_error::parameters::FifoEmpty.data()).getStoredValue() == gbt_error::constants::fifoEmpty)
     {
-        report.buffer[idx++] = line.frame.data;
+        return WinCCResponse();
     }
+
+    Board::ParameterInfo& fifo = m_board->at(gbt_error::parameters::Fifo.data());
+    SwtSequence gbtErrorFifoRead;
+    for(uint32_t idx = 0; idx < fifo.regBlockSize; idx++)
+    {
+        gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
+    }
+
+    std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
+
+    std::array<uint32_t, gbt_error::constants::fifoSize> fifoData;
+    AlfResponseParser parser(alfResponse);
+    std::transform(parser.begin(), parser.end(), std::back_inserter(fifoData), [](const AlfResponseParser::Line& line){return line.frame.data;});
+    std::shared_ptr<gbt_error::GBTErrorType> error =  gbt_error::parseFifoData(fifoData);
+    return error->createWinCCResponse();
 }
+
+

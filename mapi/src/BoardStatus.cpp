@@ -82,7 +82,12 @@ WinCCResponse BoardStatus::checkGBTErrors()
 
     std::array<uint32_t, gbt_error::constants::fifoSize> fifoData;
     AlfResponseParser parser(alfResponse);
-    std::transform(parser.begin(), parser.end(), std::back_inserter(fifoData), [](const AlfResponseParser::Line& line){return line.frame.data;});
+    uint32_t idx = 0;
+    for(auto line : parser)
+    {
+        fifoData[idx++] = line.frame.data;
+    }
+    
     std::shared_ptr<gbt_error::GBTErrorType> error =  gbt_error::parseFifoData(fifoData);
     return error->createWinCCResponse();
 }

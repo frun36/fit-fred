@@ -20,12 +20,14 @@ FitData::FitData():m_ready(false)
                         "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'"   
     );
     Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
-    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
     if(parametersTCM.size() == 0)
     {
         Print::PrintError("TCM register data have not been found!");
         return;
     }
+    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
+    m_statusParameters.emplace("TCM", constructStatusParametersList("TCM"));
+
 
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
@@ -37,6 +39,7 @@ FitData::FitData():m_ready(false)
         return;
     }
     m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
+    m_statusParameters.emplace("PM", constructStatusParametersList("PM"));
 
 
     //Print::PrintInfo("Fetching Histogram register map");
@@ -174,6 +177,19 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
     }
 }
 
+
+std::list<std::string> FitData::constructStatusParametersList(std::string_view boardName)
+{
+    std::list<std::string> statusList;
+    for(const auto& parameter : m_templateBoards.at(boardName.data())->getParameters())
+    {
+        if(parameter.second.refreshType == Board::ParameterInfo::RefreshType::SYNC)
+        {
+            statusList.emplace_back(parameter.first);
+        }
+    }
+    return std::move(statusList);
+}
 
 ///
 ///     ParameteresTable

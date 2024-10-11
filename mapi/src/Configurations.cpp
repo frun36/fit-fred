@@ -60,12 +60,12 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
             request << parameterName << ",WRITE," << parameterValue << "\n";
     }
 
-    return ConfigurationInfo(processMessageFromWinCC(request.str()), delayA, delayC);
+    return ConfigurationInfo(request.str(), delayA, delayC);
 }
 
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
-    return getConfigurationInfo(name).seq.getSequence();
+    return processMessageFromWinCC(getConfigurationInfo(name).req).getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
@@ -115,16 +115,19 @@ string Configurations::TcmConfigurations::processInputMessage(string msg)
                 return delaySequence->getSequence();
             } else {
                 m_state = State::ApplyingData;
-                return m_configurationInfo->seq.getSequence();
+                return processMessageFromWinCC(m_configurationInfo->req).getSequence();
             }
             break;
 
         case State::DelaysApplied:
+            if (msg != CONTINUE_MESSAGE)
+                throw runtime_error("TcmConfigurations: previous configuration still in progress");
+
             if (!m_configurationInfo.has_value())
                 throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
 
             m_state = State::ApplyingData;
-            return m_configurationInfo->seq.getSequence();
+            return processMessageFromWinCC(m_configurationInfo->req).getSequence();
 
         default:
             throw runtime_error("TcmConfigurations: invalid state in PIM");
@@ -152,7 +155,7 @@ string Configurations::TcmConfigurations::processOutputMessage(string msg)
             return "";
 
         case State::ApplyingData:
-            response = m_delayResponse.value_or("<no delay response>\n") + response;
+            response = m_delayResponse.value_or("") + response;
 
             if (parsedResponse.isError()) {
                 response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was applied partially\n" + response;

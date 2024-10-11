@@ -93,22 +93,111 @@ TEST(ConfigurationsTest, Tcm)
     tcm->emplace(testMap.at("UNSIGNED_HALF"));
     tcm->emplace(testMap.at("SIGNED_HALF"));
 
+    Configurations::TcmConfigurations tcmCfg(tcm);
+
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::Idle);
+    EXPECT_EQ(tcmCfg.m_configurationName, nullopt);
+    EXPECT_EQ(tcmCfg.m_configurationInfo, nullopt);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 0);
+    EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
+
+    // Alf response - idle
+    EXPECT_THROW(tcmCfg.processOutputMessage("success"), runtime_error);
+
+    // Send test - idle, no delay
     DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
     };
-
-    Configurations::TcmConfigurations tcmCfg(tcm);
 
     string tcmPimIdleNoDelaysResult = tcmCfg.processInputMessage("TEST");
     auto tcmPimIdleNoDelaysExpected = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0xf00d, { 0x0, 0x00070000 }),
                                                     SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0xf00d, {}, true) });
     EXPECT_EQ(tcmPimIdleNoDelaysResult, tcmPimIdleNoDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
+    EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, nullopt);
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, nullopt);
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
+    // Send test - busy
+    EXPECT_THROW(tcmCfg.processInputMessage("TEST"), runtime_error);
 
+    // Alf response - successful
+    string tcmPomApplyingDataNoDelaysResult = tcmCfg.processOutputMessage("success\n0\n0\n0x0000000F00D00070000\n");
+    string tcmPomApplyingDataNoDelaysExpected = "UNSIGNED_HALF,7\nSIGNED_HALF,0\n";
+    EXPECT_EQ(tcmPomApplyingDataNoDelaysResult, tcmPomApplyingDataNoDelaysExpected);
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::Idle);
+    EXPECT_EQ(tcmCfg.m_configurationName, nullopt);
+    EXPECT_EQ(tcmCfg.m_configurationInfo, nullopt);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 0);
+    EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
+
+    // Send test - _CONTINUE while idle
+    EXPECT_THROW(tcmCfg.processInputMessage("_CONTINUE"), runtime_error);
+
+    // Send test - idle, with delay
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+        { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
+        { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
+        { new Box<string>("DELAY_A"), new Box<double>(5.) },
+        { new Box<string>("DELAY_C"), new Box<double>(-1.) }
+    };
+
+    string tcmPimIdleDelaysResult = tcmCfg.processInputMessage("TEST");
+    auto tcmPimIdleDelaysExpected = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0xffff }),
+                                                  SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x5 }),
+                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
+                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true), });
+    EXPECT_EQ(tcmPimIdleDelaysResult, tcmPimIdleDelaysExpected.getSequence());
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
+    EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 5);
+    EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
+
+    // Alf - successful delay update
+    string tcmPomApplyingDelaysResult = tcmCfg.processOutputMessage("success\n0\n0\n0x000000000010000ffff\n0x0000000000000000005\n");
+    string tcmPomApplyingDelaysExpected = "";
+    EXPECT_EQ(tcmPomApplyingDelaysResult, tcmPomApplyingDelaysExpected);
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::DelaysApplied);
+    EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 5);
+    EXPECT_EQ(tcmCfg.m_delayResponse, "DELAY_C,-1\nDELAY_A,5\n");
+
+    // Idle - delays applied, not _CONTINUE
+    EXPECT_THROW(tcmCfg.processInputMessage("TEST"), runtime_error);
+
+    // Alf response - delays applied
+    EXPECT_THROW(tcmCfg.processOutputMessage("success"), runtime_error);
+
+    // Idle - _CONTINUE
+    string tcmPimIdleDelaysContinueResult = tcmCfg.processInputMessage("_CONTINUE");
+    EXPECT_EQ(tcmPimIdleDelaysContinueResult, tcmPimIdleNoDelaysExpected.getSequence());
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
+    EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
+    EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 5);
+    EXPECT_EQ(tcmCfg.m_delayResponse, "DELAY_C,-1\nDELAY_A,5\n");
+
+    // Alf - successful completion
+    string tcmPomApplyingDataDelaysResult = tcmCfg.processOutputMessage("success\n0\n0\n0x0000000F00D00070000\n");
+    string tcmPomApplyingDataDelaysExpected = "DELAY_C,-1\nDELAY_A,5\nUNSIGNED_HALF,7\nSIGNED_HALF,0\n";
+    EXPECT_EQ(tcmPomApplyingDataDelaysResult, tcmPomApplyingDataDelaysExpected);
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::Idle);
+    EXPECT_EQ(tcmCfg.m_configurationName, nullopt);
+    EXPECT_EQ(tcmCfg.m_configurationInfo, nullopt);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 0);
+    EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
     /*
     States - Idle, ApplyingDelays, DelaysApplied, ApplyingData

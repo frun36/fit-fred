@@ -96,11 +96,11 @@ class Configurations : public Mapigroup
     {
        public:
         struct ConfigurationInfo {
-            const SwtSequence seq;
+            const string req;
             const optional<double> delayA;
             const optional<double> delayC;
 
-            ConfigurationInfo(const SwtSequence& seq, optional<double> delayA, optional<double> delayC) : seq(seq), delayA(delayA), delayC(delayC) {}
+            ConfigurationInfo(const string& req, optional<double> delayA, optional<double> delayC) : req(req), delayA(delayA), delayC(delayC) {}
         };
 
         ConfigurationInfo getConfigurationInfo(const string& name);

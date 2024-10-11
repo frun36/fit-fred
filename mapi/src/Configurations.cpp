@@ -42,8 +42,8 @@ string Configurations::processInputMessage(string msg)
 Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name)
 {
     vector<SwtSequence::SwtOperation> sequenceVec;
-    optional<int16_t> delayA = nullopt;
-    optional<int16_t> delayC = nullopt;
+    optional<double> delayA = nullopt;
+    optional<double> delayC = nullopt;
     auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "';");
     stringstream request;
     for (const auto& row : dbData) {
@@ -109,7 +109,6 @@ string Configurations::TcmConfigurations::processInputMessage(string msg)
                 throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
             m_configurationName.emplace(msg);
             m_configurationInfo.emplace(getConfigurationInfo(msg));
-
             delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
             if (delaySequence.has_value()) {
                 m_state = State::ApplyingDelays;

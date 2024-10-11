@@ -1,4 +1,5 @@
 #include "WinCCRequest.h"
+#include <cstdint>
 
 WinCCRequest::Command::Command(const std::string& line) {
     std::vector<std::string> arguments = Utility::splitString(line, ",");

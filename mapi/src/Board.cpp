@@ -36,8 +36,8 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
         physicToElectronic(base.physicToElectronic),
         isFifo(base.isFifo),
         isReadonly(base.isReadonly),
-        m_value(std::nullopt),
-        refreshType(base.refreshType)
+        refreshType(base.refreshType),
+        m_value(std::nullopt)
 {}
 
 Board::ParameterInfo::ParameterInfo(
@@ -67,8 +67,8 @@ Board::ParameterInfo::ParameterInfo(
         physicToElectronic(physicToRaw_),
         isFifo(isFifo_),
         isReadonly(isReadonly_),
-        m_value(std::nullopt),
-        refreshType(refreshType_) {}
+        refreshType(refreshType_),
+        m_value(std::nullopt) {}
 
 
 

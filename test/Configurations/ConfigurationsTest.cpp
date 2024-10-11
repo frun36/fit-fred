@@ -91,12 +91,24 @@ TEST(ConfigurationsTest, Tcm)
     tcm->emplace(testMap.at("DELAY_A"));
     tcm->emplace(testMap.at("DELAY_C"));
     tcm->emplace(testMap.at("UNSIGNED_HALF"));
+    tcm->emplace(testMap.at("SIGNED_HALF"));
 
     DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
-        { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) }
+        { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
+        { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
     };
 
     Configurations::TcmConfigurations tcmCfg(tcm);
+
+    string tcmPimIdleNoDelaysResult = tcmCfg.processInputMessage("TEST");
+    auto tcmPimIdleNoDelaysExpected = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0xf00d, { 0x0, 0x00070000 }),
+                                                    SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0xf00d, {}, true) });
+    EXPECT_EQ(tcmPimIdleNoDelaysResult, tcmPimIdleNoDelaysExpected.getSequence());
+    EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
+    EXPECT_EQ(tcmCfg.m_delayDifference, 0);
+    EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
+
+
 
     /*
     States - Idle, ApplyingDelays, DelaysApplied, ApplyingData

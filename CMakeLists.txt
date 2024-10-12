@@ -12,6 +12,8 @@ if (NOT test-only)
     add_subdirectory(core)
 endif()
 
+add_compile_options(-g -Wall -Wextra)
+
 include_directories(
     mapi/include 
     core/include 

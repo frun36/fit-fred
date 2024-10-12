@@ -167,6 +167,10 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
         m_settings->emplace(
             EnvironmentFEE::Variable(name, equation)
             );
+        if(equation.variables.empty())
+        {
+            m_settings->updateVariable(name);
+        }
     }
     for(auto& row: settingsTable)
     {

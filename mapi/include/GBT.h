@@ -30,12 +30,12 @@ constexpr uint32_t fifoSize = 36;
 constexpr double fifoEmpty = 0;
 }
 
-struct GBTErrorType
+struct GbtErrorType
 {
     virtual WinCCResponse createWinCCResponse() = 0;
 };
 
-struct BCSyncLost: public GBTErrorType
+struct BCSyncLost: public GbtErrorType
 {
     BCSyncLost(const std::array<uint32_t, constants::fifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse() final;
@@ -56,7 +56,7 @@ struct BCSyncLost: public GBTErrorType
     } data;
 };
 
-struct PMEarlyHeader: public GBTErrorType
+struct PMEarlyHeader: public GbtErrorType
 {
     PMEarlyHeader(const std::array<uint32_t, constants::fifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
@@ -68,7 +68,7 @@ struct PMEarlyHeader: public GBTErrorType
     } data;
 };
 
-struct FifoOverload: public GBTErrorType
+struct FifoOverload: public GbtErrorType
 {
     FifoOverload(const std::array<uint32_t, constants::fifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
@@ -83,7 +83,7 @@ struct FifoOverload: public GBTErrorType
     }  data;
 };
 
-[[nodiscard]] std::shared_ptr<GBTErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData);
+[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData);
 
 }
 
@@ -102,16 +102,16 @@ namespace constants
 
 }
 
-class GBTRate
+class GbtRate
 {
 public:
-    GBTRate(): oldCount(0) {}
+    GbtRate(): oldCount(0) {}
     double updateRate(uint32_t newCount, std::chrono::milliseconds timeInterval);
 private:
     uint32_t oldCount;
 };
 
-class GBTRateMonitor
+class GbtRateMonitor
 {
 public:
 
@@ -130,8 +130,8 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> m_currTimePoint;
 
     
-    GBTRate m_wordsRate;
-    GBTRate m_eventsRate;
+    GbtRate m_wordsRate;
+    GbtRate m_eventsRate;
 };
 
 } // gbt_rate

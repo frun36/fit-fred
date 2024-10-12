@@ -35,8 +35,8 @@ void BoardStatus::processExecution()
 
     WinCCResponse gbtErros = checkGBTErrors();
 
-    Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount.data());
-    Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount.data());
+    Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount);
+    Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
     if(parsedResponse.errors.size() != 0){
@@ -58,22 +58,23 @@ void BoardStatus::processExecution()
 
 void BoardStatus::updateEnvironment()
 {
-    m_board->setEnvironment(SYSTEM_CLOCK_VNAME, (m_board->at(ACTUAL_SYSTEM_CLOCK_NAME).getStoredValue() == EXTERNAL_CLOCK) ?
-                m_board->getEnvironment(EXTERNAL_CLOCK_VNAME):
-                m_board->getEnvironment(INTERNAL_CLOCL_VNAME)
+    m_board->setEnvironment(environment::parameters::SystemClock.data(), 
+        (m_board->at(ActualSystemClock).getStoredValue() == environment::constants::SourceExternalClock) ?
+                m_board->getEnvironment(environment::parameters::ExtenalClock.data()):
+                m_board->getEnvironment(environment::parameters::InternalClock.data())
                 );
-    m_board->updateEnvironment(TDC_VNAME);
+    m_board->updateEnvironment(environment::parameters::TDC.data());
 }
 
 
 WinCCResponse BoardStatus::checkGBTErrors()
 {
-    if(m_board->at(gbt_error::parameters::FifoEmpty.data()).getStoredValue() == gbt_error::constants::fifoEmpty)
+    if(m_board->at(gbt_error::parameters::FifoEmpty).getStoredValue() == gbt_error::constants::fifoEmpty)
     {
         return WinCCResponse();
     }
 
-    Board::ParameterInfo& fifo = m_board->at(gbt_error::parameters::Fifo.data());
+    Board::ParameterInfo& fifo = m_board->at(gbt_error::parameters::Fifo);
     SwtSequence gbtErrorFifoRead;
     for(uint32_t idx = 0; idx < fifo.regBlockSize; idx++)
     {
@@ -90,7 +91,7 @@ WinCCResponse BoardStatus::checkGBTErrors()
         fifoData[idx++] = line.frame.data;
     }
     
-    std::shared_ptr<gbt_error::GBTErrorType> error =  gbt_error::parseFifoData(fifoData);
+    std::shared_ptr<gbt_error::GbtErrorType> error =  gbt_error::parseFifoData(fifoData);
     return error->createWinCCResponse();
 }
 

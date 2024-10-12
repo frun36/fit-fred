@@ -4,6 +4,7 @@
 #include<string>
 #include<list>
 #include<unordered_map>
+#include<string_view>
 #include"Equation.h"
 
 class EnvironmentFEE
@@ -31,3 +32,22 @@ public:
 private:
     std::unordered_map<std::string, Variable> m_settings;
 };
+
+namespace environment
+{
+
+namespace parameters
+{
+    constexpr std::string_view ExtenalClock{"LHC_CLOCK"};
+    constexpr std::string_view InternalClock{"INTERNAL_CLOCK"};
+    constexpr std::string_view SystemClock{"SYSTEM_CLOCK"};
+    constexpr std::string_view TDC{"TDC"};
+}
+
+namespace constants
+{
+    constexpr bool SourceInternalClock = false;
+    constexpr bool SourceExternalClock = true;
+}
+
+}

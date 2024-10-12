@@ -2,18 +2,18 @@
 #include<cstring>
 namespace gbt_error
 {
-[[nodiscard]] std::shared_ptr<GBTErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData)
+[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData)
 {
     switch(fifoData[0])
     {
         case BCSyncLost::getErrorCode():
-            return std::shared_ptr<GBTErrorType>(new BCSyncLost(fifoData));
+            return std::shared_ptr<GbtErrorType>(new BCSyncLost(fifoData));
 
         case FifoOverload::getErrorCode():
-            return std::shared_ptr<GBTErrorType>(new FifoOverload(fifoData));
+            return std::shared_ptr<GbtErrorType>(new FifoOverload(fifoData));
 
         case PMEarlyHeader::getErrorCode():
-            return std::shared_ptr<GBTErrorType>(new PMEarlyHeader(fifoData));
+            return std::shared_ptr<GbtErrorType>(new PMEarlyHeader(fifoData));
 
         default:
             throw std::runtime_error("Unsupported GBT ERROR!");
@@ -60,7 +60,7 @@ WinCCResponse FifoOverload::createWinCCResponse()
 
 namespace gbt_rate
 {
-    WinCCResponse GBTRateMonitor::updateRates(uint32_t wordsCount, uint32_t eventsCount)
+    WinCCResponse GbtRateMonitor::updateRates(uint32_t wordsCount, uint32_t eventsCount)
     {
         WinCCResponse response;
         response.addParameter(parameters::WordsRate.data(), {m_wordsRate.updateRate(wordsCount, m_timeInterval)});
@@ -68,7 +68,7 @@ namespace gbt_rate
         return response;
     }
 
-    double GBTRate::updateRate(uint32_t newCount, std::chrono::milliseconds timeInterval)
+    double GbtRate::updateRate(uint32_t newCount, std::chrono::milliseconds timeInterval)
     {
         double rate = (newCount >= oldCount) ? static_cast<double>(newCount - oldCount)/static_cast<double>(timeInterval.count()): newCount;
         oldCount = newCount;

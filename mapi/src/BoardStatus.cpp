@@ -24,12 +24,10 @@ void BoardStatus::processExecution()
     std::string fromWinCC = waitForRequest(running);
     if(running == false) return;
     std::string response = executeAlfSequence(m_request.getSequence());
-    Print::PrintVerbose("Received ALF resposne");
 
     updateTimePoint();
     
     auto parsedResponse = processMessageFromALF(response);
-    Print::PrintVerbose("Parsed ALF response");
 
     if(m_board->type() == Board::Type::TCM){
         updateEnvironment();

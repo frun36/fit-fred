@@ -65,6 +65,7 @@ namespace gbt_rate
         WinCCResponse response;
         response.addParameter(parameters::WordsRate.data(), {m_wordsRate.updateRate(wordsCount, m_timeInterval)});
         response.addParameter(parameters::EventsRate.data(), {m_eventsRate.updateRate(eventsCount, m_timeInterval)});
+        return response;
     }
 
     double GBTRate::updateRate(uint32_t newCount, std::chrono::milliseconds timeInterval)

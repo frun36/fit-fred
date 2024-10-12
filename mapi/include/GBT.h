@@ -27,7 +27,7 @@ constexpr std::string_view FifoEmpty{"GBT_FIFO_EMPTY_ERROR_REPORT"};
 namespace constants
 {
 constexpr uint32_t fifoSize = 36;
-constexpr double fifoEmpty = 1;
+constexpr double fifoEmpty = 0;
 }
 
 struct GBTErrorType

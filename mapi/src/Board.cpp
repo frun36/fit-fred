@@ -136,7 +136,6 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     std::vector<double> values;
     for(const auto& var: info.electronicToPhysic.variables)
     {
-        Print::PrintVerbose(var);
         if(var == info.name) {
             values.emplace_back(decoded);
         }

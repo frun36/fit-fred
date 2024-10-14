@@ -1,4 +1,5 @@
 #include"BoardStatus.h"
+#include"Alfred/print.h"
 #include"GBT.h"
 #include<sstream>
 
@@ -52,6 +53,8 @@ void BoardStatus::processExecution()
             publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
         }
     }
+
+    Print::PrintVerbose("Closing STATUS service");
 }
 
 void BoardStatus::updateEnvironment()

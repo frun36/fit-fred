@@ -148,6 +148,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
         }
         else if(m_settings != nullptr && m_settings->doesExist(var)){
             values.emplace_back(m_settings->getVariable(var));
+            Print::PrintVerbose(std::to_string(m_settings->getVariable(var)));
         }
         else{
             throw std::runtime_error("Parameter " + var + " does not exist!");

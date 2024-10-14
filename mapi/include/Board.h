@@ -98,6 +98,7 @@ public:
     uint32_t getAddress() const {return m_address;}
 
     Type type(){return m_boardType;}
+    void setType(Type type) { m_boardType = type;}
 
 private:
     Type m_boardType;

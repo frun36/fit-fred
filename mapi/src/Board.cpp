@@ -6,7 +6,12 @@
 Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
 {
-
+    if(name.find("TCM") != std::string::npos){
+        m_boardType = Type::TCM;
+    }
+    else{
+        m_boardType = Type::PM;
+    }
 }
 
 Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t boardAddress):

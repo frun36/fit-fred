@@ -143,7 +143,7 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
 {
     for(auto& parameterToHandle: m_registerTasks.at(read.frame.address))
     {
-		Print::PrintVerbose(parameterToHandle.name);
+		Print::PrintVerbose(parameterToHandle.name + " " + m_board->at(parameterToHandle.name).electronicToPhysic.equation);
 		try{
 
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);

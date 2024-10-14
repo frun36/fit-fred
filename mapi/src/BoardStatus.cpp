@@ -21,37 +21,40 @@ void BoardStatus::processExecution()
     bool running = true;
     //while(running)
     //{
-        std::string fromWinCC = waitForRequest(running);
-        if(running == false) return;
-        std::string response = executeAlfSequence(m_request.getSequence());
+    std::string fromWinCC = waitForRequest(running);
+    if(running == false) return;
+    std::string response = executeAlfSequence(m_request.getSequence());
 
-        updateTimePoint();
+    updateTimePoint();
     
-        auto parsedResponse = processMessageFromALF(response);
+    auto parsedResponse = processMessageFromALF(response);
+    Print::PrintVerbose("Parsed ALF response");
 
-        if(m_board->type() == Board::Type::TCM){
-            updateEnvironment();
+    if(m_board->type() == Board::Type::TCM){
+        updateEnvironment();
+    }
+
+    WinCCResponse gbtErros = checkGBTErrors();
+
+    Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount.data());
+    Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount.data());
+    WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
+
+    if(parsedResponse.errors.size() != 0){
+        returnError = true;
+        std::stringstream error;
+        for(auto& report: parsedResponse.errors)
+        {
+            error << report.what() << '\n';
         }
-
-        WinCCResponse gbtErros = checkGBTErrors();
-
-        Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount.data());
-        Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount.data());
-        WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
-
-        if(parsedResponse.errors.size() != 0){
-            returnError = true;
-            std::stringstream error;
-            for(auto& report: parsedResponse.errors)
-            {
-                error << report.what() << '\n';
-            }
-            error << parsedResponse.response.getContents();
-            publishError(error.str());
-        }
-        else{
-            publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
-        }
+        error << parsedResponse.response.getContents();
+        Print::PrintVerbose("Publishing error");
+        publishError(error.str());
+    }
+    else{
+        Print::PrintVerbose("Publishing board status data");
+        publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
+    }
 }
 
 void BoardStatus::updateEnvironment()

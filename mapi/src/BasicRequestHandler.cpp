@@ -118,6 +118,7 @@ BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(s
         }
 
         for (auto line : alfMsg) {
+			Print::PrintVerbose("Parsing line...");
             switch(line.type)
             {
                 case AlfResponseParser::Line::Type::ResponseToRead:

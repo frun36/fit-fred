@@ -153,6 +153,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
     }
+    Print::PrintVerbose("Parsed variables");
     if(values.size() !=  info.electronicToPhysic.variables.size()){
         throw std::runtime_error("Parameter " + param + ": parsing equation failed!");
     }

@@ -1,6 +1,7 @@
 #include<stdexcept>
 #include"Board.h"
 #include"utils.h"
+#include"Alfred/print.h"
 #include"Parser/utility.h"
 
 Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
@@ -135,6 +136,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     std::vector<double> values;
     for(const auto& var: info.electronicToPhysic.variables)
     {
+        Print::PrintVerbose(var);
         if(var == info.name) {
             values.emplace_back(decoded);
         }

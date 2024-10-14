@@ -17,11 +17,11 @@ namespace gbt_error
 
 namespace parameters
 {
-constexpr std::string_view Fifo{"GBT_ERROR_REPORT_FIFO"};
+constexpr std::string_view Fifo{"GBT_ERROR_REPORT"};
 constexpr std::string_view BCSyncLost{"GBT_ERR_BC_SYNC_LOST"};
 constexpr std::string_view PMEarlyHeader{"GBT_ERR_PM_EARLY_HEADER"};
 constexpr std::string_view FifoOverload{"GBT_ERR_FIFO_OVERLOAD"};
-constexpr std::string_view FifoEmpty{"GBT_ERROR_FIFO_EMPTY"};
+constexpr std::string_view FifoEmpty{"GBT_FIFO_EMPTY_ERROR_REPORT"};
 }
 
 namespace constants

@@ -157,6 +157,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     if(values.size() !=  info.electronicToPhysic.variables.size()){
         throw std::runtime_error("Parameter " + param + ": parsing equation failed!");
     }
+    Print::PrintVerbose("Returning value");
     return Utility::calculateEquation(info.electronicToPhysic.equation, info.electronicToPhysic.variables, values);
 }
 

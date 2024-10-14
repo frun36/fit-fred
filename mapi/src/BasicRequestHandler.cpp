@@ -147,6 +147,7 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
 		try{
 
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
+		Print::PrintVerbose(std::to_string(value));
         if(parameterToHandle.toCompare.has_value() && value != parameterToHandle.toCompare.value()){
         	report.emplace_back(
             		parameterToHandle.name,

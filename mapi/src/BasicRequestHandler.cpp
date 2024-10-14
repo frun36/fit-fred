@@ -118,7 +118,7 @@ BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(s
         }
 
         for (auto line : alfMsg) {
-			Print::PrintVerbose("Parsing line...");
+			Print::PrintVerbose("Parsing line..." + std::to_string(line.frame.address));
             switch(line.type)
             {
                 case AlfResponseParser::Line::Type::ResponseToRead:

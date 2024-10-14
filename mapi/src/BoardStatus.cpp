@@ -19,10 +19,10 @@ BasicRequestHandler(board)
 void BoardStatus::processExecution()
 {
     bool running = true;
-    while(running)
-    {
+    //while(running)
+    //{
         std::string fromWinCC = waitForRequest(running);
-        if(fromWinCC.size() == 0) continue;
+        if(running == false) return;
         std::string response = executeAlfSequence(m_request.getSequence());
 
         updateTimePoint();
@@ -52,9 +52,6 @@ void BoardStatus::processExecution()
         else{
             publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
         }
-    }
-
-    Print::PrintVerbose("Closing STATUS service");
 }
 
 void BoardStatus::updateEnvironment()

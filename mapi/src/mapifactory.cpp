@@ -35,13 +35,13 @@ void MapiFactory::generateObjects() {
         {
             statusObjects.emplace_back(board.second, boardsData.getStatusList().at("TCM"));
             this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/PARAMETERS", dynamic_cast<Mapi*>(& parametersObject.back()));
-            this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/Status", dynamic_cast<Mapi*>(&statusObjects.back()));
+            this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/STATUS", dynamic_cast<Mapi*>(&statusObjects.back()));
         }
         else
         {
             statusObjects.emplace_back(board.second, boardsData.getStatusList().at("PM"));
             this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/PARAMETERS", dynamic_cast<Mapi*>(& parametersObject.back()));
-            this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/Status", dynamic_cast<Mapi*>(&statusObjects.back()));
+            this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/STATUS", dynamic_cast<Mapi*>(&statusObjects.back()));
         }
         Print::PrintVerbose(board.first + " registered");
     }

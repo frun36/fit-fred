@@ -6,11 +6,14 @@
 
 using namespace std;
 
-struct Fred {};
+struct Fred {
+    string Name() const { return "FRED"; }
+};
 
 struct Mapi {
     Mapi();
 
+    Fred* fred;
     bool returnError;
     bool noReturn;
     bool noRpcRequest;

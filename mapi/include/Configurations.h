@@ -184,11 +184,13 @@ class Configurations : public Mapigroup
     };
 
    public:
+    Configurations() = default;
     Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards);
 
     string processInputMessage(string msg) override;
+    string processOutputMessage(string msg) override { throw std::runtime_error("Configurations: unexpectedly received '" + msg + "' from ALF"); };
 
+    const unordered_map<string, unique_ptr<BoardConfigurations>>& getBoardConfigurationServices() const { return m_boardCofigurationServices; }
    private:
     unordered_map<string, unique_ptr<BoardConfigurations>> m_boardCofigurationServices;
-    unordered_map<string, vector<string>> m_boardsInConfigurations;
 };

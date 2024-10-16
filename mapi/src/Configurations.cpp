@@ -5,12 +5,11 @@
 
 Configurations::Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards) : Mapigroup(fred)
 {
-    for (const auto& boardPair : boards) {
-        const string& boardName = boardPair.first;
-        if (boardName == "TCM")
-            m_boardCofigurationServices[boardName] = make_unique<TcmConfigurations>(boards.at(boardName));
+    for (auto [name, board] : boards) {
+        if (name == "TCM")
+            m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
         else
-            m_boardCofigurationServices[boardName] = make_unique<PmConfigurations>(boards.at(boardName));
+            m_boardCofigurationServices[name] = make_unique<PmConfigurations>(board);
     }
 }
 
@@ -20,18 +19,26 @@ string Configurations::processInputMessage(string msg)
         throw runtime_error("No DB connection");
 
     Utility::removeWhiteSpaces(msg);
-    const string& name = msg;
+    const string& configurationName = msg;
 
-    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configurations WHERE configuration_name = '" + name + "';");
+    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configurations WHERE configuration_name = '" + configurationName + "';");
     if (boardNamesData.empty())
-        throw runtime_error(name + ": configuration not found");
+        throw runtime_error(configurationName + ": configuration not found");
 
     vector<pair<string, string>> requests(boardNamesData.size());
-    std::transform(boardNamesData.begin(), boardNamesData.end(), requests.begin(), [&name](const vector<MultiBase*>& entry) {
+    std::transform(boardNamesData.begin(), boardNamesData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
         if (!entry[0]->isString())
-            throw runtime_error(name + ": invalid board name format in DB");
+            throw runtime_error(configurationName + ": invalid board name format in DB");
+        
+        string boardName = entry[0]->getString();
+        string serviceName = fred->Name(); 
+        if (boardName == "TCM")
+            serviceName += "TCM/TCM0/";
+        else if (boardName.find("PM") != string::npos)
+            serviceName += "PM/" + boardName + "/";
+        serviceName += "_INTERNAL_CONFIGURATIONS";
 
-        return make_pair(entry[0]->getString(), name);
+        return make_pair(serviceName, configurationName);
     });
 
     newMapiGroupRequest(requests);

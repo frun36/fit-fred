@@ -9,8 +9,6 @@ enable_testing()
 add_definitions(-DFIT_UNIT_TEST)
 add_compile_options(-g -Wall -Wextra)
 
-add_compile_options(-g -Wall -Wextra)
-
 include_directories(
     mapi/include 
     core/include 
@@ -38,6 +36,8 @@ macro(create_test TEST_NAME)
     target_link_libraries(${TEST_NAME}-Test gtest gtest_main gmock_main)
     add_test(NAME Unit-Test-${TEST_NAME} COMMAND ${TEST_NAME}-Test)
 endmacro()
+
+### Test declarations
 
 create_test(Utils 
     test/Utils/UtilsTest.cpp

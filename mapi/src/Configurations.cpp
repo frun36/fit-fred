@@ -100,34 +100,78 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
     return processMessageFromWinCC(request);
 }
 
-string Configurations::TcmConfigurations::processInputMessage(string msg)
+string Configurations::TcmConfigurations::handleConfigurationStart(const string& msg)
 {
     optional<SwtSequence> delaySequence;
+    if (msg == CONTINUE_MESSAGE)
+        throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
+    m_configurationName.emplace(msg);
+    m_configurationInfo.emplace(getConfigurationInfo(msg));
+    delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
+    if (delaySequence.has_value()) {
+        m_state = State::ApplyingDelays;
+        return delaySequence->getSequence();
+    } else {
+        m_state = State::ApplyingData;
+        return processMessageFromWinCC(m_configurationInfo->req).getSequence();
+    }
+}
+
+string Configurations::TcmConfigurations::handleConfigurationContinuation(const string& msg)
+{
+    if (msg != CONTINUE_MESSAGE)
+        throw runtime_error("TcmConfigurations: previous configuration still in progress");
+
+    if (!m_configurationInfo.has_value())
+        throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
+
+    m_state = State::ApplyingData;
+    return processMessageFromWinCC(m_configurationInfo->req).getSequence();
+}
+
+string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
+{
+    auto parsedResponse = processMessageFromALF(msg);
+    string response = parsedResponse.getContents();
+
+    if (parsedResponse.isError()) {
+        reset();
+        returnError = true;
+        return "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
+    }
+
+    m_delayResponse = response;
+    m_state = State::DelaysApplied;
+    // Time unit needs to be considered after electronics analysis
+    usleep((static_cast<useconds_t>(m_delayDifference) + 10) * 1000);
+    newRequest(CONTINUE_MESSAGE);
+    noReturn = true;
+    return "";
+}
+
+string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
+{
+    auto parsedResponse = processMessageFromALF(msg);
+    string response = parsedResponse.getContents();
+    response = m_delayResponse.value_or("") + response;
+
+    if (parsedResponse.isError()) {
+        response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was applied partially\n" + response;
+        returnError = true;
+    }
+
+    reset();
+    return response;
+}
+
+string Configurations::TcmConfigurations::processInputMessage(string msg)
+{
     switch (m_state) {
         case State::Idle:
-            if (msg == CONTINUE_MESSAGE)
-                throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
-            m_configurationName.emplace(msg);
-            m_configurationInfo.emplace(getConfigurationInfo(msg));
-            delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
-            if (delaySequence.has_value()) {
-                m_state = State::ApplyingDelays;
-                return delaySequence->getSequence();
-            } else {
-                m_state = State::ApplyingData;
-                return processMessageFromWinCC(m_configurationInfo->req).getSequence();
-            }
-            break;
+            return handleConfigurationStart(msg);
 
         case State::DelaysApplied:
-            if (msg != CONTINUE_MESSAGE)
-                throw runtime_error("TcmConfigurations: previous configuration still in progress");
-
-            if (!m_configurationInfo.has_value())
-                throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
-
-            m_state = State::ApplyingData;
-            return processMessageFromWinCC(m_configurationInfo->req).getSequence();
+            return handleConfigurationContinuation(msg);
 
         default:
             throw runtime_error("TcmConfigurations: invalid state in PIM");
@@ -136,34 +180,12 @@ string Configurations::TcmConfigurations::processInputMessage(string msg)
 
 string Configurations::TcmConfigurations::processOutputMessage(string msg)
 {
-    auto parsedResponse = processMessageFromALF(msg);
-    string response = parsedResponse.getContents();
     switch (m_state) {
         case State::ApplyingDelays:
-            if (parsedResponse.isError()) {
-                reset();
-                returnError = true;
-                return "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
-            }
-
-            m_delayResponse = response;
-            m_state = State::DelaysApplied;
-            // Time unit needs to be considered after electronics analysis
-            usleep((static_cast<useconds_t>(m_delayDifference) + 10) * 1000);
-            newRequest(CONTINUE_MESSAGE);
-            noReturn = true;
-            return "";
+            return handleDelayResponse(msg);
 
         case State::ApplyingData:
-            response = m_delayResponse.value_or("") + response;
-
-            if (parsedResponse.isError()) {
-                response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was applied partially\n" + response;
-                returnError = true;
-            }
-
-            reset();
-            return response;
+            return handleDataResponse(msg);
 
         default:
             throw runtime_error("TcmConfigurations: invalid state in POM");

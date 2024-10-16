@@ -135,10 +135,19 @@ class Configurations : public Mapigroup
             if (!board->doesExist("DELAY_A") || !board->doesExist("DELAY_C"))
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
         }
+
+       private:
+        string handleConfigurationStart(const string& msg);
+
+        string handleConfigurationContinuation(const string& msg);
+        
+        string handleDelayResponse(const string& msg);
+
+        string handleDataResponse(const string& msg);
+
         string processInputMessage(string msg) override;
         string processOutputMessage(string msg) override;
 
-       private:
         optional<string> m_configurationName = nullopt;
         optional<ConfigurationInfo> m_configurationInfo = nullopt;
         enum class State { Idle,

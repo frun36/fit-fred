@@ -87,14 +87,16 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
 
     if (delayA.has_value()) {
         m_delayDifference = abs(delayA.value() - getDelayA().value_or(0));
-        request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
+        if(m_delayDifference != 0)
+            request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
     }
 
     if (delayC.has_value()) {
         int16_t cDelayDifference = abs(delayC.value() - getDelayC().value_or(0));
         if (cDelayDifference > m_delayDifference)
             m_delayDifference = cDelayDifference;
-        request += "DELAY_C,WRITE," + std::to_string(delayC.value()) + "\n";
+        if (cDelayDifference != 0)
+            request += "DELAY_C,WRITE," + std::to_string(delayC.value()) + "\n";
     }
 
     return processMessageFromWinCC(request);
@@ -135,9 +137,10 @@ string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
     string response = parsedResponse.getContents();
 
     if (parsedResponse.isError()) {
+        response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
         reset();
         returnError = true;
-        return "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
+        return response;
     }
 
     m_delayResponse = response;
@@ -156,7 +159,7 @@ string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
     response = m_delayResponse.value_or("") + response;
 
     if (parsedResponse.isError()) {
-        response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was applied partially\n" + response;
+        response = "TCM configuration " + m_configurationName.value_or("<no name>") + (m_delayResponse.has_value() ? " was applied partially\n" : " was not applied\n") + response;  
         returnError = true;
     }
 

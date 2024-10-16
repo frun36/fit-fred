@@ -272,8 +272,6 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
             encoding,
             min,
             max,
-            min,
-            max,
             electronicToPhysic,
             physicToElectronic,
             parseBoolean(dbRow[Parameter::IsFifo]),

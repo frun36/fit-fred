@@ -69,7 +69,7 @@ void BoardStatus::updateEnvironment()
 
 WinCCResponse BoardStatus::checkGBTErrors()
 {
-    if(m_board->at(gbt_error::parameters::FifoEmpty).getStoredValue() == gbt_error::constants::fifoEmpty)
+    if(m_board->at(gbt_error::parameters::FifoEmpty).getStoredValue() == gbt_error::constants::FifoEmpty)
     {
         return WinCCResponse();
     }
@@ -83,7 +83,7 @@ WinCCResponse BoardStatus::checkGBTErrors()
 
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
-    std::array<uint32_t, gbt_error::constants::fifoSize> fifoData;
+    std::array<uint32_t, gbt_error::constants::FifoSize> fifoData;
     AlfResponseParser parser(alfResponse);
     uint32_t idx = 0;
     for(auto line : parser)

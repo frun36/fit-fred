@@ -19,15 +19,15 @@ namespace parameters
 {
 constexpr std::string_view Fifo{"GBT_ERROR_REPORT"};
 constexpr std::string_view BCSyncLost{"GBT_ERR_BC_SYNC_LOST"};
-constexpr std::string_view PMEarlyHeader{"GBT_ERR_PM_EARLY_HEADER"};
+constexpr std::string_view PmEarlyHeader{"GBT_ERR_PM_EARLY_HEADER"};
 constexpr std::string_view FifoOverload{"GBT_ERR_FIFO_OVERLOAD"};
 constexpr std::string_view FifoEmpty{"GBT_FIFO_EMPTY_ERROR_REPORT"};
 }
 
 namespace constants
 {
-constexpr uint32_t fifoSize = 36;
-constexpr double fifoEmpty = 0;
+constexpr uint32_t FifoSize = 36;
+constexpr double FifoEmpty = 0;
 }
 
 struct GbtErrorType
@@ -37,7 +37,7 @@ struct GbtErrorType
 
 struct BCSyncLost: public GbtErrorType
 {
-    BCSyncLost(const std::array<uint32_t, constants::fifoSize>& fifoData);
+    BCSyncLost(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse() final;
     static constexpr uint32_t getErrorCode() {return  0xEEEE000A; }
     
@@ -56,9 +56,9 @@ struct BCSyncLost: public GbtErrorType
     } data;
 };
 
-struct PMEarlyHeader: public GbtErrorType
+struct PmEarlyHeader: public GbtErrorType
 {
-    PMEarlyHeader(const std::array<uint32_t, constants::fifoSize>& fifoData);
+    PmEarlyHeader(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
     static constexpr uint32_t getErrorCode() {return 0xEEEE0009;}
     
@@ -70,7 +70,7 @@ struct PMEarlyHeader: public GbtErrorType
 
 struct FifoOverload: public GbtErrorType
 {
-    FifoOverload(const std::array<uint32_t, constants::fifoSize>& fifoData);
+    FifoOverload(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
     static constexpr uint32_t getErrorCode() {return 0xEEEE0008;}
 
@@ -83,7 +83,7 @@ struct FifoOverload: public GbtErrorType
     }  data;
 };
 
-[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData);
+[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData);
 
 }
 

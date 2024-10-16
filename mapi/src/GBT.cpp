@@ -2,7 +2,7 @@
 #include<cstring>
 namespace gbt_error
 {
-[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::fifoSize>& fifoData)
+[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     switch(fifoData[0])
     {
@@ -12,15 +12,15 @@ namespace gbt_error
         case FifoOverload::getErrorCode():
             return std::shared_ptr<GbtErrorType>(new FifoOverload(fifoData));
 
-        case PMEarlyHeader::getErrorCode():
-            return std::shared_ptr<GbtErrorType>(new PMEarlyHeader(fifoData));
+        case PmEarlyHeader::getErrorCode():
+            return std::shared_ptr<GbtErrorType>(new PmEarlyHeader(fifoData));
 
         default:
             throw std::runtime_error("Unsupported GBT ERROR!");
     }
 }
 
-BCSyncLost::BCSyncLost(const std::array<uint32_t, constants::fifoSize>& fifoData)
+BCSyncLost::BCSyncLost(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     std::memcpy((uint32_t*) &data, fifoData.data(), sizeof(Data));
 }
@@ -32,19 +32,19 @@ WinCCResponse BCSyncLost::createWinCCResponse()
     return std::move(response);
 }
 
-PMEarlyHeader::PMEarlyHeader(const std::array<uint32_t, constants::fifoSize>& fifoData)
+PmEarlyHeader::PmEarlyHeader(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     std::memcpy((uint32_t*) &data, fifoData.data(), sizeof(Data));
 }
 
-WinCCResponse PMEarlyHeader::createWinCCResponse()
+WinCCResponse PmEarlyHeader::createWinCCResponse()
 {
     WinCCResponse response;
-    response.addParameter(gbt_error::parameters::PMEarlyHeader.data(), {1});
+    response.addParameter(gbt_error::parameters::PmEarlyHeader.data(), {1});
     return std::move(response);
 }
 
-FifoOverload::FifoOverload(const std::array<uint32_t, constants::fifoSize>& fifoData)
+FifoOverload::FifoOverload(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     std::memcpy((uint32_t*) &data, fifoData.data(), sizeof(Data));
 }

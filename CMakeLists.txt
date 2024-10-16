@@ -95,7 +95,7 @@ create_test(
     mapi/src/SwtSequence.cpp 
     mapi/src/AlfResponseParser.cpp 
     mapi/src/WinCCRequest.cpp 
-    mapi/src/Settings.cpp 
+    mapi/src/Environment.cpp 
     ${MOCKS}
 )
 

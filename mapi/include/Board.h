@@ -89,7 +89,7 @@ public:
 
     ParameterInfo& operator[](const std::string&);
     ParameterInfo& operator[](std::string_view);
-    ParameterInfo& at(const std::string&);
+    // ParameterInfo& at(const std::string&);
     ParameterInfo& at(std::string_view);
 
     const std::unordered_map<std::string, ParameterInfo>& getParameters() const {return m_parameters;}

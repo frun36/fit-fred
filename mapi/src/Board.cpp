@@ -94,16 +94,16 @@ Board::ParameterInfo& Board::operator[](std::string_view param)
 }
 
 
-Board::ParameterInfo& Board::at(const std::string& param)
-{
-    try{
-        Board::ParameterInfo& ref = m_parameters.at(param);
-        return ref;
-    }
-    catch (const std::out_of_range&) {
-        throw std::out_of_range("Parameter " + param + " not found on the board.");
-    }
-}
+// Board::ParameterInfo& Board::at(const std::string& param)
+// {
+//     try{
+//         Board::ParameterInfo& ref = m_parameters.at(param);
+//         return ref;
+//     }
+//     catch (const std::out_of_range&) {
+//         throw std::out_of_range("Parameter " + param + " not found on the board.");
+//     }
+// }
 
 Board::ParameterInfo& Board::at(std::string_view param)
 {

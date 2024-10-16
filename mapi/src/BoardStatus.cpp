@@ -1,6 +1,5 @@
 #include"BoardStatus.h"
 #include"Alfred/print.h"
-#include"GBT.h"
 #include<sstream>
 
 BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh):
@@ -46,14 +45,14 @@ void BoardStatus::processExecution()
         updateEnvironment();
     }
 
-    WinCCResponse gbtErros = checkGBTErrors();
+    WinCCResponse gbtErrors = checkGbtErrors();
 
     Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount);
     Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
     Print::PrintVerbose("Publishing board status data");
-    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
+    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
 }
 
 void BoardStatus::updateEnvironment()
@@ -67,7 +66,7 @@ void BoardStatus::updateEnvironment()
 }
 
 
-WinCCResponse BoardStatus::checkGBTErrors()
+WinCCResponse BoardStatus::checkGbtErrors()
 {
     if(m_board->at(gbt_error::parameters::FifoEmpty).getStoredValue() == gbt_error::constants::FifoEmpty)
     {

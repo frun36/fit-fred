@@ -8,7 +8,7 @@
 #include "Fred/Mapi/mapi.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include"BasicRequestHandler.h"
-#include"GBT.h"
+#include"gbt.h"
 
 class BoardStatus: public IndefiniteMapi, BasicRequestHandler, gbt_rate::GbtRateMonitor{
 public:
@@ -18,7 +18,7 @@ public:
 private:
     static constexpr std::string_view ActualSystemClock{"BOARD_STATUS_ACTUAL_CLOCK_SOURCE"};
     void updateEnvironment();
-    WinCCResponse checkGBTErrors();
+    WinCCResponse checkGbtErrors();
 
     SwtSequence m_request;
 };

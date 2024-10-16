@@ -1,8 +1,16 @@
 #include<stdexcept>
 #include"Board.h"
 #include"utils.h"
-#include"Alfred/print.h"
-#include"Parser/utility.h"
+
+#ifdef FIT_UNIT_TEST
+
+#include "../../../test/mocks/include/utility.h"
+
+#else
+
+#include "Parser/utility.h"
+
+#endif
 
 Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
@@ -28,8 +36,8 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
         physicToElectronic(base.physicToElectronic),
         isFifo(base.isFifo),
         isReadonly(base.isReadonly),
-        m_value(std::nullopt),
-        refreshType(base.refreshType)
+        refreshType(base.refreshType),
+        m_value(std::nullopt)
 {}
 
 Board::ParameterInfo::ParameterInfo(
@@ -59,8 +67,8 @@ Board::ParameterInfo::ParameterInfo(
         physicToElectronic(physicToRaw_),
         isFifo(isFifo_),
         isReadonly(isReadonly_),
-        m_value(std::nullopt),
-        refreshType(refreshType_) {}
+        refreshType(refreshType_),
+        m_value(std::nullopt) {}
 
 
 
@@ -86,16 +94,16 @@ Board::ParameterInfo& Board::operator[](std::string_view param)
 }
 
 
-Board::ParameterInfo& Board::at(const std::string& param)
-{
-    try{
-        Board::ParameterInfo& ref = m_parameters.at(param);
-        return ref;
-    }
-    catch (const std::out_of_range&) {
-        throw std::out_of_range("Parameter " + param + " not found on the board.");
-    }
-}
+// Board::ParameterInfo& Board::at(const std::string& param)
+// {
+//     try{
+//         Board::ParameterInfo& ref = m_parameters.at(param);
+//         return ref;
+//     }
+//     catch (const std::out_of_range&) {
+//         throw std::out_of_range("Parameter " + param + " not found on the board.");
+//     }
+// }
 
 Board::ParameterInfo& Board::at(std::string_view param)
 {

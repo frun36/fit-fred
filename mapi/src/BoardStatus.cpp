@@ -29,6 +29,19 @@ void BoardStatus::processExecution()
     
     auto parsedResponse = processMessageFromALF(response);
 
+    if(parsedResponse.errors.empty()==false){
+        returnError = true;
+        std::stringstream error;
+        for(auto& report: parsedResponse.errors)
+        {
+            error << report.what() << '\n';
+        }
+        error << parsedResponse.response.getContents();
+        Print::PrintVerbose("Publishing error");
+        publishError(error.str());
+        return;
+    }
+
     if(m_board->type() == Board::Type::TCM){
         updateEnvironment();
     }
@@ -39,21 +52,8 @@ void BoardStatus::processExecution()
     Board::ParameterInfo& eventsCount  = m_board->at(gbt_rate::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
-    if(parsedResponse.errors.size() != 0){
-        returnError = true;
-        std::stringstream error;
-        for(auto& report: parsedResponse.errors)
-        {
-            error << report.what() << '\n';
-        }
-        error << parsedResponse.response.getContents();
-        Print::PrintVerbose("Publishing error");
-        publishError(error.str());
-    }
-    else{
-        Print::PrintVerbose("Publishing board status data");
-        publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
-    }
+    Print::PrintVerbose("Publishing board status data");
+    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErros.getContents());
 }
 
 void BoardStatus::updateEnvironment()

@@ -1,13 +1,18 @@
 #include<stdexcept>
 #include"Board.h"
-#include"Settings.h"
 #include"utils.h"
+#include"Alfred/print.h"
 #include"Parser/utility.h"
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<Settings> settings): 
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main,  std::shared_ptr<EnvironmentFEE> settings): 
 m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
 {
-
+    if(name.find("TCM") != std::string::npos){
+        m_boardType = Type::TCM;
+    }
+    else{
+        m_boardType = Type::PM;
+    }
 }
 
 Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t boardAddress):
@@ -75,6 +80,12 @@ Board::ParameterInfo& Board::operator[](const std::string& param)
     return at(param);
 }
 
+Board::ParameterInfo& Board::operator[](std::string_view param)
+{
+    return at(param);
+}
+
+
 Board::ParameterInfo& Board::at(const std::string& param)
 {
     try{
@@ -86,9 +97,35 @@ Board::ParameterInfo& Board::at(const std::string& param)
     }
 }
 
+Board::ParameterInfo& Board::at(std::string_view param)
+{
+    try{
+        Board::ParameterInfo& ref = m_parameters.at(param.data());
+        return ref;
+    }
+    catch (const std::out_of_range&) {
+        throw std::out_of_range("Parameter " + std::string(param) + " not found on the board.");
+    }
+}
+
 bool Board::doesExist(const std::string& param)
 {
     return m_parameters.find(param) != m_parameters.end();
+}
+
+double Board::getEnvironment(const std::string& variableName)
+{
+    return m_settings->getVariable(variableName);
+}
+
+void Board::setEnvironment(const std::string& variableName, double value)
+{
+    m_settings->setVariable(variableName, value);
+}
+
+void Board::updateEnvironment(const std::string& variableName)
+{
+    m_settings->updateVariable(variableName);
 }
 
 double Board::calculatePhysical(const std::string& param, uint32_t raw) 
@@ -126,7 +163,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else if(m_settings != nullptr && m_settings->doesExist(var)){
-            values.emplace_back(m_settings->getSetting(var));
+            values.emplace_back(m_settings->getVariable(var));
         }
         else{
             throw std::runtime_error("Parameter " + var + " does not exist!");
@@ -167,7 +204,7 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
         }
         else if(m_settings != nullptr && m_settings->doesExist(var)){
-            values.emplace_back(m_settings->getSetting(var));
+            values.emplace_back(m_settings->getVariable(var));
         }
         else{
             throw std::runtime_error("Parameter " + var + " does not exist!");

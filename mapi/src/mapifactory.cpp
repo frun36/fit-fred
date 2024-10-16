@@ -29,15 +29,19 @@ void MapiFactory::generateObjects() {
     
     for(auto board: boardsData.getBoards())
     {
+        parametersObject.emplace_back(board.second);
+
         if(board.first.find("TCM") != std::string::npos)
         {
-            parametersObject.emplace_back(board.second);
-            this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/PARAMETERS", (Mapi*) & parametersObject.back());
+            statusObjects.emplace_back(board.second, boardsData.getStatusList().at("TCM"));
+            this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/PARAMETERS", dynamic_cast<Mapi*>(& parametersObject.back()));
+            this->fred->registerMapiObject(this->fred->Name() + "/TCM/" + board.first + "/STATUS", dynamic_cast<Mapi*>(&statusObjects.back()));
         }
         else
         {
-            parametersObject.emplace_back(board.second);
-            this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/PARAMETERS", (Mapi*) & parametersObject.back());
+            statusObjects.emplace_back(board.second, boardsData.getStatusList().at("PM"));
+            this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/PARAMETERS", dynamic_cast<Mapi*>(& parametersObject.back()));
+            this->fred->registerMapiObject(this->fred->Name() + "/PM/" + board.first + "/STATUS", dynamic_cast<Mapi*>(&statusObjects.back()));
         }
         Print::PrintVerbose(board.first + " registered");
     }

@@ -7,8 +7,8 @@
 #include<optional>
 #include<list>
 #include"Equation.h"
+#include"Environment.h"
 
-class Settings;
 
 class Board
 {
@@ -77,26 +77,36 @@ public:
         std::optional<double> m_value;
     };
 
-    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<Settings> settings=nullptr);
+    Board(std::string name, uint32_t address, std::shared_ptr<Board> main=nullptr, std::shared_ptr<EnvironmentFEE> settings=nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
 
     ParameterInfo& operator[](const std::string&);
+    ParameterInfo& operator[](std::string_view);
     ParameterInfo& at(const std::string&);
+    ParameterInfo& at(std::string_view);
+
     const std::unordered_map<std::string, ParameterInfo>& getParameters() const {return m_parameters;}
     bool doesExist(const std::string&);
+
+    double getEnvironment(const std::string& variableName);
+    void setEnvironment(const std::string& variableName, double value);
+    void updateEnvironment(const std::string& variableName);
 
     double calculatePhysical(const std::string& param, uint32_t raw);
     uint32_t calculateRaw(const std::string& param, double physcial);
 
     uint32_t getAddress() const {return m_address;}
 
+    Type type(){return m_boardType;}
+    void setType(Type type) { m_boardType = type;}
+
 private:
     Type m_boardType;
     std::string m_name;
     uint32_t m_address;   
     std::shared_ptr<Board> m_mainBoard;
-    std::shared_ptr<Settings> m_settings;
+    std::shared_ptr<EnvironmentFEE> m_settings;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

@@ -143,8 +143,8 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
     for(auto& parameterToHandle: m_registerTasks.at(read.frame.address))
     {
 		try{
-
         double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
+		
         if(parameterToHandle.toCompare.has_value() && value != parameterToHandle.toCompare.value()){
         	report.emplace_back(
             		parameterToHandle.name,

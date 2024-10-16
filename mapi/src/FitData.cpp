@@ -20,12 +20,14 @@ FitData::FitData():m_ready(false)
                         "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'"   
     );
     Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
-    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
     if(parametersTCM.size() == 0)
     {
         Print::PrintError("TCM register data have not been found!");
         return;
     }
+    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
+    m_statusParameters.emplace("TCM", constructStatusParametersList("TCM"));
+
 
     Print::PrintInfo("Fetching PM register map");
     auto parametersPM = DatabaseInterface::executeQuery(
@@ -37,6 +39,7 @@ FitData::FitData():m_ready(false)
         return;
     }
     m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
+    m_statusParameters.emplace("PM", constructStatusParametersList("PM"));
 
 
     //Print::PrintInfo("Fetching Histogram register map");
@@ -154,26 +157,43 @@ std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uin
 
 void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
 {
-    m_settings = std::make_shared<Settings>();
+    m_settings = std::make_shared<EnvironmentFEE>();
     for(auto& row: settingsTable)
     {
-        std::string name = row[SettingsTable::Setting::Name]->getString();
-        Equation equation =  parseEquation(row[SettingsTable::Setting::Equation]->getString());
+        std::string name = row[SettingsTable::Variable::Name]->getString();
+        Equation equation =  parseEquation(row[SettingsTable::Variable::Equation]->getString());
         Print::PrintVerbose("Parsing " + name);
         Print::PrintVerbose("Equation: " + equation.equation);
         m_settings->emplace(
-            Settings::Setting(name, equation)
+            EnvironmentFEE::Variable(name, equation)
             );
+        if(equation.variables.empty())
+        {
+            m_settings->updateVariable(name);
+        }
     }
     for(auto& row: settingsTable)
     {
-        std::string name = row[SettingsTable::Setting::Name]->getString();
+        std::string name = row[SettingsTable::Variable::Name]->getString();
         Print::PrintVerbose("Updating " + name);
-        m_settings->updateSetting(name);
-        Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_settings->getSetting(name)));
+        m_settings->updateVariable(name);
+        Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_settings->getVariable(name)));
     }
 }
 
+
+std::list<std::string> FitData::constructStatusParametersList(std::string_view boardName)
+{
+    std::list<std::string> statusList;
+    for(const auto& parameter : m_templateBoards.at(boardName.data())->getParameters())
+    {
+        if(parameter.second.refreshType == Board::ParameterInfo::RefreshType::SYNC)
+        {
+            statusList.emplace_back(parameter.first);
+        }
+    }
+    return std::move(statusList);
+}
 
 ///
 ///     ParameteresTable
@@ -242,11 +262,12 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
     else{
         max = dbRow[Parameter::MaxValue]->getDouble();
     }
+
     return {
             dbRow[Parameter::Name]->getString(),
             parseHex(dbRow[Parameter::BaseAddress]),
             static_cast<uint32_t>(dbRow[Parameter::StartBit]->getInt()),
-            bitLength,
+            static_cast<uint8_t>(bitLength),
             static_cast<uint8_t>(dbRow[Parameter::RegBlockSize]->getInt()),
             encoding,
             min,

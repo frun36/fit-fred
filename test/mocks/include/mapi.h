@@ -34,7 +34,7 @@ struct Iterativemapi : Mapi {
 };
 
 struct Mapigroup : Mapi {
-    Mapigroup(Fred* fred);
+    Mapigroup();
 
     void publishAnswer(string message);
     void publishError(string error);

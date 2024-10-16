@@ -1,10 +1,8 @@
 #include "mapifactory.h"
 #include "FitData.h"
 
-MapiFactory::MapiFactory(Fred* fred)
+MapiFactory::MapiFactory(Fred* fred) : m_fred(fred)
 {
-    m_fred = fred;
-
     try {
         generateObjects();
     } catch (const exception& e) {
@@ -28,7 +26,7 @@ void MapiFactory::generateObjects()
     }
     Print::PrintVerbose("Registering MAPI Objects");
 
-    m_configurationsObject = Configurations(m_fred, boardsData.getBoards());
+    m_configurationsObject = Configurations(m_fred->Name(), boardsData.getBoards());
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", &m_configurationsObject);
 
     for (auto [boardName, board] : boardsData.getBoards()) {

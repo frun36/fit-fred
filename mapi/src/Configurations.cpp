@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <sstream>
 
-Configurations::Configurations(Fred* fred, const unordered_map<string, shared_ptr<Board>>& boards) : Mapigroup(fred)
+Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
     for (auto [name, board] : boards) {
         if (name == "TCM")
@@ -31,7 +31,7 @@ string Configurations::processInputMessage(string msg)
             throw runtime_error(configurationName + ": invalid board name format in DB");
         
         string boardName = entry[0]->getString();
-        string serviceName = fred->Name(); 
+        string serviceName = m_fredName; 
         if (boardName == "TCM")
             serviceName += "TCM/TCM0/";
         else if (boardName.find("PM") != string::npos)

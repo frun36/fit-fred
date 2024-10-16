@@ -14,7 +14,7 @@ void Iterativemapi::publishAnswer(string message) {}
 
 void Iterativemapi::publishError(string error) {}
 
-Mapigroup::Mapigroup(Fred* fred) : Mapi() {}
+Mapigroup::Mapigroup() = default;
 
 void Mapigroup::publishAnswer(string message) {}
 

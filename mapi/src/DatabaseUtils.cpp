@@ -8,6 +8,7 @@
 
 namespace db_utils
 {
+
 Equation parseEquation(std::string equation)
 {
     Equation parsed;
@@ -25,6 +26,39 @@ Equation parseEquation(std::string equation)
     parsed.equation = std::move(equation);
     return parsed;
 }
+
+std::string selectQuery(std::string_view tableName, const std::vector<std::string_view>& columns, const std::vector<std::string_view>& whereConditions, bool distinct)
+{
+    std::stringstream ss;
+    ss << "SELECT ";
+    if(distinct){
+        ss << "DISTINCT "; 
+    }
+    bool first = true;
+    for(auto& column: columns){
+        if(!first){
+            ss << ',';
+        }
+        ss << column;
+        first = false;
+    }
+    
+    ss << " FROM " << tableName;
+
+    if(!whereConditions.empty()){
+        first = true;
+        ss << " WHERE ";
+        for(auto& whereC: whereConditions){
+            if(!first){
+                ss << ',';
+            }
+            ss << whereC;
+            first = false;
+        }
+    }
+    return ss.str();
+}
+
 }
 
 bool ParametersTable::parseBoolean(MultiBase* field)
@@ -96,6 +130,11 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
         parseBoolean(dbRow[Parameter::IsReadOnly]),
         refreshType
     };
+}
+
+std::string ParametersTable::selectBoardParameters(std::string_view boardType)
+{
+    return db_utils::selectQuery(ParametersTable::Name, {"*"}, {db_utils::where(ParametersTable::Parameter::BoardTypeName, "=", boardType)});
 }
 
 ///

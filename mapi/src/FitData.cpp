@@ -14,42 +14,28 @@ FitData::FitData() : m_ready(false)
     }
 
     Print::PrintInfo("Fetching TCM register map");
-    auto parametersTCM = DatabaseInterface::executeQuery(
-        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'TCM'");
+    auto parametersTCM = DatabaseInterface::executeQuery( ParametersTable::selectBoardParameters(BoardTypesTable::TypeTCM) );
     Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
     if (parametersTCM.size() == 0) {
         Print::PrintError("TCM register data have not been found!");
         return;
     }
-    m_templateBoards.emplace("TCM", parseTemplateBoard(parametersTCM));
-    m_statusParameters.emplace("TCM", constructStatusParametersList("TCM"));
+    m_templateBoards.emplace(BoardTypesTable::TypeTCM, parseTemplateBoard(parametersTCM));
+    m_statusParameters.emplace(BoardTypesTable::TypeTCM, constructStatusParametersList(BoardTypesTable::TypeTCM));
 
     Print::PrintInfo("Fetching PM register map");
-    auto parametersPM = DatabaseInterface::executeQuery(
-        "SELECT * FROM BOARD_PARAMETERS WHERE BOARD_TYPE = 'PM'");
+    auto parametersPM = DatabaseInterface::executeQuery( ParametersTable::selectBoardParameters(BoardTypesTable::TypePM) );
     Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
     if (parametersPM.size() == 0) {
         Print::PrintError("PM register data have not been found!");
         return;
     }
-    m_templateBoards.emplace("PM", parseTemplateBoard(parametersPM));
-    m_statusParameters.emplace("PM", constructStatusParametersList("PM"));
-
-    // Print::PrintInfo("Fetching Histogram register map");
-    // auto parameterstHistogramPM = DatabaseInterface::executeQuery(
-    //                     "SELECT * FROM PARAMETERS WHERE BOARD_TYPE = 'PM_HIST'"
-    //);
-    // m_templateBoards.emplace("PM_HIST", parseTemplateBoard(parameterstHistogramPM));
-
-    // if(parameterstHistogramPM.size() == 0)
-    //{
-    //     Print::PrintError("Histogram PM register data have not been found!");
-    //     return;
-    // }
+    m_templateBoards.emplace(BoardTypesTable::TypePM, parseTemplateBoard(parametersPM));
+    m_statusParameters.emplace(BoardTypesTable::TypePM, constructStatusParametersList(BoardTypesTable::TypePM));
 
     Print::PrintInfo("Fetching information about connected devices");
-    auto connectedDevices = DatabaseInterface::executeQuery(
-        "SELECT * FROM CONNECTED_DEVICES");
+    auto connectedDevices = DatabaseInterface::executeQuery( db_utils::selectQuery("CONNECTED_DEVICES", {"*"}) );
+
     Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if (connectedDevices.size() == 0) {
         Print::PrintError("Lacking data about connected devices");
@@ -57,8 +43,7 @@ FitData::FitData() : m_ready(false)
     }
 
     Print::PrintInfo("Fetching information about unit defintion and others settings");
-    auto settings = DatabaseInterface::executeQuery(
-        "SELECT * FROM FEE_SETTINGS");
+    auto settings = DatabaseInterface::executeQuery( db_utils::selectQuery("FEE_SETTINGS", {"*"}) );
     Print::PrintInfo("Fetched " + std::to_string(settings.size()) + " rows");
     parseSettings(settings);
 

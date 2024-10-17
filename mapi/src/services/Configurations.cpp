@@ -21,7 +21,7 @@ string Configurations::processInputMessage(string msg)
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
 
-    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configurations WHERE configuration_name = '" + configurationName + "';");
+    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configuration_parameters WHERE configuration_name = '" + configurationName + "';");
     if (boardNamesData.empty())
         throw runtime_error(configurationName + ": configuration not found");
 

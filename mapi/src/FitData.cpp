@@ -256,7 +256,7 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
     if(dbRow[Parameter::MaxValue] == NULL){
         max = static_cast<double>(
             (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 
-                (1u<<bitLength - 1): twosComplementDecode<int32_t>(1u<< (bitLength - 1) - 1, bitLength)
+                ((1u<<bitLength) - 1): twosComplementDecode<int32_t>((1u<< (bitLength - 1)) - 1, bitLength)
                 );
     }
     else{
@@ -266,7 +266,7 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
     return {
             dbRow[Parameter::Name]->getString(),
             parseHex(dbRow[Parameter::BaseAddress]),
-            static_cast<uint32_t>(dbRow[Parameter::StartBit]->getInt()),
+            static_cast<uint8_t>(dbRow[Parameter::StartBit]->getInt()),
             static_cast<uint8_t>(bitLength),
             static_cast<uint8_t>(dbRow[Parameter::RegBlockSize]->getInt()),
             encoding,

@@ -86,7 +86,7 @@ class SwtSequence
     /* 
         CRU special word, appended to sequence if response to current operation (one SWT frame) is expected */
     static constexpr const char* _READ_WORD_ = "read\n";
-    /* 
+    
 
     /*
         FIT SWT specific, marks read operation  */

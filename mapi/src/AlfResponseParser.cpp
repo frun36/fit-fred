@@ -46,7 +46,6 @@ int64_t AlfResponseParser::iterator::getLineLen() const
 {
     int64_t beg_ptr = 0;
     int64_t end_ptr = 0;
-    int64_t size = 0;
 
     for(int64_t pos = 0; ; pos++){
 

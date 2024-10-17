@@ -21,7 +21,7 @@ string Configurations::processInputMessage(string msg)
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
 
-    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configuration_parameters WHERE configuration_name = '" + configurationName + "';");
+    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configuration_parameters WHERE configuration_name = '" + configurationName + "'");
     if (boardNamesData.empty())
         throw runtime_error(configurationName + ": configuration not found");
 
@@ -51,7 +51,7 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
     vector<SwtSequence::SwtOperation> sequenceVec;
     optional<double> delayA = nullopt;
     optional<double> delayC = nullopt;
-    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "';");
+    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "'");
     stringstream request;
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())

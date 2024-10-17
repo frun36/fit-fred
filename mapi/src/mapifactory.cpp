@@ -38,13 +38,13 @@ void MapiFactory::generateObjects()
         }
         m_parametersObjects.emplace_back(board);
 
-        m_statusObjects.emplace_back(board, boardsData.getStatusList().at(section));            
+        m_statusObjects.emplace_back(board, boardsData.getStatusList().at(section));
         string servicePrefix = m_fred->Name() + "/" + section + "/" + boardName + "/";
 
         m_fred->registerMapiObject(servicePrefix + "PARAMETERS", &m_parametersObjects.back());
         m_fred->registerMapiObject(servicePrefix + "STATUS", &m_statusObjects.back());
         m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject.getBoardConfigurationServices().at(boardName).get()));
-        
+
         Print::PrintVerbose(boardName + " registered");
     }
 }

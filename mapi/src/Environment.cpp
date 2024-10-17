@@ -1,5 +1,5 @@
-#include"Environment.h"
-#include"Parser/utility.h"
+#include "Environment.h"
+#include "Parser/utility.h"
 
 void EnvironmentFEE::emplace(EnvironmentFEE::Variable&& setting)
 {
@@ -20,7 +20,7 @@ double EnvironmentFEE::updateVariable(const std::string& name)
 {
     Variable& setting = m_settings.at(name);
     std::vector<double> values;
-    for(const auto& var: setting.equation.variables){
+    for (const auto& var : setting.equation.variables) {
         values.emplace_back(m_settings.at(var).value);
     }
     setting.value = Utility::calculateEquation(setting.equation.equation, setting.equation.variables, values);

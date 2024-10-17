@@ -1,11 +1,8 @@
-#include "Parameters.h"
-#include "WinCCRequest.h"
-#include "SwtSequence.h"
-#include "AlfResponseParser.h"
-#include "WinCCResponse.h"
+#include "services/Parameters.h"
 #include <algorithm>
 
-string Parameters::processInputMessage(string msg) {
+string Parameters::processInputMessage(string msg)
+{
     returnError = false;
     try {
         SwtSequence sequence = processMessageFromWinCC(msg);
@@ -15,10 +12,10 @@ string Parameters::processInputMessage(string msg) {
     }
 }
 
-string Parameters::processOutputMessage(string msg) {
+string Parameters::processOutputMessage(string msg)
+{
     auto parsedResponse = processMessageFromALF(msg);
     if (parsedResponse.isError())
         returnError = true;
     return parsedResponse.getContents();
 }
-

@@ -1,18 +1,17 @@
 #pragma once
-#include<cstdint>
-#include<list>
+
+#include <cstdint>
+#include <list>
 #include <stdexcept>
-#include<algorithm>
-#include<optional>
-#include<cstring>
-#include<string_view>
+#include <algorithm>
+#include <optional>
+#include <cstring>
+#include <string_view>
 
 class AlfResponseParser
 {
-    public:
-
-    struct SwtFrame
-    {
+   public:
+    struct SwtFrame {
         SwtFrame() = default;
         SwtFrame(std::string_view src);
 
@@ -20,20 +19,20 @@ class AlfResponseParser
         uint32_t address;
         uint32_t data;
     };
-    
-    struct Line
-    {
+
+    struct Line {
         Line() = default;
         Line(std::string_view hex, int64_t len);
 
-        enum class Type {ResponseToRead, ResponseToWrite} type;
+        enum class Type { ResponseToRead,
+                          ResponseToWrite } type;
         SwtFrame frame;
         int64_t length;
     };
 
-    class iterator                                     
+    class iterator
     {
-        public:
+       public:
         bool operator!=(const iterator& itr);
         iterator& operator++();
         iterator operator++(int) const;
@@ -41,15 +40,14 @@ class AlfResponseParser
 
         explicit iterator(std::string_view sequence);
 
-        private:
-
+       private:
         int64_t getLineLen() const;
-        
+
         std::string_view m_sequence;
         std::optional<Line> m_currentLine;
     };
-    
-    AlfResponseParser(std::string_view response): m_sequence(response) {}
+
+    AlfResponseParser(std::string_view response) : m_sequence(response) {}
 
     iterator begin();
     iterator end();
@@ -58,8 +56,7 @@ class AlfResponseParser
 
     static constexpr const int64_t _SWT_LEN_ = 21;
 
-    private:
-
+   private:
     std::string_view m_sequence;
 };
 

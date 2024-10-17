@@ -1,4 +1,4 @@
-#include "Configurations.h"
+#include "services/Configurations.h"
 #include <cctype>
 #include <unistd.h>
 #include <sstream>
@@ -29,9 +29,9 @@ string Configurations::processInputMessage(string msg)
     std::transform(boardNamesData.begin(), boardNamesData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
         if (!entry[0]->isString())
             throw runtime_error(configurationName + ": invalid board name format in DB");
-        
+
         string boardName = entry[0]->getString();
-        string serviceName = m_fredName; 
+        string serviceName = m_fredName;
         if (boardName == "TCM")
             serviceName += "TCM/TCM0/";
         else if (boardName.find("PM") != string::npos)
@@ -94,7 +94,7 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
 
     if (delayA.has_value()) {
         m_delayDifference = abs(delayA.value() - getDelayA().value_or(0));
-        if(m_delayDifference != 0)
+        if (m_delayDifference != 0)
             request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
     }
 
@@ -166,7 +166,7 @@ string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
     response = m_delayResponse.value_or("") + response;
 
     if (parsedResponse.isError()) {
-        response = "TCM configuration " + m_configurationName.value_or("<no name>") + (m_delayResponse.has_value() ? " was applied partially\n" : " was not applied\n") + response;  
+        response = "TCM configuration " + m_configurationName.value_or("<no name>") + (m_delayResponse.has_value() ? " was applied partially\n" : " was not applied\n") + response;
         returnError = true;
     }
 

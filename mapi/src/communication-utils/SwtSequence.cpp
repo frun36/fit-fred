@@ -1,20 +1,17 @@
-#include "SwtSequence.h"
-#include<cstring>
+#include "communication-utils/SwtSequence.h"
+#include <cstring>
 
-SwtSequence::SwtOperation::SwtOperation( Operation type, uint32_t addr, std::array<uint32_t,2> data, bool expect):
-    type(type), address(addr), expectResponse(expect)
-{   
+SwtSequence::SwtOperation::SwtOperation(Operation type, uint32_t addr, std::array<uint32_t, 2> data, bool expect) : type(type), address(addr), expectResponse(expect)
+{
     this->data = data;
 }
 
-SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operations):m_buffer("reset\n")
+SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operations) : m_buffer("reset\n")
 {
-    for(auto & op: operations)
-    {
+    for (auto& op : operations) {
         addOperation(op);
     }
 }
-
 
 SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const uint32_t* data, bool expectResponse)
 {
@@ -22,43 +19,35 @@ SwtSequence& SwtSequence::addOperation(Operation type, uint32_t address, const u
     return addOperation(type, saddress.c_str(), data, expectResponse);
 }
 
-SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  const uint32_t* data, bool expectResponse)
+SwtSequence& SwtSequence::addOperation(Operation type, const char* address, const uint32_t* data, bool expectResponse)
 {
-    switch(type)
-    {
-        case Operation::Read:
-        {
+    switch (type) {
+        case Operation::Read: {
             m_buffer.append(_READ_PREFIX_);
             m_buffer.append(address);
             m_buffer.append(wordToHex(0x0));
             m_buffer.append(_FRAME_POSTFIX_);
 
-            if(expectResponse)
-            {
+            if (expectResponse) {
                 m_buffer.append(_READ_WORD_);
             }
-        }
-        break;
+        } break;
 
-        case Operation::Write:
-        {
+        case Operation::Write: {
             m_buffer.append(_WRITE_PREFIX_);
             m_buffer.append(address);
             m_buffer.append(wordToHex(data[0]));
             m_buffer.append(_FRAME_POSTFIX_);
 
-        }
-        break;
+        } break;
 
-        case Operation::RMWbits:
-        {
+        case Operation::RMWbits: {
             m_buffer.append(_RMW_BITS_AND_PREFIX_);
             m_buffer.append(address);
             m_buffer.append(wordToHex(data[0]));
             m_buffer.append(_FRAME_POSTFIX_);
 
-            if(expectResponse)
-            {
+            if (expectResponse) {
                 m_buffer.append(_READ_WORD_);
             }
 
@@ -70,19 +59,16 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  con
 
         break;
 
-        case Operation::RMWsum:
-        {
+        case Operation::RMWsum: {
             m_buffer.append(_RMW_SUM_PREFIX_);
             m_buffer.append(address);
             m_buffer.append(wordToHex(data[0]));
             m_buffer.append(_FRAME_POSTFIX_);
 
-            if(expectResponse)
-            {
+            if (expectResponse) {
                 m_buffer.append(_READ_WORD_);
             }
-        }
-        break;
+        } break;
     }
 
     return *this;
@@ -90,7 +76,7 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address,  con
 
 SwtSequence& SwtSequence::addOperation(SwtSequence::SwtOperation&& operation)
 {
-    addOperation(operation.type, operation.address,  operation.data.data(), operation.expectResponse);
+    addOperation(operation.type, operation.address, operation.data.data(), operation.expectResponse);
     return *this;
 }
 
@@ -106,10 +92,8 @@ std::string SwtSequence::wordToHex(uint32_t word)
         halfByteToHex((word >> 28) & 0x0F),
         halfByteToHex((word >> 24) & 0x0F),
 
-
-        halfByteToHex((word >> 20 )& 0x0F),
+        halfByteToHex((word >> 20) & 0x0F),
         halfByteToHex((word >> 16) & 0x0F),
-
 
         halfByteToHex((word >> 12) & 0x0F),
         halfByteToHex((word >> 8) & 0x0F),
@@ -121,16 +105,16 @@ std::string SwtSequence::wordToHex(uint32_t word)
 
 void SwtSequence::createMask(uint32_t firstBit, uint32_t bitLength, uint32_t value, uint32_t* dest)
 {
-    dest[0] = ~( ( 0xFFFFFFFFu >> ( 32 - bitLength ) ) << firstBit );
+    dest[0] = ~((0xFFFFFFFFu >> (32 - bitLength)) << firstBit);
     dest[1] = (value << firstBit) & (~dest[0]);
 }
 
 uint32_t SwtSequence::createANDMask(uint32_t firstBit, uint32_t bitLength)
 {
-    return ~( ( 0xFFFFFFFFu >> ( 32 - bitLength ) ) << firstBit );
+    return ~((0xFFFFFFFFu >> (32 - bitLength)) << firstBit);
 }
 
-const uint32_t*  SwtSequence::passMasks(uint32_t firstBit, uint32_t bitLength, uint32_t value) 
+const uint32_t* SwtSequence::passMasks(uint32_t firstBit, uint32_t bitLength, uint32_t value)
 {
     createMask(firstBit, bitLength, value, m_mask.data());
     return m_mask.data();

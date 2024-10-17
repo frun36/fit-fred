@@ -1,9 +1,11 @@
+#pragma once
+
 #include "Fred/fred.h"
 #include "Fred/Mapi/mapi.h"
 #include "Alfred/print.h"
-#include "Parameters.h"
-#include "BoardStatus.h"
-#include "Configurations.h"
+#include "services/Parameters.h"
+#include "services/BoardStatus.h"
+#include "services/Configurations.h"
 #include <exception>
 #include <stdexcept>
 #include <string>

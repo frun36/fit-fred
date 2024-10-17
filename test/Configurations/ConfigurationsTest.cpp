@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "Configurations.h"
+#include "services/Configurations.h"
 #include "Board.h"
 #include "Equation.h"
 
@@ -95,10 +95,12 @@ TEST(ConfigurationsTest, Tcm)
     };
 
     string tcmPimIdleDelaysResult = tcmCfg.processInputMessage("TEST");
-    auto tcmPimIdleDelaysExpected = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0xffff }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x5 }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true), });
+    auto tcmPimIdleDelaysExpected = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0xffff }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x5 }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true),
+    });
     EXPECT_EQ(tcmPimIdleDelaysResult, tcmPimIdleDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
@@ -155,7 +157,7 @@ TEST(ConfigurationsTest, Tcm)
 
     string tcmPimIdleNoDelaysResult2 = tcmCfg.processInputMessage("TEST");
     auto tcmPimIdleNoDelaysExpected2 = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0xf00d, { 0x0, 0x00070000 }),
-                                                    SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0xf00d, {}, true) });
+                                                     SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0xf00d, {}, true) });
     EXPECT_EQ(tcmPimIdleNoDelaysResult2, tcmPimIdleNoDelaysExpected2.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
@@ -173,7 +175,6 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
-
     // Delay - ALF failure on Delay
     DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
@@ -183,10 +184,12 @@ TEST(ConfigurationsTest, Tcm)
     };
 
     string tcmPimIdleDelaysResult2 = tcmCfg.processInputMessage("TEST");
-    auto tcmPimIdleDelaysExpected2 = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0x0 }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x0 }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true), });
+    auto tcmPimIdleDelaysExpected2 = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0x0 }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x0 }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true),
+    });
     EXPECT_EQ(tcmPimIdleDelaysResult2, tcmPimIdleDelaysExpected2.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
@@ -204,7 +207,6 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
-
     // Delay - ALF failure on Data
     DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
@@ -214,10 +216,12 @@ TEST(ConfigurationsTest, Tcm)
     };
 
     string tcmPimIdleDelaysResult3 = tcmCfg.processInputMessage("TEST");
-    auto tcmPimIdleDelaysExpected3 = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0x0 }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x0 }),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
-                                                  SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true), });
+    auto tcmPimIdleDelaysExpected3 = SwtSequence({
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x1, { 0xffff0000, 0x0 }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x0, { 0xffff0000, 0x0 }),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x1, {}, true),
+        SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x0, {}, true),
+    });
     EXPECT_EQ(tcmPimIdleDelaysResult3, tcmPimIdleDelaysExpected3.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
@@ -238,7 +242,6 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
     EXPECT_EQ(tcmCfg.m_delayResponse, "DELAY_C,0\nDELAY_A,0\n");
 
-
     EXPECT_THROW(tcmCfg.processInputMessage("TEST"), runtime_error);
     EXPECT_THROW(tcmCfg.processOutputMessage("success"), runtime_error);
 
@@ -252,7 +255,6 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
     EXPECT_EQ(tcmCfg.m_delayResponse, "DELAY_C,0\nDELAY_A,0\n");
 
-
     string tcmPomDelaysDataErrorResponse = tcmCfg.processOutputMessage("failure");
     EXPECT_EQ(tcmPomDelaysDataErrorResponse, "TCM configuration TEST was applied partially\nDELAY_C,0\nDELAY_A,0\nERROR - SEQUENCE: ALF COMMUNICATION FAILED\n");
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::Idle);
@@ -260,7 +262,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_configurationInfo, nullopt);
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
-    
+
     /*
     States - Idle, ApplyingDelays, DelaysApplied, ApplyingData
     PIM:
@@ -279,10 +281,10 @@ TEST(ConfigurationsTest, Tcm)
     */
 }
 
+} // namespace
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-} // namespace

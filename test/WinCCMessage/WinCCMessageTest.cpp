@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "WinCCRequest.h"
-#include "WinCCResponse.h"
+#include "communication-utils/WinCCRequest.h"
+#include "communication-utils/WinCCResponse.h"
 #include <optional>
 
 namespace {

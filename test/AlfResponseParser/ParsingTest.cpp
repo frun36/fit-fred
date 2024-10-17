@@ -50,7 +50,7 @@ int main(int argc, const char** argv)
     auto start_time = std::chrono::high_resolution_clock::now();
     int lines_processed = 0;
     // Loop that we want to measure in microseconds
-    for (auto line : parser) {
+    for ([[maybe_unused]] auto line : parser) {
         lines_processed++;
     }
 
@@ -80,14 +80,11 @@ int main(int argc, const char** argv)
         }
     }
 
-    int64_t pos = 0;
-    char c;
-
     std::string parsed = parsedStream.str();
     if (parsed.size() != data.size()) {
         std::cout << "Expected: " << data.size() << " chars. Get: " << parsed.size() << std::endl;
     }
-    for (int i = 0; i < parsed.size(); i++) {
+    for (size_t i = 0; i < parsed.size(); i++) {
         if (parsed[i] != data[i]) {
             std::cout << "Parsing went wrong at position " << i << std::endl;
             return -1;

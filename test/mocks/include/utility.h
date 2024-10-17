@@ -7,7 +7,7 @@ using namespace std;
 
 class Utility
 {
-public:
+   public:
     // static vector<double> splitString2Num(const string& text, string by);
     static vector<string> splitString(const string& text, string by);
     // static vector<vector<string> > splitMessage(const string& text);
@@ -23,6 +23,6 @@ public:
     // static uint32_t stringToNumber(const string& number);
     // static string largeNumberToHexString(const uint128_t number, bool addZeros = false);
 
-private:
+   private:
     Utility();
 };

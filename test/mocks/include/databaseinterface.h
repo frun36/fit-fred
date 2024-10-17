@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <memory>
 
-// MultiBase interface definition
 struct MultiBase {
     virtual bool isString() const = 0;
     virtual bool isDouble() const = 0;
@@ -21,7 +20,6 @@ struct MultiBase {
     virtual ~MultiBase() = default;
 };
 
-// Box template class definition
 template <typename T>
 struct Box : public MultiBase {
     T value;
@@ -37,7 +35,6 @@ struct Box : public MultiBase {
     int getInt() const override;
 };
 
-// DatabaseInterface class definition
 struct DatabaseInterface {
     static std::unordered_map<std::string, std::vector<std::vector<MultiBase*>>> s_queryResults;
 

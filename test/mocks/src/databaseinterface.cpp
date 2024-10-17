@@ -3,7 +3,9 @@
 // Implementing Box template methods
 
 template <typename T>
-Box<T>::Box(T value) : value(value) {}
+Box<T>::Box(T value) : value(value)
+{
+}
 
 template <typename T>
 constexpr bool Box<T>::isString() const

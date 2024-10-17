@@ -1,12 +1,13 @@
-#include "WinCCRequest.h"
+#include "communication-utils/WinCCRequest.h"
 #include <cstdint>
 
-WinCCRequest::Command::Command(const std::string& line) {
+WinCCRequest::Command::Command(const std::string& line)
+{
     std::vector<std::string> arguments = Utility::splitString(line, ",");
 
     if (arguments.size() < 2)
         throw std::runtime_error("Too few arguments");
-    
+
     name = std::move(arguments[0]);
 
     if (arguments[1] == "READ") {
@@ -14,10 +15,10 @@ WinCCRequest::Command::Command(const std::string& line) {
         value = std::nullopt;
     } else if (arguments[1] == "WRITE") {
         operation = Operation::Write;
-        
+
         if (arguments.size() < 3)
             throw std::runtime_error(name + ": Too few arguments for WRITE operation");
-        
+
         value = stringToDouble(arguments[2]);
 
         if (!value.has_value())
@@ -27,13 +28,14 @@ WinCCRequest::Command::Command(const std::string& line) {
     }
 }
 
-WinCCRequest::WinCCRequest(const std::string& input) {
+WinCCRequest::WinCCRequest(const std::string& input)
+{
     std::vector<std::string> lines = Utility::splitString(input, "\n"); // CRLF for Windows-based WinCC?
 
-    for (const auto& line: lines) {
+    for (const auto& line : lines) {
         Command cmd(line);
 
-        if(!m_reqType.has_value())
+        if (!m_reqType.has_value())
             m_reqType = cmd.operation;
         else if (m_reqType.value() != cmd.operation)
             throw std::runtime_error(cmd.name + ": attempted operation mixing in single request");
@@ -42,7 +44,8 @@ WinCCRequest::WinCCRequest(const std::string& input) {
     }
 }
 
-std::optional<double> WinCCRequest::stringToDouble(std::string str) {
+std::optional<double> WinCCRequest::stringToDouble(std::string str)
+{
     // stringstream is slow - makes for easy code though, I suggest we stick with it for now to avoid premature optimisation
     std::stringstream ss(str);
     double value;
@@ -50,12 +53,12 @@ std::optional<double> WinCCRequest::stringToDouble(std::string str) {
 
     if (str.rfind("0x", 0) == 0) {
         ss >> std::hex >> hexTmp;
-        value = static_cast<double>(hexTmp); 
+        value = static_cast<double>(hexTmp);
     } else {
         ss >> value;
     }
 
-    if(ss.fail())
+    if (ss.fail())
         return std::nullopt;
 
     return value;

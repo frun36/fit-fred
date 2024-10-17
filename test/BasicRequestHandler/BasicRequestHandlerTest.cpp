@@ -8,8 +8,8 @@
 #include <vector>
 #include <random>
 
-#include"BasicRequestHandler.h"
-#include"Board.h"
+#include "BasicRequestHandler.h"
+#include "Board.h"
 
 std::shared_ptr<Board> createTestBoard()
 {
@@ -30,10 +30,8 @@ std::shared_ptr<Board> createTestBoard()
             electronicToPhysic,
             physicToElectronic,
             false,
-            true
-        );
+            true);
 
-    
         board->emplace(std::move(param));
     }
     {
@@ -49,8 +47,7 @@ std::shared_ptr<Board> createTestBoard()
             Board::ParameterInfo::Equation::Empty(),
             Board::ParameterInfo::Equation::Empty(),
             false,
-            false
-        );
+            false);
 
         board->emplace(std::move(param));
     }
@@ -67,8 +64,7 @@ std::shared_ptr<Board> createTestBoard()
             Board::ParameterInfo::Equation::Empty(),
             Board::ParameterInfo::Equation::Empty(),
             false,
-            false
-        );
+            false);
 
         board->emplace(std::move(param));
     }
@@ -84,7 +80,7 @@ TEST(BasicRequestHandlerTest, ProcessWinCCMessageReadTest)
     SwtSequence expected;
     expected.addOperation(SwtSequence::Operation::Read, 0x0F, nullptr, true);
     expected.addOperation(SwtSequence::Operation::Read, 0x05, nullptr, true);
-    EXPECT_EQ(created.getSequence(),expected.getSequence());
+    EXPECT_EQ(created.getSequence(), expected.getSequence());
 }
 
 TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteTest)
@@ -94,10 +90,10 @@ TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteTest)
     SwtSequence created = handler.processMessageFromWinCC("ActualClockSource,WRITE,1\nGBTRxReady,WRITE,1");
 
     SwtSequence expected;
-    std::array<uint32_t, 2> data = {static_cast<uint32_t>(~(0x18)),0x18};
+    std::array<uint32_t, 2> data = { static_cast<uint32_t>(~(0x18)), 0x18 };
     expected.addOperation(SwtSequence::Operation::RMWbits, 0x0F, data.data(), false);
     expected.addOperation(SwtSequence::Operation::Read, 0x0F, nullptr, true);
-    EXPECT_EQ(created.getSequence(),expected.getSequence());
+    EXPECT_EQ(created.getSequence(), expected.getSequence());
 }
 
 TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteResponseSuccess)
@@ -107,16 +103,16 @@ TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteResponseSuccess)
     SwtSequence created = handler.processMessageFromWinCC("ActualClockSource,WRITE,1\nGBTRxReady,WRITE,1");
 
     SwtSequence expected;
-    std::array<uint32_t, 2> data = {static_cast<uint32_t>(~(0x18)),0x18};
+    std::array<uint32_t, 2> data = { static_cast<uint32_t>(~(0x18)), 0x18 };
     expected.addOperation(SwtSequence::Operation::RMWbits, 0x0F, data.data(), false);
     expected.addOperation(SwtSequence::Operation::Read, 0x0F, nullptr, true);
-    EXPECT_EQ(created.getSequence(),expected.getSequence());
+    EXPECT_EQ(created.getSequence(), expected.getSequence());
 
     std::string alfResponse("success\n0\n0x0000000000F00000018");
     auto parsed = handler.processMessageFromALF(alfResponse);
 
-    EXPECT_EQ(parsed.errors.size(),0) << parsed.errors.front().what() << std::endl;
-    EXPECT_EQ(parsed.response.getContents(),"ActualClockSource,1\nGBTRxReady,1\n");
+    EXPECT_EQ(parsed.errors.size(), 0) << parsed.errors.front().what() << std::endl;
+    EXPECT_EQ(parsed.response.getContents(), "ActualClockSource,1\nGBTRxReady,1\n");
 }
 
 TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteResponseFailure)
@@ -126,15 +122,15 @@ TEST(BasicRequestHandlerTest, ProcessWinCCMessageWriteResponseFailure)
     SwtSequence created = handler.processMessageFromWinCC("ActualClockSource,WRITE,1\nGBTRxReady,WRITE,1");
 
     SwtSequence expected;
-    std::array<uint32_t, 2> data = {static_cast<uint32_t>(~(0x18)),0x18};
+    std::array<uint32_t, 2> data = { static_cast<uint32_t>(~(0x18)), 0x18 };
     expected.addOperation(SwtSequence::Operation::RMWbits, 0x0F, data.data(), false);
     expected.addOperation(SwtSequence::Operation::Read, 0x0F, nullptr, true);
-    EXPECT_EQ(created.getSequence(),expected.getSequence());
+    EXPECT_EQ(created.getSequence(), expected.getSequence());
 
     std::string alfResponse("success\n0\n0x0000000000F00000028");
     auto parsed = handler.processMessageFromALF(alfResponse);
 
-    EXPECT_EQ(parsed.errors.size(),1);
-    EXPECT_EQ(parsed.errors.front().what(),"ERROR - GBTRxReady: WRITE FAILED: Received 0.000000, Expected 1.000000");
-    EXPECT_EQ(parsed.response.getContents(),"ActualClockSource,1\n");
+    EXPECT_EQ(parsed.errors.size(), 1);
+    EXPECT_EQ(parsed.errors.front().what(), "ERROR - GBTRxReady: WRITE FAILED: Received 0.000000, Expected 1.000000");
+    EXPECT_EQ(parsed.response.getContents(), "ActualClockSource,1\n");
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SwtSequence.h"
 #include "BasicRequestHandler.h"
 #include <optional>
 #include <unordered_map>
@@ -140,7 +139,7 @@ class Configurations : public Mapigroup
         string handleConfigurationStart(const string& msg);
 
         string handleConfigurationContinuation(const string& msg);
-        
+
         string handleDelayResponse(const string& msg);
 
         string handleDataResponse(const string& msg);
@@ -159,11 +158,13 @@ class Configurations : public Mapigroup
         // which is odd, since the delay range is in nanoseconds
         double m_delayDifference = 0;
 
-        optional<double> getDelayA() const {
+        optional<double> getDelayA() const
+        {
             return m_board->at("DELAY_A").getStoredValueOptional();
         }
 
-        optional<double> getDelayC() const {
+        optional<double> getDelayC() const
+        {
             return m_board->at("DELAY_C").getStoredValueOptional();
         }
 
@@ -191,6 +192,7 @@ class Configurations : public Mapigroup
     string processOutputMessage(string msg) override { throw std::runtime_error("Configurations: unexpectedly received '" + msg + "' from ALF"); };
 
     const unordered_map<string, unique_ptr<BoardConfigurations>>& getBoardConfigurationServices() const { return m_boardCofigurationServices; }
+
    private:
     unordered_map<string, unique_ptr<BoardConfigurations>> m_boardCofigurationServices;
     string m_fredName;

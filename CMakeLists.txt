@@ -45,17 +45,17 @@ create_test(Utils
 
 create_test(AlfResponseParser
     test/AlfResponseParser/ParsingTest.cpp 
-    mapi/src/AlfResponseParser.cpp
+    mapi/src/communication-utils/AlfResponseParser.cpp
 )
 
 create_test(SwtSequence
     test/SwtSequence/SwtSequenceTest.cpp 
-    mapi/src/SwtSequence.cpp
+    mapi/src/communication-utils/SwtSequence.cpp
 )
 
 create_test(WinCCMessage
     test/WinCCMessage/WinCCMessageTest.cpp 
-    mapi/src/WinCCRequest.cpp 
+    mapi/src/communication-utils/WinCCRequest.cpp 
     ${MOCKS}
 )
 
@@ -89,12 +89,12 @@ create_test(WinCCMessage
 create_test(
     Configurations
     test/Configurations/ConfigurationsTest.cpp 
-    mapi/src/Configurations.cpp 
+    mapi/src/services/Configurations.cpp 
     mapi/src/BasicRequestHandler.cpp 
     mapi/src/Board.cpp  
-    mapi/src/SwtSequence.cpp 
-    mapi/src/AlfResponseParser.cpp 
-    mapi/src/WinCCRequest.cpp 
+    mapi/src/communication-utils/AlfResponseParser.cpp
+    mapi/src/communication-utils/SwtSequence.cpp
+    mapi/src/communication-utils/WinCCRequest.cpp
     mapi/src/Environment.cpp 
     ${MOCKS}
 )

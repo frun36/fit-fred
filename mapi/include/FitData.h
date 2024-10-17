@@ -1,17 +1,17 @@
 #pragma once
 
-#include<cmath>
-#include<memory>
-#include<unordered_map>
+#include <cmath>
+#include <memory>
+#include <unordered_map>
 
-#include"Database/databaseinterface.h"
-#include"Board.h"
+#include "Database/databaseinterface.h"
+#include "Board.h"
 
 typedef uint8_t columnIdx;
 
 class FitData
 {
-    public:
+   public:
     FitData();
     bool isReady() const { return m_ready; }
 
@@ -19,17 +19,16 @@ class FitData
     static constexpr uint32_t BaseAddressPMC = 0x1600;
     static constexpr uint32_t AddressSpaceSizePM = 0x0200;
 
-    std::unordered_map<std::string, std::shared_ptr<Board>>& getBoards() {return m_boards;}
-    std::unordered_map<std::string, std::list<std::string>>& getStatusList() {return m_statusParameters;}
+    std::unordered_map<std::string, std::shared_ptr<Board>>& getBoards() { return m_boards; }
+    std::unordered_map<std::string, std::list<std::string>>& getStatusList() { return m_statusParameters; }
     static Equation parseEquation(std::string eq);
 
-    private:
+   private:
     bool m_ready;
     std::shared_ptr<Board> parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable);
     std::list<std::string> constructStatusParametersList(std::string_view boardName);
-    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main=nullptr);
+    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main = nullptr);
     void parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable);
-
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::list<std::string>> m_statusParameters;
@@ -37,12 +36,10 @@ class FitData
     std::shared_ptr<EnvironmentFEE> m_settings;
 };
 
-
 class ParametersTable
 {
-public: 
-    struct Parameter
-    {
+   public:
+    struct Parameter {
         static constexpr columnIdx Name = 1;
         static constexpr columnIdx BaseAddress = 2;
         static constexpr columnIdx StartBit = 3;
@@ -67,40 +64,38 @@ public:
         static constexpr std::string_view ExprTRUE{ "Y" };
         static constexpr std::string_view ExprFALSE{ "N" };
 
-        static Board::ParameterInfo buildParameter(std::vector<MultiBase*>&);    
+        static Board::ParameterInfo buildParameter(std::vector<MultiBase*>&);
     };
- 
+
     static bool parseBoolean(MultiBase* field);
     static uint32_t parseHex(MultiBase* field);
 };
 
-
 class ConnectedDevicesTable
 {
-    public:
-
-    struct Device
-    {
+   public:
+    struct Device {
         Device(std::vector<MultiBase*>&);
 
         std::string name;
-        enum class Side{A,C} side;
-        enum class BoardType{PM, TCM} type;
+        enum class Side { A,
+                          C } side;
+        enum class BoardType { PM,
+                               TCM } type;
         uint32_t index;
 
         static constexpr columnIdx Name = 0;
         static constexpr columnIdx Type = 1;
 
         static constexpr std::string_view TypePM{ "PM" };
-        static constexpr std::string_view TypeTCM{"TCM" };
+        static constexpr std::string_view TypeTCM{ "TCM" };
     };
 };
 
 class SettingsTable
 {
-    public:
-    struct Variable
-    {
+   public:
+    struct Variable {
         static constexpr columnIdx Name = 0;
         static constexpr columnIdx Equation = 1;
     };

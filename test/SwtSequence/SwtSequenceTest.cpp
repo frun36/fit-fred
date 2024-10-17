@@ -1,11 +1,12 @@
 // SwtSequenceTest.cpp
 
 #include "gtest/gtest.h"
-#include "SwtSequence.h"
+#include "communication-utils/SwtSequence.h"
 #include <array>
 #include <vector>
 
-namespace {
+namespace
+{
 
 TEST(SwtSequenceTest, WordToHex)
 {
@@ -42,11 +43,11 @@ TEST(SwtSequenceTest, CreateMask)
     EXPECT_EQ(dest[0], 0xFFFFFF0F);
     EXPECT_EQ(dest[1], 0x000000F0);
 
-    SwtSequence::createMask(0, 32, 0xAAAAAAAA,  dest.data());
+    SwtSequence::createMask(0, 32, 0xAAAAAAAA, dest.data());
     EXPECT_EQ(dest[0], 0x00000000);
     EXPECT_EQ(dest[1], 0xAAAAAAAA);
 
-    SwtSequence::createMask(5, 1, 1,  dest.data());
+    SwtSequence::createMask(5, 1, 1, dest.data());
     EXPECT_EQ(dest[0], 0xFFFFFFDF);
     EXPECT_EQ(dest[1], 0x00000020);
 }
@@ -54,7 +55,7 @@ TEST(SwtSequenceTest, CreateMask)
 TEST(SwtSequenceTest, PassMasks)
 {
     SwtSequence seq;
-    const uint32_t * mask= seq.passMasks(4, 4, 0xF);
+    const uint32_t* mask = seq.passMasks(4, 4, 0xF);
     EXPECT_EQ(mask[0], 0xFFFFFF0F);
     EXPECT_EQ(mask[1], 0x000000F0);
 }
@@ -98,7 +99,7 @@ TEST(SwtSequenceTest, AddOperationRMWbits)
 {
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
-    std::array<uint32_t, 2> data = {0xFFFFFF0F, 0x000000F0};
+    std::array<uint32_t, 2> data = { 0xFFFFFF0F, 0x000000F0 };
     seq.addOperation(SwtSequence::Operation::RMWbits, address, data.data());
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
@@ -116,7 +117,7 @@ TEST(SwtSequenceTest, AddOperationRMWsum)
     SwtSequence seq;
     uint32_t address = 0x1234ABCD;
     uint32_t data = 0x00000010;
-    seq.addOperation(SwtSequence::Operation::RMWsum, address,&data);
+    seq.addOperation(SwtSequence::Operation::RMWsum, address, &data);
     std::string expected = "reset\n";
     std::string addr_hex = SwtSequence::wordToHex(address);
     std::string data_hex = SwtSequence::wordToHex(data);
@@ -164,7 +165,7 @@ TEST(SwtSequenceTest, AddOperationWithHexAddress)
     SwtSequence seq;
     const char* address = "1234ABCD";
     uint32_t data = 0x56789ABC;
-    seq.addOperation(SwtSequence::Operation::Write, address,&data);
+    seq.addOperation(SwtSequence::Operation::Write, address, &data);
     std::string expected = "reset\n";
     std::string data_hex = SwtSequence::wordToHex(data);
     expected += std::string(SwtSequence::_WRITE_PREFIX_) + std::string(address) + data_hex + SwtSequence::_FRAME_POSTFIX_;
@@ -174,7 +175,7 @@ TEST(SwtSequenceTest, AddOperationWithHexAddress)
 
 TEST(SwtSequenceTest, SwtOperationConstructor)
 {
-    SwtSequence::SwtOperation op(SwtSequence::Operation::Write, 0x1234ABCD, {0x56789ABC, 0x0}, false);
+    SwtSequence::SwtOperation op(SwtSequence::Operation::Write, 0x1234ABCD, { 0x56789ABC, 0x0 }, false);
     EXPECT_EQ(op.type, SwtSequence::Operation::Write);
     EXPECT_EQ(op.address, 0x1234ABCD);
     EXPECT_EQ(op.data[0], 0x56789ABC);
@@ -185,7 +186,7 @@ TEST(SwtSequenceTest, SwtOperationConstructor)
 TEST(SwtSequenceTest, AddOperationWithSwtOperation)
 {
     SwtSequence seq;
-    SwtSequence::SwtOperation op(SwtSequence::Operation::Write, 0x1234ABCD, {0x56789ABC, 0x0}, false);
+    SwtSequence::SwtOperation op(SwtSequence::Operation::Write, 0x1234ABCD, { 0x56789ABC, 0x0 }, false);
     seq.addOperation(op);
 
     std::string expected = "reset\n";
@@ -199,8 +200,8 @@ TEST(SwtSequenceTest, AddOperationWithSwtOperation)
 TEST(SwtSequenceTest, ConstructorWithOperationsVector)
 {
     std::vector<SwtSequence::SwtOperation> operations;
-    operations.emplace_back(SwtSequence::Operation::Write, 0x1234ABCD, std::array<uint32_t,2>{0x56789ABC, 0x0}, false);
-    operations.emplace_back(SwtSequence::Operation::RMWsum, 0xABCDEF01, std::array<uint32_t,2>{0x00000010, 0x0}, true);
+    operations.emplace_back(SwtSequence::Operation::Write, 0x1234ABCD, std::array<uint32_t, 2>{ 0x56789ABC, 0x0 }, false);
+    operations.emplace_back(SwtSequence::Operation::RMWsum, 0xABCDEF01, std::array<uint32_t, 2>{ 0x00000010, 0x0 }, true);
 
     SwtSequence seq(operations);
 
@@ -217,9 +218,10 @@ TEST(SwtSequenceTest, ConstructorWithOperationsVector)
     EXPECT_EQ(seq.getSequence(), expected);
 }
 
-}  // namespace
+} // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

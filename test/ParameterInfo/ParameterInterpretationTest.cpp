@@ -1,9 +1,11 @@
 #include "gtest/gtest.h"
 #include "ParameterInfo.h"
 
-namespace {
+namespace
+{
 
-TEST(ParameterInterpretationTest, Unsigned) {
+TEST(ParameterInterpretationTest, Unsigned)
+{
     ParameterInfo p(
         "UNSIGNED_TEST",
         0x0,
@@ -15,8 +17,7 @@ TEST(ParameterInterpretationTest, Unsigned) {
         0.,
         7.,
         false,
-        false
-    );
+        false);
 
     double physicalValue = p.calculatePhysicalValue(0xffffffff);
     EXPECT_EQ(physicalValue, 105);
@@ -25,7 +26,8 @@ TEST(ParameterInterpretationTest, Unsigned) {
     EXPECT_EQ(rawValue, 0x000000f0);
 }
 
-TEST(ParameterInterpretationTest, Signed32) {
+TEST(ParameterInterpretationTest, Signed32)
+{
     ParameterInfo p(
         "SIGNED32_TEST",
         0x1,
@@ -37,8 +39,7 @@ TEST(ParameterInterpretationTest, Signed32) {
         0.,
         -2.,
         false,
-        false
-    );
+        false);
 
     double physicalValue = p.calculatePhysicalValue(0x8000DAA7);
     EXPECT_EQ(physicalValue, 4294855346.);
@@ -47,7 +48,8 @@ TEST(ParameterInterpretationTest, Signed32) {
     EXPECT_EQ(rawValue, 0x8000DAA7);
 }
 
-TEST(ParameterInterpretationTest, Signed16) {
+TEST(ParameterInterpretationTest, Signed16)
+{
     ParameterInfo p(
         "SIGNED16_TEST",
         0x2,
@@ -59,8 +61,7 @@ TEST(ParameterInterpretationTest, Signed16) {
         0.,
         3.,
         false,
-        false
-    );
+        false);
 
     double physicalValue = p.calculatePhysicalValue(0xFFFFFFFF);
     EXPECT_EQ(physicalValue, -3.);
@@ -71,7 +72,8 @@ TEST(ParameterInterpretationTest, Signed16) {
 
 } // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -11,10 +11,11 @@
 // Include the definitions of Board and Board::ParameterInfo
 // Replace these includes with the actual paths or code
 #include "Board.h"
-#include "utils.h" // For twosComplementEncode, twosComplementDecode, getBitField
+#include "utils.h"          // For twosComplementEncode, twosComplementDecode, getBitField
 #include "Parser/utility.h" // For Utility::calculateEquation
 
-TEST(BoardTest, EmplaceAndRetrieveParameter) {
+TEST(BoardTest, EmplaceAndRetrieveParameter)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "x", { "Param1" } };
@@ -32,8 +33,7 @@ TEST(BoardTest, EmplaceAndRetrieveParameter) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     auto result = board.emplace(param);
     EXPECT_TRUE(result); // Emplace should succeed
@@ -46,7 +46,8 @@ TEST(BoardTest, EmplaceAndRetrieveParameter) {
     EXPECT_EQ(retrievedParam.bitLength, 16u);
 }
 
-TEST(BoardTest, CalculatePhysicalUnsigned) {
+TEST(BoardTest, CalculatePhysicalUnsigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
@@ -64,16 +65,14 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
-    if(board.doesExist(param.name) == false)
-    {
-        std::cout<<"Parameter not found\n";
+    if (board.doesExist(param.name) == false) {
+        std::cout << "Parameter not found\n";
     }
-    std::cout << "Variables number:  "<< board.at(param.name).electronicToPhysic.variables.size();
+    std::cout << "Variables number:  " << board.at(param.name).electronicToPhysic.variables.size();
 
     uint32_t rawValue = 0x1234;
     double physicalValue = board.calculatePhysical(param.name, rawValue);
@@ -81,7 +80,8 @@ TEST(BoardTest, CalculatePhysicalUnsigned) {
     EXPECT_EQ(physicalValue, 0x1234);
 }
 
-TEST(BoardTest, CalculatePhysicalSigned) {
+TEST(BoardTest, CalculatePhysicalSigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned", { "ParamSigned" } };
@@ -99,8 +99,7 @@ TEST(BoardTest, CalculatePhysicalSigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -110,7 +109,8 @@ TEST(BoardTest, CalculatePhysicalSigned) {
     EXPECT_EQ(physicalValue, -1);
 }
 
-TEST(BoardTest, CalculateRawUnsigned) {
+TEST(BoardTest, CalculateRawUnsigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned", { "ParamUnsigned" } };
@@ -128,8 +128,7 @@ TEST(BoardTest, CalculateRawUnsigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -139,7 +138,8 @@ TEST(BoardTest, CalculateRawUnsigned) {
     EXPECT_EQ(rawValue, 0x1234);
 }
 
-TEST(BoardTest, CalculateRawSigned) {
+TEST(BoardTest, CalculateRawSigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned", { "ParamSigned" } };
@@ -157,8 +157,7 @@ TEST(BoardTest, CalculateRawSigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -168,7 +167,8 @@ TEST(BoardTest, CalculateRawSigned) {
     EXPECT_EQ(rawValue, 0xFFFF); // -1 in 16-bit two's complement
 }
 
-TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
+TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
@@ -186,8 +186,7 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -197,7 +196,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Unsigned) {
     EXPECT_EQ(physicalValue, 0x12345678);
 }
 
-TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
+TEST(BoardTest, DISABLED_CalculatePhysical64Signed)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
@@ -215,8 +215,7 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -226,7 +225,8 @@ TEST(BoardTest, DISABLED_CalculatePhysical64Signed) {
     EXPECT_EQ(physicalValue, -1);
 }
 
-TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
+TEST(BoardTest, DISABLED_CalculateRaw64Unsigned)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamUnsigned64", { "ParamUnsigned64" } };
@@ -244,8 +244,7 @@ TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -255,7 +254,8 @@ TEST(BoardTest, DISABLED_CalculateRaw64Unsigned) {
     EXPECT_EQ(rawValue, 0x12345678);
 }
 
-TEST(BoardTest, DISABLED_CalculateRaw64Signed) {
+TEST(BoardTest, DISABLED_CalculateRaw64Signed)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
@@ -273,8 +273,7 @@ TEST(BoardTest, DISABLED_CalculateRaw64Signed) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -284,7 +283,8 @@ TEST(BoardTest, DISABLED_CalculateRaw64Signed) {
     EXPECT_EQ(rawValue, 0xFFFFFFFF); // -1 in 32-bit two's complement
 }
 
-TEST(BoardTest, ParameterDoesNotExist) {
+TEST(BoardTest, ParameterDoesNotExist)
+{
     Board board("TestBoard", 0x1000);
 
     // Attempt to retrieve a non-existent parameter
@@ -297,9 +297,10 @@ TEST(BoardTest, ParameterDoesNotExist) {
     EXPECT_THROW(board.calculateRaw("NonExistentParam", 42.0), std::runtime_error);
 }
 
-TEST(BoardTest, ParameterWithoutStoredValue) {
+TEST(BoardTest, ParameterWithoutStoredValue)
+{
     Board board("TestBoard", 0x1000);
-        Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
+    Board::ParameterInfo::Equation electronicToPhysic = { "ParamSigned64", { "ParamSigned64" } };
     Board::ParameterInfo::Equation physicToElectronic = { "ParamSigned64", { "ParamSigned64" } };
 
     Board::ParameterInfo param(
@@ -314,8 +315,7 @@ TEST(BoardTest, ParameterWithoutStoredValue) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     board.emplace(param);
 
@@ -323,7 +323,8 @@ TEST(BoardTest, ParameterWithoutStoredValue) {
     EXPECT_THROW(board.at(param.name).getStoredValue(), std::runtime_error);
 }
 
-TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
+TEST(BoardTest, EmplaceParameterWithInvalidAddress)
+{
     Board board("TestBoard", 0x1000);
 
     Board::ParameterInfo::Equation electronicToPhysic = { "ParamInvalid", { "ParamInvalid" } };
@@ -341,13 +342,13 @@ TEST(BoardTest, EmplaceParameterWithInvalidAddress) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     EXPECT_THROW(board.emplace(param), std::runtime_error);
 }
 
-TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
+TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit)
+{
     Board board("RandomBoard", 0x1000);
 
     std::mt19937 rng(123); // Fixed seed for reproducibility
@@ -388,8 +389,7 @@ TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
             electronicToPhysic,
             physicToElectronic,
             false,
-            false
-        );
+            false);
 
         EXPECT_TRUE(board.emplace(param));
 
@@ -430,10 +430,10 @@ TEST(BoardTest, RandomizedCalculatePhysicalAndRawWithStartBit) {
     }
 }
 
-
 #include <chrono>
 
-TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
+TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming)
+{
     // Create a Board instance
     Board board("PerformanceBoard", 0x1000);
 
@@ -454,8 +454,7 @@ TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
         electronicToPhysic,
         physicToElectronic,
         false,
-        false
-    );
+        false);
 
     // Emplace the parameter into the board
     bool emplaced = board.emplace(param);
@@ -470,8 +469,7 @@ TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
 
     // Values to test
     uint32_t rawValue = 0x0120;
-    double physicalValue = static_cast<int8_t>(rawValue>>4)*2; // 0x1234 in decimal
-
+    double physicalValue = static_cast<int8_t>(rawValue >> 4) * 2; // 0x1234 in decimal
 
     // Measure time for calculatePhysical
     for (int i = 0; i < iterations; ++i) {
@@ -509,8 +507,8 @@ TEST(BoardPerformanceTest, CalculatePhysicalAndRawTiming) {
               << (durationCalculateRaw.count() / iterations) << " ms" << std::endl;
 }
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

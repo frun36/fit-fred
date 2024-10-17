@@ -4,7 +4,7 @@
 #include <random>
 #include <limits>
 #include <cmath>
-#include"utils.h"
+#include "utils.h"
 
 TEST(TwosComplementTest, EncodeDecode)
 {
@@ -12,17 +12,13 @@ TEST(TwosComplementTest, EncodeDecode)
     std::mt19937 rng(12345); // Fixed seed for reproducibility
 
     // Test bitsNumber from 1 to 32
-    for (uint32_t bitsNumber = 1; bitsNumber <= 32; ++bitsNumber)
-    {
+    for (uint32_t bitsNumber = 1; bitsNumber <= 32; ++bitsNumber) {
         int32_t minValue, maxValue;
 
-        if (bitsNumber == 32)
-        {
+        if (bitsNumber == 32) {
             minValue = std::numeric_limits<int32_t>::min();
             maxValue = std::numeric_limits<int32_t>::max();
-        }
-        else
-        {
+        } else {
             minValue = static_cast<int32_t>(-(1u << (bitsNumber - 1u)));
             maxValue = static_cast<int32_t>((1u << (bitsNumber - 1u)) - 1u);
         }
@@ -30,8 +26,7 @@ TEST(TwosComplementTest, EncodeDecode)
         std::uniform_int_distribution<int32_t> dist(minValue, maxValue);
 
         // Test with 100 random values for each bitsNumber
-        for (int i = 0; i < 100; ++i)
-        {
+        for (int i = 0; i < 100; ++i) {
             int32_t originalValue = dist(rng);
 
             uint32_t encodedValue = twosComplementEncode<int32_t>(originalValue, bitsNumber);
@@ -49,8 +44,7 @@ TEST(GetBitFieldTest, RandomTests)
     std::uniform_int_distribution<uint32_t> distWord(0, std::numeric_limits<uint32_t>::max());
 
     // Test with 1000 random words
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         uint32_t word = distWord(rng);
 
         // Generate random first and last positions
@@ -60,12 +54,9 @@ TEST(GetBitFieldTest, RandomTests)
 
         uint32_t extractedBits = getBitField(word, first, bitWidth);
 
-        if (bitWidth == 32u)
-        {
+        if (bitWidth == 32u) {
             ASSERT_EQ(extractedBits, word) << "Failed at word=" << word << ", first=" << static_cast<int>(first) << ", last=" << static_cast<int>(last);
-        }
-        else
-        {
+        } else {
             uint32_t mask = ((1u << bitWidth) - 1u) << first;
             uint32_t expectedBits = (word & mask) >> first;
 
@@ -73,8 +64,6 @@ TEST(GetBitFieldTest, RandomTests)
         }
     }
 }
-
-
 
 // Existing tests for 32-bit types...
 
@@ -86,17 +75,13 @@ TEST(TwosComplementTest64, EncodeDecode)
     std::mt19937_64 rng(12345); // Fixed seed for reproducibility
 
     // Test bitsNumber from 1 to 64
-    for (uint32_t bitsNumber = 1; bitsNumber <= 64; ++bitsNumber)
-    {
+    for (uint32_t bitsNumber = 1; bitsNumber <= 64; ++bitsNumber) {
         int64_t minValue, maxValue;
 
-        if (bitsNumber == 64)
-        {
+        if (bitsNumber == 64) {
             minValue = std::numeric_limits<int64_t>::min();
             maxValue = std::numeric_limits<int64_t>::max();
-        }
-        else
-        {
+        } else {
             minValue = static_cast<int64_t>(-(1ull << (bitsNumber - 1ull)));
             maxValue = static_cast<int64_t>((1ull << (bitsNumber - 1ull)) - 1ull);
         }
@@ -104,8 +89,7 @@ TEST(TwosComplementTest64, EncodeDecode)
         std::uniform_int_distribution<int64_t> dist(minValue, maxValue);
 
         // Test with 100 random values for each bitsNumber
-        for (int i = 0; i < 100; ++i)
-        {
+        for (int i = 0; i < 100; ++i) {
             int64_t originalValue = dist(rng);
 
             uint64_t encodedValue = twosComplementEncode<int64_t, uint64_t>(originalValue, bitsNumber);
@@ -123,8 +107,7 @@ TEST(GetBitFieldTest64, RandomTests)
     std::uniform_int_distribution<uint64_t> distWord(0, std::numeric_limits<uint64_t>::max());
 
     // Test with 1000 random words
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         uint64_t word = distWord(rng);
 
         // Generate random first and length positions
@@ -135,12 +118,9 @@ TEST(GetBitFieldTest64, RandomTests)
         uint64_t extractedBits = getBitField<uint64_t>(word, first, length);
 
         uint64_t expectedBits;
-        if (length == 64u)
-        {
+        if (length == 64u) {
             expectedBits = word;
-        }
-        else
-        {
+        } else {
             uint64_t mask = ((1ull << length) - 1ull);
             expectedBits = (word >> first) & mask;
         }
@@ -148,4 +128,3 @@ TEST(GetBitFieldTest64, RandomTests)
         ASSERT_EQ(extractedBits, expectedBits) << "Failed at word=" << word << ", first=" << static_cast<int>(first) << ", length=" << static_cast<int>(length);
     }
 }
-

@@ -3,15 +3,17 @@
 #include "communication-utils/WinCCResponse.h"
 #include <optional>
 
-namespace {
+namespace
+{
 
-TEST(WinCCMessageTest, Request) {
+TEST(WinCCMessageTest, Request)
+{
     WinCCRequest reqR("TESTR,READ\n");
 
-    WinCCRequest::Command testR = { 
-        "TESTR", 
-        WinCCRequest::Operation::Read, 
-        std::nullopt 
+    WinCCRequest::Command testR = {
+        "TESTR",
+        WinCCRequest::Operation::Read,
+        std::nullopt
     };
 
     EXPECT_EQ(reqR.getCommands().size(), 1);
@@ -22,30 +24,31 @@ TEST(WinCCMessageTest, Request) {
 
     WinCCRequest reqW("TESTW,WRITE,-15.7\nTESTH,WRITE,0xbeef");
 
-    WinCCRequest::Command testW = { 
-        "TESTW", 
-        WinCCRequest::Operation::Write, 
-        -15.7 
+    WinCCRequest::Command testW = {
+        "TESTW",
+        WinCCRequest::Operation::Write,
+        -15.7
     };
 
-    WinCCRequest::Command testH = { 
-        "TESTH", 
-        WinCCRequest::Operation::Write, 
-        48879 
+    WinCCRequest::Command testH = {
+        "TESTH",
+        WinCCRequest::Operation::Write,
+        48879
     };
-    
+
     EXPECT_EQ(reqW.getCommands().size(), 2);
 
     EXPECT_EQ(reqW.getCommands()[0].name, testW.name);
     EXPECT_EQ(reqW.getCommands()[0].operation, testW.operation);
     EXPECT_EQ(reqW.getCommands()[0].value, testW.value);
-    
+
     EXPECT_EQ(reqW.getCommands()[1].name, testH.name);
     EXPECT_EQ(reqW.getCommands()[1].operation, testH.operation);
     EXPECT_EQ(reqW.getCommands()[1].value, testH.value);
 }
 
-TEST(WinCCMessageTest, MixingRejection) {
+TEST(WinCCMessageTest, MixingRejection)
+{
     string resultRW = "OK";
     try {
         WinCCRequest reqRW("TESTR,READ\nTESTW,WRITE,0");
@@ -65,16 +68,18 @@ TEST(WinCCMessageTest, MixingRejection) {
     EXPECT_EQ(resultWR, "TESTR: attempted operation mixing in single request");
 }
 
-TEST(WinCCMessageTest, Response) {
+TEST(WinCCMessageTest, Response)
+{
     WinCCResponse res;
-    res.addParameter("TEST1", {0.7}).addParameter("TEST2", {-123, 27.8, 312.9}).addParameter("TEST3", {});
+    res.addParameter("TEST1", { 0.7 }).addParameter("TEST2", { -123, 27.8, 312.9 }).addParameter("TEST3", {});
 
     EXPECT_EQ(res.getContents(), "TEST1,0.7\nTEST2,-123,27.8,312.9\nTEST3\n");
 }
 
-}
+} // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

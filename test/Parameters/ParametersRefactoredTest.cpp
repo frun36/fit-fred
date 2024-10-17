@@ -9,7 +9,8 @@
 #include "WinCCResponse.h"
 
 // Function to create a test board
-std::shared_ptr<Board> createTestBoard() {
+std::shared_ptr<Board> createTestBoard()
+{
     std::shared_ptr<Board> board = std::make_shared<Board>("TestBoard", 0x0);
     {
         Board::ParameterInfo::Equation electronicToPhysic = { "BoardTemperature*0.1", { "BoardTemperature" } };
@@ -27,8 +28,7 @@ std::shared_ptr<Board> createTestBoard() {
             electronicToPhysic,
             physicToElectronic,
             false,
-            true
-        );
+            true);
 
         board->emplace(std::move(param));
     }
@@ -45,8 +45,7 @@ std::shared_ptr<Board> createTestBoard() {
             Board::ParameterInfo::Equation::Empty(),
             Board::ParameterInfo::Equation::Empty(),
             false,
-            false
-        );
+            false);
 
         board->emplace(std::move(param));
     }
@@ -63,15 +62,15 @@ std::shared_ptr<Board> createTestBoard() {
             Board::ParameterInfo::Equation::Empty(),
             Board::ParameterInfo::Equation::Empty(),
             false,
-            false
-        );
+            false);
 
         board->emplace(std::move(param));
     }
     return board;
 }
 
-TEST(ParametersTest, ProcessInputMessage_ReadCommands) {
+TEST(ParametersTest, ProcessInputMessage_ReadCommands)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
@@ -89,7 +88,8 @@ TEST(ParametersTest, ProcessInputMessage_ReadCommands) {
     // Additional checks can be added if the expected output is known
 }
 
-TEST(ParametersTest, ProcessInputMessage_WriteCommands) {
+TEST(ParametersTest, ProcessInputMessage_WriteCommands)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
@@ -106,7 +106,8 @@ TEST(ParametersTest, ProcessInputMessage_WriteCommands) {
     EXPECT_FALSE(output.empty());
 }
 
-TEST(ParametersTest, ProcessInputMessage_InvalidCommand) {
+TEST(ParametersTest, ProcessInputMessage_InvalidCommand)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
@@ -114,12 +115,11 @@ TEST(ParametersTest, ProcessInputMessage_InvalidCommand) {
     std::string inputMessage = "InvalidParameter,READ";
 
     // Act & Assert
-    EXPECT_THROW({
-        parameters.processInputMessage(inputMessage);
-    }, std::exception);
+    EXPECT_THROW({ parameters.processInputMessage(inputMessage); }, std::exception);
 }
 
-TEST(ParametersTest, ProcessOutputMessage_SuccessfulResponse) {
+TEST(ParametersTest, ProcessOutputMessage_SuccessfulResponse)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
@@ -138,7 +138,8 @@ TEST(ParametersTest, ProcessOutputMessage_SuccessfulResponse) {
     // Optionally, check the output content
 }
 
-TEST(ParametersTest, ProcessOutputMessage_ErrorResponse) {
+TEST(ParametersTest, ProcessOutputMessage_ErrorResponse)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
@@ -157,17 +158,16 @@ TEST(ParametersTest, ProcessOutputMessage_ErrorResponse) {
     EXPECT_NE(output.find("ERROR - GBTRxReady: WRITE FAILED"), std::string::npos);
 }
 
-TEST(ParametersTest, ProcessInputMessage_ExceptionHandling) {
+TEST(ParametersTest, ProcessInputMessage_ExceptionHandling)
+{
     // Arrange
     auto testBoard = createTestBoard();
     Parameters parameters(testBoard);
 
-    std::string inputMessage = "BoardTemperature,WRITE";  // Missing value
+    std::string inputMessage = "BoardTemperature,WRITE"; // Missing value
 
     // Act & Assert
-    EXPECT_THROW({
-        parameters.processInputMessage(inputMessage);
-    }, std::exception);
+    EXPECT_THROW({ parameters.processInputMessage(inputMessage); }, std::exception);
 
     EXPECT_FALSE(parameters.returnError);
 }

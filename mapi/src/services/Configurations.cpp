@@ -32,8 +32,8 @@ string Configurations::processInputMessage(string msg)
 
         string boardName = entry[0]->getString();
         string serviceName = m_fredName;
-        if (boardName == "TCM")
-            serviceName += "TCM/TCM0/";
+        if (boardName == "TCM0")
+            serviceName += "/TCM/TCM0/";
         else if (boardName.find("PM") != string::npos)
             serviceName += "PM/" + boardName + "/";
         serviceName += "_INTERNAL_CONFIGURATIONS";

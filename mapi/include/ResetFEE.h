@@ -1,6 +1,7 @@
 #include "BasicRequestHandler.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include "services/Configurations.h"
+#include "Alfred/print.h"
 #include <string_view>
 #include <vector>
 #include <functional>
@@ -36,6 +37,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
         try {
             seq = handler.processMessageFromWinCC(request).getSequence();
         } catch (std::exception& e) {
+            Print::PrintVerbose(e.what());
             return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }
         return handler.processMessageFromALF(executeAlfSequence(seq));

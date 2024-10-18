@@ -78,7 +78,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
 
 BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
 {
-    std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
+    std::string pmRequest = readRequest(pm_parameters::HighVoltage);
 
     for (auto& pm: m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
@@ -143,9 +143,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 {
-    std::stringstream request;
-    request << gbt_error::parameters::FifoReportReset << ",WRITE," << static_cast<int>(on);
-    return request.str();
+    return writeRequest(gbt_error::parameters::FifoReportReset, static_cast<int>(!on));
 }
 
 std::string ResetFEE::seqSetResetSystem()
@@ -154,9 +152,9 @@ std::string ResetFEE::seqSetResetSystem()
 
     std::stringstream request;
 
-    request << tcm_parameters::ResetSystem << ",WRITE,1\n";
+    request << writeRequest(tcm_parameters::ResetSystem, 1) << "\n";
     if (forceLocalClock.getStoredValueOptional() != std::nullopt && forceLocalClock.getStoredValue() == 1) {
-        request << tcm_parameters::ForceLocalClock << ",WRITE,1";
+        request << writeRequest(tcm_parameters::ForceLocalClock, 1);
     }
 
     return request.str();
@@ -164,10 +162,7 @@ std::string ResetFEE::seqSetResetSystem()
 
 std::string ResetFEE::seqSetResetFinished()
 {
-    std::stringstream request;
-    request << tcm_parameters::SystemRestarted << ",WRITE," << 1;
-
-    return request.str();
+    return writeRequest(tcm_parameters::SystemRestarted, 1);
 }
 
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
@@ -177,10 +172,10 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
         spiMask.storeValue(0x0);
     }
 
-    std::stringstream request;
-    request << spiMask.name << ",WRITE,";
-    request << (static_cast<uint32_t>(spiMask.getStoredValue()) | (static_cast<uint32_t>(mask) << idx));
-    return request.str();
+    uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u)<< idx));
+    masked |= static_cast<uint32_t>(1u) << idx;
+
+    return writeRequest(spiMask.name, masked);
 }
 
 std::string ResetFEE::seqSetBoardId(std::shared_ptr<Board> board)
@@ -195,14 +190,11 @@ std::string ResetFEE::seqSetBoardId(std::shared_ptr<Board> board)
     } else {
         id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
     }
-    std::stringstream request;
-    request << gbt_config::parameters::BoardId << "WRITE," << id;
-    return request.str();
+    
+    return writeRequest(gbt_config::parameters::BoardId, id);
 }
 
 std::string ResetFEE::seqSetSystemId()
 {
-    std::stringstream ss;
-    ss << gbt_config::parameters::SystemId << ",WRITE," << m_board->getEnvironment(environment::parameters::SystemId.data());
-    return ss.str();
+    return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }

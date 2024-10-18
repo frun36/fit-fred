@@ -2,6 +2,7 @@
 #include "Fred/Mapi/indefinitemapi.h"
 #include "services/Configurations.h"
 #include "Alfred/print.h"
+#include"utils.h"
 #include <string_view>
 #include <vector>
 #include <functional>
@@ -41,6 +42,17 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
             return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }
         return handler.processMessageFromALF(executeAlfSequence(seq));
+    }
+
+    template<typename T>
+    std::string writeRequest(std::string_view param, T value)
+    {
+        return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
+    }
+
+    std::string readRequest(std::string_view param)
+    {
+        return string_utils::concatenate(param,"READ");
     }
 
     static const BasicRequestHandler::ParsedResponse EmptyResponse;

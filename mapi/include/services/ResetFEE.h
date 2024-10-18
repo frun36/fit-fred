@@ -1,8 +1,8 @@
-#include "BasicRequestHandler.h"
+#include "../BasicRequestHandler.h"
 #include "Fred/Mapi/indefinitemapi.h"
-#include "services/Configurations.h"
+#include "Configurations.h"
 #include "Alfred/print.h"
-#include"utils.h"
+#include"../utils.h"
 #include <string_view>
 #include <vector>
 #include <functional>

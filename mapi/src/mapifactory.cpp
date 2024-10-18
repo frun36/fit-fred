@@ -28,13 +28,16 @@ void MapiFactory::generateObjects()
 
     m_configurationsObject = Configurations(m_fred->Name(), boardsData.getBoards());
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", &m_configurationsObject);
-
+    std::shared_ptr<Board> tcm;
+    std::vector<std::shared_ptr<Board>> pms;
     for (auto [boardName, board] : boardsData.getBoards()) {
         string section;
         if (boardName.find("TCM") != std::string::npos) {
             section = "TCM";
+            tcm = board;
         } else {
             section = "PM";
+            pms.emplace_back(board);
         }
         m_parametersObjects.emplace_back(board);
 
@@ -47,4 +50,6 @@ void MapiFactory::generateObjects()
 
         Print::PrintVerbose(boardName + " registered");
     }
+    m_resetSystem = std::make_shared<ResetFEE>(tcm, pms);
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESER_SYSTEM"), dynamic_cast<Mapi*>(m_resetSystem.get()));
 }

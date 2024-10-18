@@ -6,6 +6,7 @@
 #include "services/Parameters.h"
 #include "services/BoardStatus.h"
 #include "services/Configurations.h"
+#include"ResetFEE.h"
 #include <exception>
 #include <stdexcept>
 #include <string>
@@ -21,6 +22,7 @@ class MapiFactory
     std::vector<Parameters> m_parametersObjects;
     std::list<BoardStatus> m_statusObjects;
     Configurations m_configurationsObject;
+    std::shared_ptr<ResetFEE> m_resetSystem;
 
     void generateObjects();
 

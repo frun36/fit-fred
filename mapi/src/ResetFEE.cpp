@@ -164,7 +164,7 @@ std::string ResetFEE::seqSetResetSystem()
 std::string ResetFEE::seqSetResetFinished()
 {
     std::stringstream request;
-    request << tcm_parameters::SystemRestarted << "WRITE,1\n";
+    request << tcm_parameters::SystemRestarted << ",WRITE," << 1;
 
     return request.str();
 }

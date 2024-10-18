@@ -1,6 +1,5 @@
 #include"ResetFEE.h"
 #include"TCM.h"
-#include"PMParameters.h"
 #include<thread>
 void ResetFEE::processExecution()
 {

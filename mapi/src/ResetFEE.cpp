@@ -80,7 +80,8 @@ BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
 {
     std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
 
-    for (uint32_t pmIdx = 0; pmIdx < 10; pmIdx++) {
+    for (auto& pm: m_PMs) {
+        uint32_t pmIdx = pm.getBoard()->getIdentity().number;
         {
             auto parsedResponse = processSequence(*this, seqMaskPMLink(pmIdx, true));
             if (parsedResponse.errors.empty() == false) {
@@ -89,7 +90,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
         }
 
         {
-            auto parsedResponse = processSequence(m_PMs[pmIdx], pmRequest);
+            auto parsedResponse = processSequence(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
                 (void)processSequence(*this, seqMaskPMLink(pmIdx, false));
             } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF) {

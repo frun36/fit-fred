@@ -142,9 +142,9 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 {
-    std::string request{ gbt_error::parameters::FifoReportReset };
-    request.append("WRITE\n").append(std::to_string(!on));
-    return request;
+    std::stringstream request;
+    request << gbt_error::parameters::FifoReportReset << ",WRITE," << static_cast<int>(on);
+    return request.str();
 }
 
 std::string ResetFEE::seqSetResetSystem()

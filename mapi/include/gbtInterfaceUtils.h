@@ -133,9 +133,11 @@ class GbtRateMonitor
 
 namespace gbt_config
 {
+constexpr std::string_view GbtConfigurationName{ "GBT" };
 namespace parameters
 {
 constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
 constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
 } // namespace parameters
+
 } // namespace gbt_config

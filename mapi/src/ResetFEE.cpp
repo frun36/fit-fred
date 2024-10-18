@@ -3,6 +3,9 @@
 #include "PM.h"
 #include "gbtInterfaceUtils.h"
 #include <thread>
+
+const BasicRequestHandler::ParsedResponse ResetFEE::EmptyResponse({ WinCCResponse(), {} });
+
 void ResetFEE::processExecution()
 {
     bool running = true;
@@ -16,19 +19,27 @@ void ResetFEE::processExecution()
         auto response = applyResetFEE();
         if (response.errors.empty() == false) {
             publishError(response.getContents());
+            return;
         }
     }
     {
         auto response = checkPMLinks();
         if (response.errors.empty() == false) {
             publishError(response.getContents());
+            return;
+        }
+    }
+    {
+        auto response = applyGbtConfiguration();
+        if (response.errors.empty() == false) {
+            publishError(response.getContents());
+            return;
         }
     }
 }
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
 {
-
     {
         auto parsedResponse = processSequence(*this, seqSwitchGBTErrorReports(false));
         if (parsedResponse.errors.empty() == false) {
@@ -41,8 +52,9 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
-        std::this_thread::sleep_for(m_sleepAfterReset);
     }
+
+    std::this_thread::sleep_for(m_sleepAfterReset);
 
     {
         auto parsedResponse = processSequence(*this, seqSetResetFinished());
@@ -51,7 +63,78 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
         }
     }
 
-    return processSequence(*this, seqSwitchGBTErrorReports(true));
+    {
+        auto parsedResponse = processSequence(*this, seqSwitchGBTErrorReports(true));
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
+        }
+    }
+
+    return EmptyResponse;
+}
+
+BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
+{
+    std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
+
+    for (uint32_t pmIdx = 0; pmIdx < 10; pmIdx++) {
+        {
+            auto parsedResponse = processSequence(*this, seqMaskPMLink(pmIdx, true));
+            if (parsedResponse.errors.empty() == false) {
+                return parsedResponse;
+            }
+        }
+
+        {
+            auto parsedResponse = processSequence(m_PMs[pmIdx], pmRequest);
+            if (parsedResponse.errors.empty() == false) {
+                (void)processSequence(*this, seqMaskPMLink(pmIdx, false));
+            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF) {
+                (void)processSequence(*this, seqMaskPMLink(pmIdx, false));
+            }
+        }
+    }
+
+    return EmptyResponse;
+}
+
+BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
+{
+    {
+        auto parsedResponse = applyGbtConfigurationToBoard(*this);
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
+        }
+    }
+
+    auto checkSPIMask = [this](BasicRequestHandler& pmHandler) {
+        return (static_cast<uint32_t>(this->m_board->at(tcm_parameters::PmSpiMask).getStoredValue()) &
+                static_cast<uint32_t>(1u << pmHandler.getBoard()->getIdentity().number));
+    };
+
+    for (auto& pm : m_PMs)
+    {
+        if (!checkSPIMask(pm)) {
+            continue;
+        }
+        auto parsedResponse = applyGbtConfigurationToBoard(pm);
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
+        }
+    }
+
+    return EmptyResponse;
+}
+
+BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler)
+{
+    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, boardHandler.getBoard()->getName());
+    if (configuration.empty()) {
+        return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined for this board!" } } };
+    }
+    std::string configReq = Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration);
+    std::string request = configReq + "\n" + seqSetBoardId(boardHandler.getBoard()) + "\n" + seqSetSystemId();
+    return processSequence(boardHandler, std::move(request));
 }
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
@@ -94,29 +177,6 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
     request << spiMask.name << ",WRITE,";
     request << (static_cast<uint32_t>(spiMask.getStoredValue()) | (static_cast<uint32_t>(mask) << idx));
     return request.str();
-}
-
-BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
-{
-    std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
-
-    for (uint32_t pmIdx = 0; pmIdx < 10; pmIdx++) {
-        {
-            auto parsedResponse = processSequence(*this, seqMaskPMLink(pmIdx, true));
-            if (parsedResponse.errors.empty() == false) {
-                return parsedResponse;
-            }
-        }
-
-        {
-            auto parsedResponse = processSequence(m_PMs[pmIdx], pmRequest);
-            if (parsedResponse.errors.empty() == false) {
-                (void)processSequence(*this, seqMaskPMLink(pmIdx, false));
-            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF) {
-                (void)processSequence(*this, seqMaskPMLink(pmIdx, false));
-            }
-        }
-    }
 }
 
 std::string ResetFEE::seqSetBoardId(std::shared_ptr<Board> board)

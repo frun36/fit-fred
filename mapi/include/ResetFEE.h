@@ -5,16 +5,19 @@
 #include <vector>
 #include <functional>
 
-class ResetFEE : public Configurations::BoardConfigurations, public IndefiniteMapi
+class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
 {
    public:
-    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : BoardConfigurations(TCM)
+    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : BasicRequestHandler(TCM)
     {
         for (auto& pm : pms) {
             m_PMs.emplace_back(pm);
         }
     }
 
+    void processExecution() override;
+
+   private:
     std::string seqSwitchGBTErrorReports(bool);
     std::string seqSetResetSystem();
     std::string seqSetResetFinished();
@@ -24,21 +27,22 @@ class ResetFEE : public Configurations::BoardConfigurations, public IndefiniteMa
 
     BasicRequestHandler::ParsedResponse applyResetFEE();
     BasicRequestHandler::ParsedResponse checkPMLinks();
+    BasicRequestHandler::ParsedResponse applyGbtConfiguration();
+    BasicRequestHandler::ParsedResponse applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler);
 
     BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
     {
         std::string seq;
         try {
             seq = handler.processMessageFromWinCC(request).getSequence();
-        } catch (...) {
-            return { WinCCResponse(), { { "REQUEST_TO_ALF", "Request failed: " + request } } };
+        } catch (std::exception& e) {
+            return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }
         return handler.processMessageFromALF(executeAlfSequence(seq));
     }
 
-    void processExecution() override;
+    static const BasicRequestHandler::ParsedResponse EmptyResponse;
 
-   private:
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BasicRequestHandler> m_PMs;
 };

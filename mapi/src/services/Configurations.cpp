@@ -2,6 +2,7 @@
 #include <cctype>
 #include <unistd.h>
 #include <sstream>
+#include"utils.h"
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
@@ -44,6 +45,25 @@ string Configurations::processInputMessage(string msg)
     newMapiGroupRequest(requests);
     noRpcRequest = true;
     return "";
+}
+
+std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(std::string_view configuration, std::string_view board)
+{
+    return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + std::string(configuration) + "' AND board_name = '" + std::string(board) + "'");
+}
+
+std::string Configurations::BoardConfigurations::convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration)
+{
+    stringstream request;
+    for (const auto& row : configuration) {
+        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
+            throw runtime_error( string_utils::concatenate(name, "Invalid CONFIGURATIONS data row") );
+
+        string parameterName = row[0]->getString();
+        double parameterValue = row[1]->getDouble();
+        request << parameterName << ",WRITE," << parameterValue << "\n";
+    }
+    return request.str();
 }
 
 Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name)

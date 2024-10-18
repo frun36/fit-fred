@@ -62,3 +62,14 @@ WordType getBitField(WordType word, uint8_t first, uint8_t length)
     WordType mask = (static_cast<WordType>(1u) << length) - 1u;
     return (word >> first) & mask;
 }
+
+namespace string_utils
+{
+template<typename ...Args>
+std::string concatenate(Args... args)
+{
+    std::string res;
+    (res.append(args), ...);
+    return res;
+}
+}

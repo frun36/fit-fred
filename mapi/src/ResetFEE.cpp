@@ -15,6 +15,7 @@ void ResetFEE::processExecution()
         return;
     }
 
+    Print::PrintVerbose("Applying reset command");
     {
         auto response = applyResetFEE();
         if (response.errors.empty() == false) {
@@ -22,6 +23,7 @@ void ResetFEE::processExecution()
             return;
         }
     }
+    Print::PrintVerbose("Constructing SPI mask");
     {
         auto response = checkPMLinks();
         if (response.errors.empty() == false) {
@@ -29,6 +31,7 @@ void ResetFEE::processExecution()
             return;
         }
     }
+    Print::PrintVerbose("Applying GBT configuration");
     {
         auto response = applyGbtConfiguration();
         if (response.errors.empty() == false) {

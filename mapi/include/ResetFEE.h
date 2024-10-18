@@ -36,7 +36,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
         std::string seq;
         try {
             seq = handler.processMessageFromWinCC(request).getSequence();
-        } catch (std::runtime_error& e) {
+        } catch (const std::exception& e) {
             Print::PrintVerbose(e.what());
             return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }

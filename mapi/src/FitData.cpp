@@ -14,7 +14,7 @@ FitData::FitData() : m_ready(false)
     }
 
     Print::PrintInfo("Fetching TCM register map");
-    auto parametersTCM = DatabaseInterface::executeQuery( ParametersTable::selectBoardParameters(BoardTypesTable::TypeTCM) );
+    auto parametersTCM = DatabaseInterface::executeQuery(ParametersTable::selectBoardParameters(BoardTypesTable::TypeTCM));
     Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
     if (parametersTCM.size() == 0) {
         Print::PrintError("TCM register data have not been found!");
@@ -24,7 +24,7 @@ FitData::FitData() : m_ready(false)
     m_statusParameters.emplace(BoardTypesTable::TypeTCM, constructStatusParametersList(BoardTypesTable::TypeTCM));
 
     Print::PrintInfo("Fetching PM register map");
-    auto parametersPM = DatabaseInterface::executeQuery( ParametersTable::selectBoardParameters(BoardTypesTable::TypePM) );
+    auto parametersPM = DatabaseInterface::executeQuery(ParametersTable::selectBoardParameters(BoardTypesTable::TypePM));
     Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
     if (parametersPM.size() == 0) {
         Print::PrintError("PM register data have not been found!");
@@ -34,7 +34,7 @@ FitData::FitData() : m_ready(false)
     m_statusParameters.emplace(BoardTypesTable::TypePM, constructStatusParametersList(BoardTypesTable::TypePM));
 
     Print::PrintInfo("Fetching information about connected devices");
-    auto connectedDevices = DatabaseInterface::executeQuery( db_utils::selectQuery("CONNECTED_DEVICES", {"*"}) );
+    auto connectedDevices = DatabaseInterface::executeQuery(db_utils::selectQuery("CONNECTED_DEVICES", { "*" }));
 
     Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if (connectedDevices.size() == 0) {
@@ -43,7 +43,7 @@ FitData::FitData() : m_ready(false)
     }
 
     Print::PrintInfo("Fetching information about unit defintion and others settings");
-    auto settings = DatabaseInterface::executeQuery( db_utils::selectQuery("FEE_SETTINGS", {"*"}) );
+    auto settings = DatabaseInterface::executeQuery(db_utils::selectQuery("FEE_SETTINGS", { "*" }));
     Print::PrintInfo("Fetched " + std::to_string(settings.size()) + " rows");
     parseSettings(settings);
 
@@ -79,7 +79,6 @@ FitData::FitData() : m_ready(false)
 
     m_ready = true;
 }
-
 
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
@@ -134,4 +133,3 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
     }
     return std::move(statusList);
 }
-

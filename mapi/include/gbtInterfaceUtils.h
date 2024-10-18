@@ -21,7 +21,7 @@ constexpr std::string_view BCSyncLost{ "GBT_ERR_BC_SYNC_LOST" };
 constexpr std::string_view PmEarlyHeader{ "GBT_ERR_PM_EARLY_HEADER" };
 constexpr std::string_view FifoOverload{ "GBT_ERR_FIFO_OVERLOAD" };
 constexpr std::string_view FifoEmpty{ "GBT_FIFO_EMPTY_ERROR_REPORT" };
-constexpr std::string_view FifoReportReset{"GBT_RESET_ERROR_REPORT_FIFO"};
+constexpr std::string_view FifoReportReset{ "GBT_RESET_ERROR_REPORT_FIFO" };
 } // namespace parameters
 
 namespace constants
@@ -131,12 +131,11 @@ class GbtRateMonitor
 
 } // namespace gbt_rate
 
-
 namespace gbt_config
 {
 namespace parameters
 {
-constexpr std::string_view BoardId{"GBT_RDH_FEEID"};
-constexpr std::string_view SystemId{"GBT_RDH_SYSTEM_ID"};
-}
-}
+constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
+constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
+} // namespace parameters
+} // namespace gbt_config

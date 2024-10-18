@@ -20,7 +20,7 @@ Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, st
         m_identity.number = 0;
     } else {
         m_identity.type = Type::PM;
-        m_identity.side = (name.find("A") != std::string::npos)? Side::A: Side::C;
+        m_identity.side = (name.find("A") != std::string::npos) ? Side::A : Side::C;
         m_identity.number = name.back() - '0';
     }
 }

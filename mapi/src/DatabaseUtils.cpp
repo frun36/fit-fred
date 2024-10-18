@@ -1,6 +1,6 @@
 #include <sstream>
 #include <algorithm>
-#include"DatabaseUtils.h"
+#include "DatabaseUtils.h"
 
 ///
 ///     ParameteresTable
@@ -31,25 +31,25 @@ std::string selectQuery(std::string_view tableName, const std::vector<std::strin
 {
     std::stringstream ss;
     ss << "SELECT ";
-    if(distinct){
-        ss << "DISTINCT "; 
+    if (distinct) {
+        ss << "DISTINCT ";
     }
     bool first = true;
-    for(auto& column: columns){
-        if(!first){
+    for (auto& column : columns) {
+        if (!first) {
             ss << ',';
         }
         ss << column;
         first = false;
     }
-    
+
     ss << " FROM " << tableName;
 
-    if(!whereConditions.empty()){
+    if (!whereConditions.empty()) {
         first = true;
         ss << " WHERE ";
-        for(auto& whereC: whereConditions){
-            if(!first){
+        for (auto& whereC : whereConditions) {
+            if (!first) {
                 ss << ',';
             }
             ss << whereC;
@@ -59,7 +59,7 @@ std::string selectQuery(std::string_view tableName, const std::vector<std::strin
     return ss.str();
 }
 
-}
+} // namespace db_utils
 
 bool ParametersTable::parseBoolean(MultiBase* field)
 {
@@ -134,7 +134,7 @@ Board::ParameterInfo ParametersTable::Parameter::buildParameter(std::vector<Mult
 
 std::string ParametersTable::selectBoardParameters(std::string_view boardType)
 {
-    return db_utils::selectQuery(ParametersTable::Name, {"*"}, {db_utils::where(ParametersTable::Parameter::BoardTypeName, "=", boardType)});
+    return db_utils::selectQuery(ParametersTable::Name, { "*" }, { db_utils::where(ParametersTable::Parameter::BoardTypeName, "=", boardType) });
 }
 
 ///

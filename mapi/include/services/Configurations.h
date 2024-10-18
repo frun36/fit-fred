@@ -90,7 +90,7 @@ class Configurations : public Mapigroup
     FRIEND_TEST(::ConfigurationsTest, Tcm);
 #endif
 
-    public:
+   public:
     class BoardConfigurations : public BasicRequestHandler
     {
        public:
@@ -108,7 +108,8 @@ class Configurations : public Mapigroup
 
         virtual ~BoardConfigurations() = default;
     };
-    private:
+
+   private:
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
 #ifdef FIT_UNIT_TEST

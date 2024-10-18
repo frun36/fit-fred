@@ -57,7 +57,7 @@ class BasicRequestHandler
     SwtSequence processMessageFromWinCC(std::string);
     virtual ParsedResponse processMessageFromALF(std::string);
 
-    std::shared_ptr<Board> getBoard() {return m_board;}
+    std::shared_ptr<Board> getBoard() { return m_board; }
 
    protected:
     struct ParameterToHandle {

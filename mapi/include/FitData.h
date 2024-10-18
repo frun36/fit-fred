@@ -2,7 +2,7 @@
 #include <cmath>
 #include <memory>
 #include <unordered_map>
-#include"DatabaseUtils.h"
+#include "DatabaseUtils.h"
 #include "Board.h"
 
 typedef uint8_t columnIdx;
@@ -32,4 +32,3 @@ class FitData
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;
     std::shared_ptr<EnvironmentFEE> m_settings;
 };
-

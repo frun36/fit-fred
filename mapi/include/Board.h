@@ -15,11 +15,10 @@ class Board
    public:
     enum class Type { TCM,
                       PM };
-    enum class Side{A, 
-                    C};
+    enum class Side { A,
+                      C };
 
-    struct Identity
-    {
+    struct Identity {
         Type type;
         std::optional<Side> side;
         uint8_t number;
@@ -119,7 +118,7 @@ class Board
 
     Type type() { return m_identity.type; }
 
-    Identity getIdentity() const {return m_identity;}
+    Identity getIdentity() const { return m_identity; }
 
     const std::string& getName() const { return m_name; }
 

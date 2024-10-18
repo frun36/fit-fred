@@ -5,6 +5,7 @@
 #include<vector>
 #include<functional>
 
+
 class ResetFEE: public Configurations::BoardConfigurations, public IndefiniteMapi
 {
 public:
@@ -16,21 +17,34 @@ public:
     }
     
     
-    SwtSequence switchGBTErrorReports(bool);
-    SwtSequence setRestSystem();
-    SwtSequence setResetFinished();
+    std::string switchGBTErrorReports(bool);
+    std::string setResetSystem();
+    std::string setResetFinished();
+    std::string setBoardId(std::shared_ptr<Board> board);
+    std::string setSystemId(std::shared_ptr<Board> board);
+    std::string maskPMLink(uint32_t idx, bool mask);
 
     BasicRequestHandler::ParsedResponse applyResetFEE();
     BasicRequestHandler::ParsedResponse checkPMLinks();
+    
+    BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
+    {
+        std::string seq;
+        try{
+            seq = handler.processMessageFromWinCC(request).getSequence();
+        }
+        catch(...)
+        {
+            return {WinCCResponse(), { {"REQUEST_TO_ALF","Request failed: " + request} }};
+        }
+        return handler.processMessageFromALF(executeAlfSequence(seq));
+    }
 
-    SwtSequence maskPMLink(uint32_t idx, bool mask);
+    
 
     void processExecution() override;
 
 private:
-
-    
-
     std::chrono::milliseconds m_sleepAfterReset{2000};
     std::vector<BasicRequestHandler> m_PMs;
 };

@@ -15,6 +15,15 @@ class Board
    public:
     enum class Type { TCM,
                       PM };
+    enum class Side{A, 
+                    C};
+
+    struct Identity
+    {
+        Type type;
+        std::optional<Side> side;
+        uint8_t number;
+    };
 
     struct ParameterInfo {
         // The encoding system requires serious rethinking, based on the electronics
@@ -108,12 +117,14 @@ class Board
 
     uint32_t getAddress() const { return m_address; }
 
-    Type type() { return m_boardType; }
-    void setType(Type type) { m_boardType = type; }
+    Type type() { return m_identity.type; }
+
+    Identity getIdentity() const {return m_identity;}
 
     const std::string& getName() const { return m_name; }
 
    private:
+    Identity m_identity;
     Type m_boardType;
     std::string m_name;
     uint32_t m_address;

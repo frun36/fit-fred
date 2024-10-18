@@ -40,6 +40,9 @@ constexpr std::string_view ExtenalClock{ "LHC_CLOCK" };
 constexpr std::string_view InternalClock{ "INTERNAL_CLOCK" };
 constexpr std::string_view SystemClock{ "SYSTEM_CLOCK" };
 constexpr std::string_view TDC{ "TDC" };
+constexpr std::string_view PmA0BoardId{"PMA0_BOARD_ID"};
+constexpr std::string_view PmC0BoardId{"PMC0_BOARD_ID"};
+constexpr std::string_view TcmBoardId{"TCM_BOARD_ID"};
 } // namespace parameters
 
 namespace constants

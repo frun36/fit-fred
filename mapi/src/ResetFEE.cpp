@@ -1,5 +1,7 @@
 #include"ResetFEE.h"
 #include"TCM.h"
+#include"PM.h"
+#include"gbtInterfaceUtils.h"
 #include<thread>
 void ResetFEE::processExecution()
 {
@@ -13,13 +15,13 @@ void ResetFEE::processExecution()
     {
         auto response = applyResetFEE();
         if(response.errors.empty() == false){
-            publishError(parseErrorString(response));
+            publishError(response.getContents());
         }
     }
     {
         auto response = checkPMLinks();
         if(response.errors.empty() == false){
-            publishError(parseErrorString(response));
+            publishError(response.getContents());
         }
     }
 
@@ -29,16 +31,9 @@ void ResetFEE::processExecution()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
 {
-    auto processSequence = 
-    [this](SwtSequence&& sequence)
-    {
-        return this->processMessageFromALF(this->executeAlfSequence(sequence.getSequence()));
-    };
-
-    resetExecutionData();
 
     {
-        auto parsedResponse = processSequence(switchGBTErrorReports(false));
+        auto parsedResponse = processSequence(*this, switchGBTErrorReports(false));
         if(parsedResponse.errors.empty() == false)
         {
             return parsedResponse;
@@ -46,7 +41,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     }
 
     {
-        auto parsedResponse = processSequence(setRestSystem());
+        auto parsedResponse = processSequence(*this, setResetSystem());
         if(parsedResponse.errors.empty() == false)
         {
             return parsedResponse;
@@ -55,26 +50,26 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     }
 
     {
-        auto parsedResponse = processSequence(setResetFinished());
+        auto parsedResponse = processSequence(*this, setResetFinished());
         if(parsedResponse.errors.empty() == false)
         {
             return parsedResponse;
         }
     }
 
-    return processSequence(switchGBTErrorReports(true));
+    return processSequence(*this, switchGBTErrorReports(true));
 }
 
-SwtSequence ResetFEE::switchGBTErrorReports(bool on)
+std::string ResetFEE::switchGBTErrorReports(bool on)
 {
-    std::string request{tcm_parameters::GBT_RESET_ERROR_REPORT_FIFO};
+    std::string request{gbt_error::parameters::FifoReportReset};
     request.append("WRITE\n").append(std::to_string(!on));
-    return processMessageFromWinCC(request);
+    return request;
 }
 
-SwtSequence ResetFEE::setRestSystem()
+std::string ResetFEE::setResetSystem()
 {
-    Board::ParameterInfo& forceLocalClock = m_board->at(tcm_parameters::BOARD_STATUS_FORCE_LOCAL_CLOCK.data());
+    Board::ParameterInfo& forceLocalClock = m_board->at(tcm_parameters::ForceLocalClock.data());
 
     std::stringstream request;
 
@@ -83,18 +78,18 @@ SwtSequence ResetFEE::setRestSystem()
         request << tcm_parameters::ForceLocalClock << ",WRITE,1";
     }
     
-    return processMessageFromWinCC(request.str());
+    return request.str();
 }
 
-SwtSequence ResetFEE::setResetFinished()
+std::string ResetFEE::setResetFinished()
 {
     std::stringstream request;
     request << tcm_parameters::SystemRestarted << "WRITE,1\n";
 
-    return processMessageFromWinCC({tcm_parameters::SystemRestarted, "WRITE,1"});
+    return request.str();
 }
 
-SwtSequence ResetFEE::maskPMLink(uint32_t idx, bool mask)
+std::string ResetFEE::maskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_board->at(tcm_parameters::PmSpiMask.data());
     if(spiMask.getStoredValueOptional() == std::nullopt)
@@ -104,44 +99,55 @@ SwtSequence ResetFEE::maskPMLink(uint32_t idx, bool mask)
 
     std::stringstream request;
     request << spiMask.name <<",WRITE,";
-    request << std::hex << (static_cast<uint32_t>(spiMask.getStoredValue()) | (static_cast<uint32_t>(mask)<<idx));
-    return processMessageFromWinCC(request.str());
+    request << (static_cast<uint32_t>(spiMask.getStoredValue()) | (static_cast<uint32_t>(mask)<<idx));
+    return request.str();
 }
 
 BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
 {
-    auto processSequencePM = [this](BasicRequestHandler& handler, const std::string& request)
-    {
-        auto sequence = handler.processMessageFromWinCC(request);
-        return handler.processMessageFromALF(this->executeAlfSequence(sequence.getSequence()));
-    };
-
-    auto processSequenceTCM = [this](SwtSequence&& sequence)
-    {
-        return this->processMessageFromALF(this->executeAlfSequence(sequence.getSequence()));
-    };
-
     std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
 
     for(uint32_t pmIdx = 0; pmIdx < 10; pmIdx++)
     {
         {
-            auto parsedResponse = processSequenceTCM(maskPMLink(pmIdx, true));
+            auto parsedResponse = processSequence(*this, maskPMLink(pmIdx, true));
             if(parsedResponse.errors.empty() == false){
                 return parsedResponse;
             }
         }
 
         {
-            auto parsedResponse = processSequencePM(m_PMs[pmIdx], pmRequest);
+            auto parsedResponse = processSequence(m_PMs[pmIdx], pmRequest);
             if(parsedResponse.errors.empty() == false){
-                (void) processSequenceTCM(maskPMLink(pmIdx, false));
+                (void) processSequence(*this, maskPMLink(pmIdx, false));
             }
             else if(m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF){
-                (void) processSequenceTCM(maskPMLink(pmIdx, false));
+                (void) processSequence(*this, maskPMLink(pmIdx, false));
             }
         }
     }
 }
 
+std::string ResetFEE::setBoardId(std::shared_ptr<Board> board)
+{
+    Board::Identity identity = board->getIdentity();
+    uint8_t id = 0;
 
+    if(identity.type == Board::Type::PM && identity.side == Board::Side::A){
+        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::PmA0BoardId.data())) + identity.number;
+    }
+    else if(identity.type == Board::Type::PM && identity.side == Board::Side::C){
+        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::PmC0BoardId.data())) + identity.number;
+    }
+    else{
+        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
+    }
+    std::stringstream request;
+    request << gbt_config::parameters::BoardId << "WRITE," << id;
+    return request.str();
+}
+
+SwtSequence ResetFEE::setSystemId(BasicRequestHandler& board)
+{
+    return static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
+}

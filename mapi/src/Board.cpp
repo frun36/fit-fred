@@ -15,9 +15,13 @@
 Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentFEE> settings) : m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
 {
     if (name.find("TCM") != std::string::npos) {
-        m_boardType = Type::TCM;
+        m_identity.type = Type::TCM;
+        m_identity.side = std::nullopt;
+        m_identity.number = 0;
     } else {
-        m_boardType = Type::PM;
+        m_identity.type = Type::PM;
+        m_identity.side = (name.find("A") != std::string::npos)? Side::A: Side::C;
+        m_identity.number = name.back() - '0';
     }
 }
 

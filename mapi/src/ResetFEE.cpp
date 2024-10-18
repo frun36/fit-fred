@@ -96,14 +96,14 @@ SwtSequence ResetFEE::setResetFinished()
 
 SwtSequence ResetFEE::maskPMLink(uint32_t idx, bool mask)
 {
-    Board::ParameterInfo& spiMask = m_board->at(tcm_parameters::PM_SPI_MASK.data());
+    Board::ParameterInfo& spiMask = m_board->at(tcm_parameters::PmSpiMask.data());
     if(spiMask.getStoredValueOptional() == std::nullopt)
     {
         spiMask.storeValue(0x0);
     }
 
     std::stringstream request;
-    request << tcm_parameters::PM_SPI_MASK <<",WRITE,";
+    request << spiMask.name <<",WRITE,";
     request << std::hex << (static_cast<uint32_t>(spiMask.getStoredValue()) | (static_cast<uint32_t>(mask)<<idx));
     return processMessageFromWinCC(request.str());
 }
@@ -121,7 +121,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
         return this->processMessageFromALF(this->executeAlfSequence(sequence.getSequence()));
     };
 
-    std::string pmRequest = pm_parameters::HIGH_VOLTAGE.data() + std::string(",READ");
+    std::string pmRequest = pm_parameters::HighVoltage.data() + std::string(",READ");
 
     for(uint32_t pmIdx = 0; pmIdx < 10; pmIdx++)
     {
@@ -137,7 +137,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
             if(parsedResponse.errors.empty() == false){
                 (void) processSequenceTCM(maskPMLink(pmIdx, false));
             }
-            else if(m_PMs[pmIdx].getBoard()->at(pm_parameters::HIGH_VOLTAGE.data()).getStoredValue() == 0xFFFFF){
+            else if(m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF){
                 (void) processSequenceTCM(maskPMLink(pmIdx, false));
             }
         }

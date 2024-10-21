@@ -178,7 +178,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler)
 {
-    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, "GBT");
+    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, gbt_config::GbtConfigurationBoardName);
     if (configuration.empty()) {
         return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }

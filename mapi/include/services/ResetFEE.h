@@ -53,7 +53,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
 
     std::string readRequest(std::string_view param)
     {
-        return string_utils::concatenate(param, "READ");
+        return string_utils::concatenate(param, ",READ");
     }
 
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);

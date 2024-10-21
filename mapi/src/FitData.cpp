@@ -50,11 +50,13 @@ FitData::FitData() : m_ready(false)
     std::shared_ptr<Board> TCM{ nullptr };
 
     for (auto& deviceRow : connectedDevices) {
-        ConnectedDevicesTable::Device device(deviceRow);
-        Print::PrintInfo("Registering " + device.name);
-        if(device.name == "GBT"){
+         if(device.name == "GBT"){
             continue;
         }
+        
+        ConnectedDevicesTable::Device device(deviceRow);
+        Print::PrintInfo("Registering " + device.name);
+       
         switch (device.type) {
             case ConnectedDevicesTable::Device::BoardType::PM: {
                 if (TCM.get() == nullptr) {

@@ -128,10 +128,10 @@ BasicRequestHandler::ParsedResponse ResetFEE::testPMLinks()
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
     auto isBoardIdCorrect = [this](std::shared_ptr<Board> board) {
-        return ((static_cast<uint32_t>(board->at(gbt_config::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
-                (board->at(gbt_config::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())));
+        return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
+                (board->at(gbt::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())));
     };
-    std::string readFEEId = readRequest(gbt_config::parameters::BoardId) + "\n" + readRequest(gbt_config::parameters::SystemId);
+    std::string readFEEId = readRequest(gbt::parameters::BoardId) + "\n" + readRequest(gbt::parameters::SystemId);
 
     // Reading TCM ID
     {
@@ -178,20 +178,20 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler)
 {
-    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, gbt_config::GbtConfigurationBoardName);
+    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, gbt::GbtConfigurationBoardName);
     if (configuration.empty()) {
         return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }
 
     std::stringstream request;
 
-    request << Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration);
-    if (boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
-        request << writeRequest(gbt_config::parameters::BcIdDelay,
+    request << Configurations::BoardConfigurations::convertConfigToRequest(gbt::GbtConfigurationName, configuration);
+    if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
+        request << writeRequest(gbt::parameters::BcIdDelay,
                                 static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
                 << "\n";
     } else {
-        request << writeRequest(gbt_config::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue()) << "\n";
+        request << writeRequest(gbt::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValue()) << "\n";
     }
 
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
@@ -202,7 +202,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 {
-    return writeRequest(gbt_error::parameters::FifoReportReset, static_cast<int>(!on));
+    return writeRequest(gbt::parameters::FifoReportReset, static_cast<int>(!on));
 }
 
 std::string ResetFEE::seqSetResetSystem()
@@ -237,7 +237,7 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 
 std::string ResetFEE::seqSetBoardId(std::shared_ptr<Board> board)
 {
-    return writeRequest(gbt_config::parameters::BoardId, getEnvBoardId(board));
+    return writeRequest(gbt::parameters::BoardId, getEnvBoardId(board));
 }
 
 uint32_t ResetFEE::getEnvBoardId(std::shared_ptr<Board> board)
@@ -257,7 +257,7 @@ uint32_t ResetFEE::getEnvBoardId(std::shared_ptr<Board> board)
 
 std::string ResetFEE::seqSetSystemId()
 {
-    return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
+    return writeRequest(gbt::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()

@@ -44,6 +44,7 @@ constexpr std::string_view PmA0BoardId{ "PMA0_BOARD_ID" };
 constexpr std::string_view PmC0BoardId{ "PMC0_BOARD_ID" };
 constexpr std::string_view TcmBoardId{ "TCM_BOARD_ID" };
 constexpr std::string_view SystemId{ "SYSTEM_ID" };
+constexpr std::string_view BcIdOffsetDefault{ "BCID_OFFSET_DEFAULT" };
 } // namespace parameters
 
 namespace constants

@@ -138,6 +138,7 @@ namespace parameters
 {
 constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
 constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
+constexpr std::string_view BcIdDelay{ "GBT_BCID_OFFSET" };
 } // namespace parameters
 
 } // namespace gbt_config

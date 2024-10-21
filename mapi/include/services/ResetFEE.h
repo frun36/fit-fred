@@ -58,9 +58,12 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
 
     static const BasicRequestHandler::ParsedResponse EmptyResponse;
-    static constexpr std::string_view EnforceDefGbtConfig{"ENFORCE DEFAULT GBT CONFIG"};
+    static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE DEFAULT GBT CONFIG" };
+    static constexpr std::string_view ForceLocalClock{ "FORCE LOCAL CLOCK" };
 
-    bool m_enforceDefGbtConfig;
+    bool m_enforceDefGbtConfig{ false };
+    bool m_forceLocalClock{ false };
+
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BasicRequestHandler> m_PMs;
 };

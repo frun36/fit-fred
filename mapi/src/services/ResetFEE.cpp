@@ -14,11 +14,17 @@ void ResetFEE::processExecution()
     if (running == false) {
         return;
     }
-    if(request == ResetFEE::EnforceDefGbtConfig){
+
+    if (request.find(ResetFEE::EnforceDefGbtConfig) != std::string::npos) {
         m_enforceDefGbtConfig = true;
-    }
-    else{
+    } else {
         m_enforceDefGbtConfig = false;
+    }
+
+    if (request.find(ResetFEE::ForceLocalClock) != std::string::npos) {
+        m_forceLocalClock = true;
+    } else {
+        m_forceLocalClock = false;
     }
 
     Print::PrintVerbose("Applying reset command");
@@ -110,11 +116,10 @@ BasicRequestHandler::ParsedResponse ResetFEE::testPMLinks()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
-    auto isBoardIdCorrect = [this](std::shared_ptr<Board> board)
-    {
-        return  ( ( static_cast<uint32_t>(board->at(gbt_config::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board) ) ||
-                (board->at(gbt_config::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())) );
-    }; 
+    auto isBoardIdCorrect = [this](std::shared_ptr<Board> board) {
+        return ((static_cast<uint32_t>(board->at(gbt_config::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
+                (board->at(gbt_config::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())));
+    };
     std::string readFEEId = readRequest(gbt_config::parameters::BoardId) + readRequest(gbt_config::parameters::SystemId);
 
     // Reading TCM ID
@@ -164,11 +169,19 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
 {
     auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, boardHandler.getBoard()->getName());
     if (configuration.empty()) {
-        return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined for this board!" } } };
+        return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }
-    std::string configReq = Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration);
-    std::string request = configReq + "\n" + seqSetBoardId(boardHandler.getBoard()) + "\n" + seqSetSystemId();
-    return processSequence(boardHandler, std::move(request));
+
+    std::stringstream request;
+    request << Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration) << "\n";
+    if (boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
+        request <<  writeRequest(gbt_config::parameters::BcIdDelay,
+                                     static_cast<uint32_t>(boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue())) << "\n";
+    }
+    request << seqSetBoardId(boardHandler.getBoard()) << "\n";
+    request << seqSetSystemId();
+
+    return processSequence(boardHandler, request.str());
 }
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
@@ -178,12 +191,10 @@ std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 
 std::string ResetFEE::seqSetResetSystem()
 {
-    Board::ParameterInfo& forceLocalClock = m_board->at(tcm_parameters::ForceLocalClock.data());
-
     std::stringstream request;
 
     request << writeRequest(tcm_parameters::ResetSystem, 1) << "\n";
-    if (forceLocalClock.getStoredValueOptional() != std::nullopt && forceLocalClock.getStoredValue() == 1) {
+    if (m_forceLocalClock) {
         request << writeRequest(tcm_parameters::ForceLocalClock, 1);
     }
 
@@ -232,4 +243,3 @@ std::string ResetFEE::seqSetSystemId()
 {
     return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }
-

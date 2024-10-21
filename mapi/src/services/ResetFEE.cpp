@@ -184,22 +184,16 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
     }
 
     std::stringstream request;
-    
+
     request << Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration);
     if (boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
-        try{
-            request <<  writeRequest(gbt_config::parameters::BcIdDelay,
-                                     static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data()))) << "\n";
-        }
-        catch(const std::exception& e){
-            return {WinCCResponse(), {{boardHandler.getBoard()->getName(), "Lacking default BCID GBT"}}};
-        }
+        request << writeRequest(gbt_config::parameters::BcIdDelay,
+                                static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
+                << "\n";
+    } else {
+        request << writeRequest(gbt_config::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue()) << "\n";
     }
-    else{
-        request <<  writeRequest(gbt_config::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue()) << "\n";
-        
-    }
-   
+
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
     request << seqSetSystemId();
 
@@ -266,8 +260,8 @@ std::string ResetFEE::seqSetSystemId()
     return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }
 
- BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
- {
+BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
+{
     std::stringstream request;
     request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger1Signature.data())) << "\n";
     request << writeRequest(tcm_parameters::Trigger2Signature, m_board->getEnvironment(environment::parameters::Trigger2Signature.data())) << "\n";
@@ -275,4 +269,4 @@ std::string ResetFEE::seqSetSystemId()
     request << writeRequest(tcm_parameters::Trigger4Signature, m_board->getEnvironment(environment::parameters::Trigger4Signature.data())) << "\n";
     request << writeRequest(tcm_parameters::Trigger5Signature, m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
     return processSequence(*this, request.str());
- }
+}

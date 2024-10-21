@@ -45,11 +45,11 @@ constexpr std::string_view PmC0BoardId{ "PMC0_BOARD_ID" };
 constexpr std::string_view TcmBoardId{ "TCM_BOARD_ID" };
 constexpr std::string_view SystemId{ "SYSTEM_ID" };
 constexpr std::string_view BcIdOffsetDefault{ "BCID_OFFSET_DEFAULT" };
-constexpr std::string_view Trigger1Signature{"TRIGGER_1_SIGNATURE"};
-constexpr std::string_view Trigger2Signature{"TRIGGER_2_SIGNATURE"};
-constexpr std::string_view Trigger3Signature{"TRIGGER_3_SIGNATURE"};
-constexpr std::string_view Trigger4Signature{"TRIGGER_4_SIGNATURE"};
-constexpr std::string_view Trigger5Signature{"TRIGGER_5_SIGNATURE"};
+constexpr std::string_view Trigger1Signature{ "TRIGGER_1_SIGNATURE" };
+constexpr std::string_view Trigger2Signature{ "TRIGGER_2_SIGNATURE" };
+constexpr std::string_view Trigger3Signature{ "TRIGGER_3_SIGNATURE" };
+constexpr std::string_view Trigger4Signature{ "TRIGGER_4_SIGNATURE" };
+constexpr std::string_view Trigger5Signature{ "TRIGGER_5_SIGNATURE" };
 
 } // namespace parameters
 

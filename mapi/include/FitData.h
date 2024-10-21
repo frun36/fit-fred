@@ -26,6 +26,7 @@ class FitData
     std::list<std::string> constructStatusParametersList(std::string_view boardName);
     std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main = nullptr);
     void parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable);
+    bool checkSettings();
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::list<std::string>> m_statusParameters;

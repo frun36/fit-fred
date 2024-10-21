@@ -198,7 +198,6 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
         request <<  writeRequest(gbt_config::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue()) << "\n";
         
     }
-    }
    
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
     request << seqSetSystemId();

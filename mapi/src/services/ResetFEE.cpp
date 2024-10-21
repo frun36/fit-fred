@@ -186,7 +186,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
     std::stringstream request;
 
     request << Configurations::BoardConfigurations::convertConfigToRequest(gbt::GbtConfigurationName, configuration);
-    if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
+    if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValueOptional() == std::nullopt) {
         request << writeRequest(gbt::parameters::BcIdDelay,
                                 static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
                 << "\n";

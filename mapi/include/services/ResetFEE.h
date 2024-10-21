@@ -31,6 +31,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
     BasicRequestHandler::ParsedResponse testPMLinks();
     BasicRequestHandler::ParsedResponse applyGbtConfiguration();
     BasicRequestHandler::ParsedResponse applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler);
+    BasicRequestHandler::ParsedResponse applyTriggersSign();
 
     BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
     {

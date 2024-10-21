@@ -35,6 +35,16 @@ void ResetFEE::processExecution()
             return;
         }
     }
+
+    Print::PrintVerbose("Applying triggers signatures");
+    {
+        auto response = applyTriggersSign();
+        if (response.errors.empty() == false) {
+            publishError(response.getContents());
+            return;
+        }
+    }
+
     Print::PrintVerbose("Constructing SPI mask");
     {
         auto response = testPMLinks();
@@ -243,3 +253,14 @@ std::string ResetFEE::seqSetSystemId()
 {
     return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }
+
+ BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
+ {
+    std::stringstream request;
+    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger1Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger2Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger3Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger4Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
+    return processSequence(*this, request.str());
+ }

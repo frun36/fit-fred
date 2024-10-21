@@ -1,5 +1,4 @@
-#include "../BasicRequestHandler.h"
-#include "Fred/Mapi/indefinitemapi.h"
+#include"BasicFitIndefiniteMapi.h"
 #include "Configurations.h"
 #include "Alfred/print.h"
 #include "../utils.h"
@@ -7,10 +6,10 @@
 #include <vector>
 #include <functional>
 
-class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
+class ResetFEE : public BasicFitIndefiniteMapi
 {
    public:
-    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : BasicRequestHandler(TCM)
+    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : BasicFitIndefiniteMapi(TCM)
     {
         for (auto& pm : pms) {
             m_PMs.emplace_back(pm);
@@ -32,29 +31,6 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
     BasicRequestHandler::ParsedResponse applyGbtConfiguration();
     BasicRequestHandler::ParsedResponse applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler);
     BasicRequestHandler::ParsedResponse applyTriggersSign();
-
-    BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
-    {
-        std::string seq;
-        try {
-            seq = handler.processMessageFromWinCC(request).getSequence();
-        } catch (const std::exception& e) {
-            Print::PrintVerbose(e.what());
-            return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
-        }
-        return handler.processMessageFromALF(executeAlfSequence(seq));
-    }
-
-    template <typename T>
-    std::string writeRequest(std::string_view param, T value)
-    {
-        return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
-    }
-
-    std::string readRequest(std::string_view param)
-    {
-        return string_utils::concatenate(param, ",READ");
-    }
 
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
 

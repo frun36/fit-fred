@@ -1,7 +1,7 @@
 #include"services/Reset.h"
 #include"gbtInterfaceUtils.h"
 
-Reset::Reset(std::shared_ptr<Board> board):BasicRequestHandler(board) 
+Reset::Reset(std::shared_ptr<Board> board): BasicFitIndefiniteMapi(board)
 {
     m_resetParameters.emplace(gbt::parameters::Reset, m_board->at(gbt::parameters::Reset));
     m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_board->at(gbt::parameters::ResetDataCounters));

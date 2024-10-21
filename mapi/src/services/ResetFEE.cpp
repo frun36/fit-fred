@@ -130,7 +130,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
         return ((static_cast<uint32_t>(board->at(gbt_config::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
                 (board->at(gbt_config::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())));
     };
-    std::string readFEEId = readRequest(gbt_config::parameters::BoardId) + readRequest(gbt_config::parameters::SystemId);
+    std::string readFEEId = readRequest(gbt_config::parameters::BoardId) + "\n" + readRequest(gbt_config::parameters::SystemId);
 
     // Reading TCM ID
     {
@@ -177,18 +177,18 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler)
 {
-    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, boardHandler.getBoard()->getName());
+    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt_config::GbtConfigurationName, "GBT");
     if (configuration.empty()) {
         return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }
 
     std::stringstream request;
     
-    request << Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration) << "\n";
+    request << Configurations::BoardConfigurations::convertConfigToRequest(gbt_config::GbtConfigurationName, configuration);
     if (boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValueOptional() != std::nullopt) {
         try{
             request <<  writeRequest(gbt_config::parameters::BcIdDelay,
-                                     static_cast<uint32_t>(boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue())) << "\n";
+                                     static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data()))) << "\n";
         }
         catch(const std::exception& e){
             return {WinCCResponse(), {{boardHandler.getBoard()->getName(), "Lacking default BCID GBT"}}};

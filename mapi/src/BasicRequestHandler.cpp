@@ -43,7 +43,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess)
 
     } catch (const std::exception& e) {
         resetExecutionData();
-        throw e;
+        throw std::runtime_error(e.what());
     }
 
     return sequence;

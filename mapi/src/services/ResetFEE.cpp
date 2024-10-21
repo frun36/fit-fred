@@ -258,9 +258,9 @@ std::string ResetFEE::seqSetSystemId()
  {
     std::stringstream request;
     request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger1Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger2Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger3Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger4Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
+    request << writeRequest(tcm_parameters::Trigger2Signature, m_board->getEnvironment(environment::parameters::Trigger2Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger3Signature, m_board->getEnvironment(environment::parameters::Trigger3Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger4Signature, m_board->getEnvironment(environment::parameters::Trigger4Signature.data())) << "\n";
+    request << writeRequest(tcm_parameters::Trigger5Signature, m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
     return processSequence(*this, request.str());
  }

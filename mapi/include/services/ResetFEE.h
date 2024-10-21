@@ -1,4 +1,4 @@
-#include"BasicFitIndefiniteMapi.h"
+#include "BasicFitIndefiniteMapi.h"
 #include "Configurations.h"
 #include "Alfred/print.h"
 #include "../utils.h"
@@ -33,6 +33,10 @@ class ResetFEE : public BasicFitIndefiniteMapi
     BasicRequestHandler::ParsedResponse applyTriggersSign();
 
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
+    uint32_t prepareSign(double sign)
+    {
+        return static_cast<uint32_t>(sign) << 7 | (~static_cast<uint32_t>(sign) & 0x7F);
+    }
 
     static const BasicRequestHandler::ParsedResponse EmptyResponse;
     static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE DEFAULT GBT CONFIG" };

@@ -1,7 +1,7 @@
-#include"services/Reset.h"
-#include"gbtInterfaceUtils.h"
+#include "services/Reset.h"
+#include "gbtInterfaceUtils.h"
 
-Reset::Reset(std::shared_ptr<Board> board): BasicFitIndefiniteMapi(board)
+Reset::Reset(std::shared_ptr<Board> board) : BasicFitIndefiniteMapi(board)
 {
     m_resetParameters.emplace(gbt::parameters::Reset, m_board->at(gbt::parameters::Reset));
     m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_board->at(gbt::parameters::ResetDataCounters));
@@ -11,9 +11,8 @@ Reset::Reset(std::shared_ptr<Board> board): BasicFitIndefiniteMapi(board)
     m_resetParameters.emplace(gbt::parameters::ResetRxPhaseError, m_board->at(gbt::parameters::ResetRxPhaseError));
     m_resetParameters.emplace(gbt::parameters::FifoReportReset, m_board->at(gbt::parameters::FifoReportReset));
 
-    for(auto [name, parameter]: m_resetParameters)
-    {
-        appendRequest(m_reqClearResetBits, writeRequest(name,0));
+    for (auto [name, parameter] : m_resetParameters) {
+        appendRequest(m_reqClearResetBits, writeRequest(name, 0));
     }
 }
 
@@ -27,13 +26,13 @@ void Reset::processExecution()
         return;
     }
 
-    if(m_resetParameters.find(request) == m_resetParameters.end()){
+    if (m_resetParameters.find(request) == m_resetParameters.end()) {
         publishError("Unexpected request: " + request);
     }
 
     {
         auto parsedResponse = processSequence(m_reqClearResetBits);
-        if(parsedResponse.isError()){
+        if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
             return;
         }
@@ -41,24 +40,21 @@ void Reset::processExecution()
 
     {
         auto parsedResponse = processSequence(writeRequest(request, 1));
-        if(parsedResponse.isError()){
+        if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
-        }
-        else{
+        } else {
             success = true;
         }
     }
 
     {
         auto parsedResponse = processSequence(m_reqClearResetBits);
-        if(parsedResponse.isError()){
+        if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
         }
     }
 
-    if(success){
+    if (success) {
         publishAnswer("SUCCESS");
     }
 }
-
-

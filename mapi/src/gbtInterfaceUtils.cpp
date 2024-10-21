@@ -56,7 +56,7 @@ WinCCResponse FifoOverload::createWinCCResponse()
     return std::move(response);
 }
 
-} // namespace gbt_error
+} // namespace gbt
 
 namespace gbt
 {
@@ -75,4 +75,4 @@ double GbtRate::updateRate(uint32_t newCount, std::chrono::milliseconds timeInte
     return rate;
 }
 
-} // namespace gbt_rate
+} // namespace gbt

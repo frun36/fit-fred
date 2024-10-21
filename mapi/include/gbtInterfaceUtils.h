@@ -23,14 +23,14 @@ constexpr std::string_view FifoOverload{ "GBT_ERR_FIFO_OVERLOAD" };
 constexpr std::string_view FifoEmpty{ "GBT_FIFO_EMPTY_ERROR_REPORT" };
 
 // 0xD8
-constexpr std::string_view ResetOrbitSync{"GBT_RESET_ORBIT_SYNC"};
-constexpr std::string_view ResetDataCounters{"GBT_RESET_DATA_COUNTERS"};
-constexpr std::string_view ResetRxError{"GBT_RESET_RX_ERROR"};
-constexpr std::string_view Reset{"GBT_RESET"};
-constexpr std::string_view ResetRxPhaseError{"GBT_RESET_RX_PHASE_ERROR"};
-constexpr std::string_view ResetReadoutFsm{"GBT_RESET_READOUT_FSM"};
+constexpr std::string_view ResetOrbitSync{ "GBT_RESET_ORBIT_SYNC" };
+constexpr std::string_view ResetDataCounters{ "GBT_RESET_DATA_COUNTERS" };
+constexpr std::string_view ResetRxError{ "GBT_RESET_RX_ERROR" };
+constexpr std::string_view Reset{ "GBT_RESET" };
+constexpr std::string_view ResetRxPhaseError{ "GBT_RESET_RX_PHASE_ERROR" };
+constexpr std::string_view ResetReadoutFsm{ "GBT_RESET_READOUT_FSM" };
 constexpr std::string_view FifoReportReset{ "GBT_RESET_ERROR_REPORT_FIFO" };
-constexpr std::string_view ForceIdle{"GBT_FORCE_IDLE"};
+constexpr std::string_view ForceIdle{ "GBT_FORCE_IDLE" };
 
 constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
 constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
@@ -99,8 +99,6 @@ struct FifoOverload : public GbtErrorType {
 
 [[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData);
 
-
-
 class GbtRate
 {
    public:
@@ -132,8 +130,7 @@ class GbtRateMonitor
     GbtRate m_eventsRate;
 };
 
-
 constexpr std::string_view GbtConfigurationName{ "GBT_DEFAULT" };
 constexpr std::string_view GbtConfigurationBoardName{ "GBT" };
 
-} // namespace gbt_config
+} // namespace gbt

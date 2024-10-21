@@ -2,16 +2,15 @@
 
 #include "../BasicRequestHandler.h"
 #include "Fred/Mapi/indefinitemapi.h"
-#include"../utils.h"
+#include "../utils.h"
 
-class BasicFitIndefiniteMapi: public BasicRequestHandler, public IndefiniteMapi
+class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
 {
-public:
-    BasicFitIndefiniteMapi(std::shared_ptr<Board> board): BasicRequestHandler(board) {}
+   public:
+    BasicFitIndefiniteMapi(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
     void processExecution() = 0;
 
-protected:
-
+   protected:
     BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
     {
         std::string seq;

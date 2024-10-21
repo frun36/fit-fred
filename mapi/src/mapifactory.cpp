@@ -51,7 +51,7 @@ void MapiFactory::generateObjects()
 
         Print::PrintVerbose(boardName + " registered");
     }
-    
+
     m_resetSystem = std::make_shared<ResetFEE>(tcm, pms);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM"), dynamic_cast<Mapi*>(m_resetSystem.get()));
 }

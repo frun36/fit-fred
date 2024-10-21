@@ -23,7 +23,7 @@ class MapiFactory
     std::list<Parameters> m_parametersObjects;
     std::list<BoardStatus> m_statusObjects;
     std::list<Reset> m_resetObjects;
-    
+
     Configurations m_configurationsObject;
     std::shared_ptr<ResetFEE> m_resetSystem;
 

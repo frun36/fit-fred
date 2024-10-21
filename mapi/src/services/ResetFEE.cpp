@@ -263,10 +263,16 @@ std::string ResetFEE::seqSetSystemId()
 BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
 {
     std::stringstream request;
-    request << writeRequest(tcm_parameters::Trigger1Signature, m_board->getEnvironment(environment::parameters::Trigger1Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger2Signature, m_board->getEnvironment(environment::parameters::Trigger2Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger3Signature, m_board->getEnvironment(environment::parameters::Trigger3Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger4Signature, m_board->getEnvironment(environment::parameters::Trigger4Signature.data())) << "\n";
-    request << writeRequest(tcm_parameters::Trigger5Signature, m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
+    double trigger1Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger1Signature.data())));
+    double trigger2Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger2Signature.data())));
+    double trigger3Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger3Signature.data())));
+    double trigger4Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger4Signature.data())));
+    double trigger5Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger5Signature.data())));
+
+    request << writeRequest(tcm_parameters::Trigger1Signature, trigger1Sign) << "\n";
+    request << writeRequest(tcm_parameters::Trigger2Signature, trigger2Sign) << "\n";
+    request << writeRequest(tcm_parameters::Trigger3Signature, trigger3Sign) << "\n";
+    request << writeRequest(tcm_parameters::Trigger4Signature, trigger4Sign) << "\n";
+    request << writeRequest(tcm_parameters::Trigger5Signature, trigger5Sign);
     return processSequence(*this, request.str());
 }

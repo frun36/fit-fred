@@ -189,6 +189,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
         try{
             request <<  writeRequest(gbt_config::parameters::BcIdDelay,
                                      static_cast<uint32_t>(boardHandler.getBoard()->at(gbt_config::parameters::BcIdDelay).getStoredValue())) << "\n";
+        }
         catch(const std::exception& e){
             return {WinCCResponse(), {{boardHandler.getBoard()->getName(), "Lacking default BCID GBT"}}};
         }

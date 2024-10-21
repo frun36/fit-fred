@@ -5,7 +5,9 @@ ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr
 {
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::Reset, 0));
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetDataCounters, 0));
+    appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetStartEmulation, 0));
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetOrbitSync, 0));
+    appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetDataCounters, 0));
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetReadoutFsm, 0));
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetRxError, 0));
     appendRequest(m_reqClearResetBits,  writeRequest(gbt::parameters::ResetRxPhaseError, 0));
@@ -13,6 +15,7 @@ ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr
 
     appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::Reset, 0));
     appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::ResetDataCounters, 0));
+    appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::ResetStartEmulation, 0));
     appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::ResetOrbitSync, 0));
     appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::ResetReadoutFsm, 0));
     appendRequest(m_reqClearAndUnlock,  writeRequest(gbt::parameters::ResetRxError, 0));

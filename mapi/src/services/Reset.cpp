@@ -5,6 +5,7 @@ Reset::Reset(std::shared_ptr<Board> board) : BasicFitIndefiniteMapi(board)
 {
     m_resetParameters.emplace(gbt::parameters::Reset, m_board->at(gbt::parameters::Reset));
     m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_board->at(gbt::parameters::ResetDataCounters));
+    m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_board->at(gbt::parameters::ResetStartEmulation));
     m_resetParameters.emplace(gbt::parameters::ResetOrbitSync, m_board->at(gbt::parameters::ResetOrbitSync));
     m_resetParameters.emplace(gbt::parameters::ResetReadoutFsm, m_board->at(gbt::parameters::ResetReadoutFsm));
     m_resetParameters.emplace(gbt::parameters::ResetRxError, m_board->at(gbt::parameters::ResetRxError));

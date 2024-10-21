@@ -61,6 +61,7 @@ void ResetFEE::processExecution()
             return;
         }
     }
+    publishAnswer("SUCCESS");
 }
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()

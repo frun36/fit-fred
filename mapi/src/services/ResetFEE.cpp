@@ -4,8 +4,6 @@
 #include "gbtInterfaceUtils.h"
 #include <thread>
 
-const BasicRequestHandler::ParsedResponse ResetFEE::EmptyResponse({ WinCCResponse(), {} });
-
 void ResetFEE::processExecution()
 {
     bool running = true;

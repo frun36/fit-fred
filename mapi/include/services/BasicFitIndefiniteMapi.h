@@ -42,4 +42,6 @@ class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
     {
         return mess.append(newRequest).append("\n");
     }
+
+    static const BasicRequestHandler::ParsedResponse EmptyResponse;
 };

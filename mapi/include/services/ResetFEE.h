@@ -38,7 +38,6 @@ class ResetFEE : public BasicFitIndefiniteMapi
         return static_cast<uint32_t>(sign) << 7 | (~static_cast<uint32_t>(sign) & 0x7F);
     }
 
-    static const BasicRequestHandler::ParsedResponse EmptyResponse;
     static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE DEFAULT GBT CONFIG" };
     static constexpr std::string_view ForceLocalClock{ "FORCE LOCAL CLOCK" };
 

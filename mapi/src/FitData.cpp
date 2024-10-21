@@ -52,6 +52,9 @@ FitData::FitData() : m_ready(false)
     for (auto& deviceRow : connectedDevices) {
         ConnectedDevicesTable::Device device(deviceRow);
         Print::PrintInfo("Registering " + device.name);
+        if(device.name == "GBT"){
+            continue;
+        }
         switch (device.type) {
             case ConnectedDevicesTable::Device::BoardType::PM: {
                 if (TCM.get() == nullptr) {

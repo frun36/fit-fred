@@ -2,7 +2,7 @@
 #include "Fred/Mapi/indefinitemapi.h"
 #include "Configurations.h"
 #include "Alfred/print.h"
-#include"../utils.h"
+#include "../utils.h"
 #include <string_view>
 #include <vector>
 #include <functional>
@@ -28,7 +28,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
     std::string seqMaskPMLink(uint32_t idx, bool mask);
 
     BasicRequestHandler::ParsedResponse applyResetFEE();
-    BasicRequestHandler::ParsedResponse checkPMLinks();
+    BasicRequestHandler::ParsedResponse testPMLinks();
     BasicRequestHandler::ParsedResponse applyGbtConfiguration();
     BasicRequestHandler::ParsedResponse applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler);
 
@@ -44,7 +44,7 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
         return handler.processMessageFromALF(executeAlfSequence(seq));
     }
 
-    template<typename T>
+    template <typename T>
     std::string writeRequest(std::string_view param, T value)
     {
         return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
@@ -52,11 +52,15 @@ class ResetFEE : public BasicRequestHandler, public IndefiniteMapi
 
     std::string readRequest(std::string_view param)
     {
-        return string_utils::concatenate(param,"READ");
+        return string_utils::concatenate(param, "READ");
     }
 
-    static const BasicRequestHandler::ParsedResponse EmptyResponse;
+    uint32_t getEnvBoardId(std::shared_ptr<Board> board);
 
+    static const BasicRequestHandler::ParsedResponse EmptyResponse;
+    static constexpr std::string_view EnforceDefGbtConfig{"ENFORCE DEFAULT GBT CONFIG"};
+
+    bool m_enforceDefGbtConfig;
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BasicRequestHandler> m_PMs;
 };

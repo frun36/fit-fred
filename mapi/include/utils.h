@@ -65,11 +65,11 @@ WordType getBitField(WordType word, uint8_t first, uint8_t length)
 
 namespace string_utils
 {
-template<typename ...Args>
+template <typename... Args>
 std::string concatenate(Args... args)
 {
     std::string res;
     (res.append(args), ...);
     return res;
 }
-}
+} // namespace string_utils

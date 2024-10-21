@@ -14,6 +14,12 @@ void ResetFEE::processExecution()
     if (running == false) {
         return;
     }
+    if(request == ResetFEE::EnforceDefGbtConfig){
+        m_enforceDefGbtConfig = true;
+    }
+    else{
+        m_enforceDefGbtConfig = false;
+    }
 
     Print::PrintVerbose("Applying reset command");
     {
@@ -25,7 +31,7 @@ void ResetFEE::processExecution()
     }
     Print::PrintVerbose("Constructing SPI mask");
     {
-        auto response = checkPMLinks();
+        auto response = testPMLinks();
         if (response.errors.empty() == false) {
             publishError(response.getContents());
             return;
@@ -76,11 +82,11 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     return EmptyResponse;
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
+BasicRequestHandler::ParsedResponse ResetFEE::testPMLinks()
 {
     std::string pmRequest = readRequest(pm_parameters::HighVoltage);
 
-    for (auto& pm: m_PMs) {
+    for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
         {
             auto parsedResponse = processSequence(*this, seqMaskPMLink(pmIdx, true));
@@ -104,7 +110,22 @@ BasicRequestHandler::ParsedResponse ResetFEE::checkPMLinks()
 
 BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
+    auto isBoardIdCorrect = [this](std::shared_ptr<Board> board)
     {
+        return  ( ( static_cast<uint32_t>(board->at(gbt_config::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board) ) ||
+                (board->at(gbt_config::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())) );
+    }; 
+    std::string readFEEId = readRequest(gbt_config::parameters::BoardId) + readRequest(gbt_config::parameters::SystemId);
+
+    // Reading TCM ID
+    {
+        auto parsedResponse = processSequence(*this, readFEEId);
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
+        }
+    }
+
+    if (isBoardIdCorrect(m_board) || m_enforceDefGbtConfig) {
         auto parsedResponse = applyGbtConfigurationToBoard(*this);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
@@ -116,14 +137,23 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
                 static_cast<uint32_t>(1u << pmHandler.getBoard()->getIdentity().number));
     };
 
-    for (auto& pm : m_PMs)
-    {
+    for (auto& pm : m_PMs) {
         if (!checkSPIMask(pm)) {
             continue;
         }
-        auto parsedResponse = applyGbtConfigurationToBoard(pm);
-        if (parsedResponse.errors.empty() == false) {
-            return parsedResponse;
+        // Reading PM ID
+        {
+            auto parsedResponse = processSequence(*this, readFEEId);
+            if (parsedResponse.errors.empty() == false) {
+                return parsedResponse;
+            }
+        }
+        // Comparing ID readed from board to ID calculated from the environment variables
+        if (isBoardIdCorrect(pm.getBoard()) || m_enforceDefGbtConfig) {
+            auto parsedResponse = applyGbtConfigurationToBoard(pm);
+            if (parsedResponse.errors.empty() == false) {
+                return parsedResponse;
+            }
         }
     }
 
@@ -172,7 +202,7 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
         spiMask.storeValue(0x0);
     }
 
-    uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u)<< idx));
+    uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u) << idx));
     masked |= static_cast<uint32_t>(1u) << idx;
 
     return writeRequest(spiMask.name, masked);
@@ -180,21 +210,26 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 
 std::string ResetFEE::seqSetBoardId(std::shared_ptr<Board> board)
 {
+    return writeRequest(gbt_config::parameters::BoardId, getEnvBoardId(board));
+}
+
+uint32_t ResetFEE::getEnvBoardId(std::shared_ptr<Board> board)
+{
     Board::Identity identity = board->getIdentity();
-    uint8_t id = 0;
+    uint32_t id = 0;
 
     if (identity.type == Board::Type::PM && identity.side == Board::Side::A) {
-        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::PmA0BoardId.data())) + identity.number;
+        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::PmA0BoardId.data())) + identity.number;
     } else if (identity.type == Board::Type::PM && identity.side == Board::Side::C) {
-        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::PmC0BoardId.data())) + identity.number;
+        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::PmC0BoardId.data())) + identity.number;
     } else {
-        id = static_cast<uint8_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
+        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
     }
-    
-    return writeRequest(gbt_config::parameters::BoardId, id);
+    return id;
 }
 
 std::string ResetFEE::seqSetSystemId()
 {
     return writeRequest(gbt_config::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
 }
+

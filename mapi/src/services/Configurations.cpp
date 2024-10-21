@@ -2,7 +2,7 @@
 #include <cctype>
 #include <unistd.h>
 #include <sstream>
-#include"utils.h"
+#include "utils.h"
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
@@ -57,7 +57,7 @@ std::string Configurations::BoardConfigurations::convertConfigToRequest(std::str
     stringstream request;
     for (const auto& row : configuration) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
-            throw runtime_error( string_utils::concatenate(name, "Invalid CONFIGURATIONS data row") );
+            throw runtime_error(string_utils::concatenate(name, "Invalid CONFIGURATIONS data row"));
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();

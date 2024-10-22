@@ -46,10 +46,11 @@ constexpr std::string_view EventsCount{ "GBT_EVENTS_COUNT" };
 namespace constants
 {
 constexpr uint32_t FifoSize = 36;
-constexpr double FifoEmpty = 0;
+constexpr double FifoEmpty = 1;
 } // namespace constants
 
 struct GbtErrorType {
+    virtual ~GbtErrorType() = default;
     virtual WinCCResponse createWinCCResponse() = 0;
 };
 
@@ -71,6 +72,12 @@ struct BCSyncLost : public GbtErrorType {
         uint32_t orbitCRU;
         uint32_t reservedSpace[2];
     } data;
+};
+
+struct Unknown : public GbtErrorType {
+    Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData);
+    [[nodiscard]] WinCCResponse createWinCCResponse();
+    static constexpr uint32_t getErrorCode() { return 0x00000000; }
 };
 
 struct PmEarlyHeader : public GbtErrorType {

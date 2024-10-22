@@ -9,7 +9,7 @@ void BasicRequestHandler::resetExecutionData()
     m_operations.clear();
 }
 
-SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess)
+SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess, bool readAfterWrite)
 {
     resetExecutionData();
     SwtSequence sequence;
@@ -35,7 +35,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess)
             sequence.addOperation(operation.second);
         }
 
-        if (request.isWrite()) {
+        if (request.isWrite() && readAfterWrite) {
             for (auto& rmw : m_operations) {
                 sequence.addOperation(SwtSequence::Operation::Read, rmw.first, {}, true);
             }

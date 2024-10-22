@@ -54,7 +54,7 @@ class BasicRequestHandler
         }
     };
 
-    SwtSequence processMessageFromWinCC(std::string);
+    SwtSequence processMessageFromWinCC(std::string, bool=true);
     virtual ParsedResponse processMessageFromALF(std::string);
 
     std::shared_ptr<Board> getBoard() { return m_board; }

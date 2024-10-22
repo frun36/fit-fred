@@ -1,22 +1,37 @@
 #include "gbtInterfaceUtils.h"
+#include"Alfred/print.h"
 #include <cstring>
 
 namespace gbt
 {
+
+Unknown::Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData)
+{
+    
+}
+
+[[nodiscard]] WinCCResponse Unknown::createWinCCResponse()
+{
+    WinCCResponse respone;
+    respone.addParameter("GBT_ERR_UNKNOWN",{1});
+    return respone;
+}
+
 [[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     switch (fifoData[0]) {
         case BCSyncLost::getErrorCode():
-            return std::shared_ptr<GbtErrorType>(new BCSyncLost(fifoData));
+            return std::make_shared<BCSyncLost>(fifoData);
 
         case FifoOverload::getErrorCode():
-            return std::shared_ptr<GbtErrorType>(new FifoOverload(fifoData));
+            return std::make_shared<FifoOverload>(fifoData);
 
         case PmEarlyHeader::getErrorCode():
-            return std::shared_ptr<GbtErrorType>(new PmEarlyHeader(fifoData));
+            return std::make_shared<PmEarlyHeader>(fifoData);
 
         default:
-            throw std::runtime_error("Unsupported GBT ERROR!");
+            Print::PrintError("Unsupported GBT ERROR!");
+            return std::make_shared<Unknown>(fifoData);
     }
 }
 

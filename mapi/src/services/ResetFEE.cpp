@@ -81,7 +81,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     std::this_thread::sleep_for(m_sleepAfterReset);
 
     {
-        auto parsedResponse = processSequence(*this, seqSetResetFinished());
+        auto parsedResponse = processSequence(*this, seqSetResetFinished(),false);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }

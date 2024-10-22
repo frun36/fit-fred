@@ -11,11 +11,11 @@ class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
     void processExecution() = 0;
 
    protected:
-    BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request)
+    BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request,bool raw=true)
     {
         std::string seq;
         try {
-            seq = handler.processMessageFromWinCC(request).getSequence();
+            seq = handler.processMessageFromWinCC(request,raw).getSequence();
         } catch (const std::exception& e) {
             return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }

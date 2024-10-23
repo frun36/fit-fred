@@ -8,14 +8,13 @@ class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
 {
    public:
     BasicFitIndefiniteMapi(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
-    void processExecution() = 0;
 
    protected:
-    BasicRequestHandler::ParsedResponse processSequence(BasicRequestHandler& handler, std::string request,bool raw=true)
+    BasicRequestHandler::ParsedResponse processSequenceExternalHandler(BasicRequestHandler& handler, std::string request, bool raw = true)
     {
         std::string seq;
         try {
-            seq = handler.processMessageFromWinCC(request,raw).getSequence();
+            seq = handler.processMessageFromWinCC(request, raw).getSequence();
         } catch (const std::exception& e) {
             return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
         }
@@ -24,23 +23,7 @@ class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
 
     BasicRequestHandler::ParsedResponse processSequence(std::string request)
     {
-        return processSequence(*this, request);
-    }
-
-    template <typename T>
-    std::string writeRequest(std::string_view param, T value)
-    {
-        return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
-    }
-
-    std::string readRequest(std::string_view param)
-    {
-        return string_utils::concatenate(param, ",READ");
-    }
-
-    std::string& appendRequest(std::string& mess, const std::string& newRequest)
-    {
-        return mess.append(newRequest).append("\n");
+        return processSequenceExternalHandler(*this, request);
     }
 
     static const BasicRequestHandler::ParsedResponse EmptyResponse;

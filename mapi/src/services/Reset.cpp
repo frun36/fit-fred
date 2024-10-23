@@ -13,7 +13,7 @@ Reset::Reset(std::shared_ptr<Board> board) : BasicFitIndefiniteMapi(board)
     m_resetParameters.emplace(gbt::parameters::FifoReportReset, m_board->at(gbt::parameters::FifoReportReset));
 
     for (auto [name, parameter] : m_resetParameters) {
-        appendRequest(m_reqClearResetBits, writeRequest(name, 0));
+        WinCCRequest::appendToRequest(m_reqClearResetBits, WinCCRequest::writeRequest(name, 0));
     }
 }
 
@@ -40,7 +40,7 @@ void Reset::processExecution()
     }
 
     {
-        auto parsedResponse = processSequence(writeRequest(request, 1));
+        auto parsedResponse = processSequence(WinCCRequest::writeRequest(request, 1));
         if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
         } else {

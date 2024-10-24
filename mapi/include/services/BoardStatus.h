@@ -10,7 +10,7 @@
 #include "BasicRequestHandler.h"
 #include "gbtInterfaceUtils.h"
 
-class BoardStatus : public IndefiniteMapi, BasicRequestHandler, gbt_rate::GbtRateMonitor
+class BoardStatus : public IndefiniteMapi, BasicRequestHandler, gbt::GbtRateMonitor
 {
    public:
     BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh);

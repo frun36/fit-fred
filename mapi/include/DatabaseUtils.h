@@ -1,19 +1,19 @@
 #pragma once
 
-#include<string_view>
+#include <string_view>
 #include <sstream>
-#include<cstdint>
-#include<algorithm>
-#include"Board.h"
+#include <cstdint>
+#include <algorithm>
+#include "Board.h"
 #include "Database/databaseinterface.h"
-#include"utils.h"
+#include "utils.h"
 typedef uint8_t columnIdx;
 
 namespace db_utils
 {
 Equation parseEquation(std::string eq);
 
-template<typename T>
+template <typename T>
 std::string where(std::string_view column, std::string_view relation, const T& value)
 {
     std::stringstream ss;
@@ -25,25 +25,24 @@ std::string where(std::string_view column, std::string_view relation, const T& v
     return ss.str();
 }
 
-
 std::string selectQuery(std::string_view tableName, const std::vector<std::string_view>& columns, const std::vector<std::string_view>& whereConditions = std::vector<std::string_view>(), bool distinct = false);
 
-}
+} // namespace db_utils
 
 class BoardTypesTable
 {
-    public:
-    static constexpr std::string_view TypeTCM{"TCM"};
-    static constexpr std::string_view TypePM{"PM"};
+   public:
+    static constexpr std::string_view TypeTCM{ "TCM" };
+    static constexpr std::string_view TypePM{ "PM" };
 };
 
 class ParametersTable
 {
    public:
-    static constexpr std::string_view Name{"BOARD_PARAMETERS"};
+    static constexpr std::string_view Name{ "BOARD_PARAMETERS" };
     struct Parameter {
         static constexpr columnIdx BoardType = 0;
-        static constexpr std::string_view BoardTypeName{"BOARD_TYPE"};
+        static constexpr std::string_view BoardTypeName{ "BOARD_TYPE" };
         static constexpr columnIdx Name = 1;
         static constexpr columnIdx BaseAddress = 2;
         static constexpr columnIdx StartBit = 3;
@@ -67,7 +66,6 @@ class ParametersTable
         static constexpr std::string_view ExprFALSE{ "N" };
 
         static Board::ParameterInfo buildParameter(std::vector<MultiBase*>&);
-        
     };
 
     static std::string selectBoardParameters(std::string_view BoardType);

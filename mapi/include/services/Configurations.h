@@ -90,7 +90,7 @@ class Configurations : public Mapigroup
     FRIEND_TEST(::ConfigurationsTest, Tcm);
 #endif
 
-   private:
+   public:
     class BoardConfigurations : public BasicRequestHandler
     {
        public:
@@ -105,10 +105,13 @@ class Configurations : public Mapigroup
         ConfigurationInfo getConfigurationInfo(const string& name);
 
         BoardConfigurations(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
+        static std::vector<std::vector<MultiBase*>> fetchConfiguration(std::string_view configuration, std::string_view board);
+        static std::string convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration);
 
         virtual ~BoardConfigurations() = default;
     };
 
+   private:
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
 #ifdef FIT_UNIT_TEST

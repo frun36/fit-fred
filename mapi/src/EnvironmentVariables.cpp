@@ -1,22 +1,22 @@
-#include "Environment.h"
+#include "EnvironmentVariables.h"
 #include "Parser/utility.h"
 
-void EnvironmentFEE::emplace(EnvironmentFEE::Variable&& setting)
+void EnvironmentVariables::emplace(EnvironmentVariables::Variable&& setting)
 {
     m_settings.emplace(setting.name, setting);
 }
 
-void EnvironmentFEE::emplace(const EnvironmentFEE::Variable& setting)
+void EnvironmentVariables::emplace(const EnvironmentVariables::Variable& setting)
 {
     m_settings.emplace(setting.name, setting);
 }
 
-bool EnvironmentFEE::doesExist(const std::string& name)
+bool EnvironmentVariables::doesExist(const std::string& name)
 {
     return m_settings.find(name) != m_settings.end();
 }
 
-double EnvironmentFEE::updateVariable(const std::string& name)
+double EnvironmentVariables::updateVariable(const std::string& name)
 {
     Variable& setting = m_settings.at(name);
     std::vector<double> values;
@@ -27,12 +27,12 @@ double EnvironmentFEE::updateVariable(const std::string& name)
     return setting.value;
 }
 
-void EnvironmentFEE::setVariable(const std::string& name, double val)
+void EnvironmentVariables::setVariable(const std::string& name, double val)
 {
     m_settings.at(name).value = val;
 }
 
-double EnvironmentFEE::getVariable(const std::string& name)
+double EnvironmentVariables::getVariable(const std::string& name)
 {
     return m_settings.at(name).value;
 }

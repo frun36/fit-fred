@@ -11,7 +11,7 @@ struct GbtWord {
     uint16_t buffer[WordSize];
 };
 
-namespace gbt_error
+namespace gbt
 {
 
 namespace parameters
@@ -21,15 +21,36 @@ constexpr std::string_view BCSyncLost{ "GBT_ERR_BC_SYNC_LOST" };
 constexpr std::string_view PmEarlyHeader{ "GBT_ERR_PM_EARLY_HEADER" };
 constexpr std::string_view FifoOverload{ "GBT_ERR_FIFO_OVERLOAD" };
 constexpr std::string_view FifoEmpty{ "GBT_FIFO_EMPTY_ERROR_REPORT" };
+
+// 0xD8
+constexpr std::string_view ResetOrbitSync{ "GBT_RESET_ORBIT_SYNC" };
+constexpr std::string_view ResetDataCounters{ "GBT_RESET_DATA_COUNTERS" };
+constexpr std::string_view ResetStartEmulation{"GBT_START_OF_EMULATION"};
+constexpr std::string_view ResetRxError{ "GBT_RESET_RX_ERROR" };
+constexpr std::string_view Reset{ "GBT_RESET" };
+constexpr std::string_view ResetRxPhaseError{ "GBT_RESET_RX_PHASE_ERROR" };
+constexpr std::string_view ResetReadoutFsm{ "GBT_RESET_READOUT_FSM" };
+constexpr std::string_view FifoReportReset{ "GBT_RESET_ERROR_REPORT_FIFO" };
+constexpr std::string_view ForceIdle{ "GBT_FORCE_IDLE" };
+
+constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
+constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
+constexpr std::string_view BcIdDelay{ "GBT_BCID_OFFSET" };
+
+constexpr std::string_view WordsRate{ "GBT_WORDS_RATE" };
+constexpr std::string_view EventsRate{ "GBT_EVENTS_RATE" };
+constexpr std::string_view WordsCount{ "GBT_WORDS_COUNT" };
+constexpr std::string_view EventsCount{ "GBT_EVENTS_COUNT" };
 } // namespace parameters
 
 namespace constants
 {
 constexpr uint32_t FifoSize = 36;
-constexpr double FifoEmpty = 0;
+constexpr double FifoEmpty = 1;
 } // namespace constants
 
 struct GbtErrorType {
+    virtual ~GbtErrorType() = default;
     virtual WinCCResponse createWinCCResponse() = 0;
 };
 
@@ -51,6 +72,12 @@ struct BCSyncLost : public GbtErrorType {
         uint32_t orbitCRU;
         uint32_t reservedSpace[2];
     } data;
+};
+
+struct Unknown : public GbtErrorType {
+    Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData);
+    [[nodiscard]] WinCCResponse createWinCCResponse();
+    static constexpr uint32_t getErrorCode() { return 0x00000000; }
 };
 
 struct PmEarlyHeader : public GbtErrorType {
@@ -79,23 +106,6 @@ struct FifoOverload : public GbtErrorType {
 };
 
 [[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData);
-
-} // namespace gbt_error
-
-namespace gbt_rate
-{
-namespace parameters
-{
-constexpr std::string_view WordsRate{ "GBT_WORDS_RATE" };
-constexpr std::string_view EventsRate{ "GBT_EVENTS_RATE" };
-constexpr std::string_view WordsCount{ "GBT_WORDS_COUNT" };
-constexpr std::string_view EventsCount{ "GBT_EVENTS_COUNT" };
-} // namespace parameters
-
-namespace constants
-{
-
-}
 
 class GbtRate
 {
@@ -128,4 +138,7 @@ class GbtRateMonitor
     GbtRate m_eventsRate;
 };
 
-} // namespace gbt_rate
+constexpr std::string_view GbtConfigurationName{ "GBT_DEFAULT" };
+constexpr std::string_view GbtConfigurationBoardName{ "GBT" };
+
+} // namespace gbt

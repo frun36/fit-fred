@@ -44,9 +44,8 @@ void BoardStatus::processExecution()
     }
 
     WinCCResponse gbtErrors = checkGbtErrors();
-
-    Board::ParameterInfo& wordsCount = m_board->at(gbt_rate::parameters::WordsCount);
-    Board::ParameterInfo& eventsCount = m_board->at(gbt_rate::parameters::EventsCount);
+    Board::ParameterInfo& wordsCount = m_board->at(gbt::parameters::WordsCount);
+    Board::ParameterInfo& eventsCount = m_board->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
     Print::PrintVerbose("Publishing board status data");
@@ -62,11 +61,11 @@ void BoardStatus::updateEnvironment()
 
 WinCCResponse BoardStatus::checkGbtErrors()
 {
-    if (m_board->at(gbt_error::parameters::FifoEmpty).getStoredValue() == gbt_error::constants::FifoEmpty) {
+    if (m_board->at(gbt::parameters::FifoEmpty).getStoredValue() == gbt::constants::FifoEmpty) {
         return WinCCResponse();
     }
 
-    Board::ParameterInfo& fifo = m_board->at(gbt_error::parameters::Fifo);
+    Board::ParameterInfo& fifo = m_board->at(gbt::parameters::Fifo);
     SwtSequence gbtErrorFifoRead;
     for (uint32_t idx = 0; idx < fifo.regBlockSize; idx++) {
         gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
@@ -74,13 +73,15 @@ WinCCResponse BoardStatus::checkGbtErrors()
 
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
-    std::array<uint32_t, gbt_error::constants::FifoSize> fifoData;
+    std::array<uint32_t, gbt::constants::FifoSize> fifoData;
     AlfResponseParser parser(alfResponse);
     uint32_t idx = 0;
     for (auto line : parser) {
+        if(idx >=  gbt::constants::FifoSize) break;
         fifoData[idx++] = line.frame.data;
     }
 
-    std::shared_ptr<gbt_error::GbtErrorType> error = gbt_error::parseFifoData(fifoData);
+    std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
+    
     return error->createWinCCResponse();
 }

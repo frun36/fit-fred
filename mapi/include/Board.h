@@ -8,13 +8,21 @@
 #include <optional>
 #include <list>
 #include "Equation.h"
-#include "Environment.h"
+#include "EnvironmentVariables.h"
 
 class Board
 {
    public:
     enum class Type { TCM,
                       PM };
+    enum class Side { A,
+                      C };
+
+    struct Identity {
+        Type type;
+        std::optional<Side> side;
+        uint8_t number;
+    };
 
     struct ParameterInfo {
         // The encoding system requires serious rethinking, based on the electronics
@@ -86,7 +94,7 @@ class Board
         std::optional<double> m_value;
     };
 
-    Board(std::string name, uint32_t address, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentFEE> settings = nullptr);
+    Board(std::string name, uint32_t address, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentVariables> settings = nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
@@ -108,16 +116,18 @@ class Board
 
     uint32_t getAddress() const { return m_address; }
 
-    Type type() { return m_boardType; }
-    void setType(Type type) { m_boardType = type; }
+    Type type() { return m_identity.type; }
+
+    Identity getIdentity() const { return m_identity; }
 
     const std::string& getName() const { return m_name; }
 
    private:
+    Identity m_identity;
     Type m_boardType;
     std::string m_name;
     uint32_t m_address;
     std::shared_ptr<Board> m_mainBoard;
-    std::shared_ptr<EnvironmentFEE> m_settings;
+    std::shared_ptr<EnvironmentVariables> m_settings;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

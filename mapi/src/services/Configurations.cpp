@@ -2,6 +2,7 @@
 #include <cctype>
 #include <unistd.h>
 #include <sstream>
+#include "utils.h"
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
@@ -46,13 +47,32 @@ string Configurations::processInputMessage(string msg)
     return "";
 }
 
+std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(std::string_view configuration, std::string_view board)
+{
+    return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + std::string(configuration) + "' AND board_name = '" + std::string(board) + "'");
+}
+
+std::string Configurations::BoardConfigurations::convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration)
+{
+    string request;
+    for (const auto& row : configuration) {
+        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
+            throw runtime_error(string_utils::concatenate(name, ": invalid CONFIGURATIONS data row"));
+
+        string parameterName = row[0]->getString();
+        double parameterValue = row[1]->getDouble();
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
+    }
+    return request;
+}
+
 Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name)
 {
     vector<SwtSequence::SwtOperation> sequenceVec;
     optional<double> delayA = nullopt;
     optional<double> delayC = nullopt;
     auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "'");
-    stringstream request;
+    string request;
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
             throw runtime_error(name + ": invalid CONFIGURATIONS data row");
@@ -64,10 +84,10 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
         else if (parameterName == "DELAY_C")
             delayC = parameterValue;
         else
-            request << parameterName << ",WRITE," << parameterValue << "\n";
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
     }
 
-    return ConfigurationInfo(request.str(), delayA, delayC);
+    return ConfigurationInfo(request, delayA, delayC);
 }
 
 string Configurations::PmConfigurations::processInputMessage(string name)
@@ -95,7 +115,7 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
     if (delayA.has_value()) {
         m_delayDifference = abs(delayA.value() - getDelayA().value_or(0));
         if (m_delayDifference != 0)
-            request += "DELAY_A,WRITE," + std::to_string(delayA.value()) + "\n";
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_A", delayA.value()));
     }
 
     if (delayC.has_value()) {
@@ -103,7 +123,7 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
         if (cDelayDifference > m_delayDifference)
             m_delayDifference = cDelayDifference;
         if (cDelayDifference != 0)
-            request += "DELAY_C,WRITE," + std::to_string(delayC.value()) + "\n";
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayA.value()));
     }
 
     return processMessageFromWinCC(request);

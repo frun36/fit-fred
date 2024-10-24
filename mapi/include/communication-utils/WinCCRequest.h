@@ -5,6 +5,7 @@
 #include <optional>
 #include <stdexcept>
 #include <sstream>
+#include "utils.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -53,5 +54,21 @@ class WinCCRequest
     bool isWrite() const
     {
         return m_reqType.has_value() && m_reqType.value() == Operation::Write;
+    }
+
+    template <typename T>
+    static std::string writeRequest(std::string_view param, T value)
+    {
+        return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
+    }
+
+    static std::string readRequest(std::string_view param)
+    {
+        return string_utils::concatenate(param, ",READ");
+    }
+
+    static std::string& appendToRequest(std::string& mess, const std::string& newRequest)
+    {
+        return mess.append(newRequest).append("\n");
     }
 };

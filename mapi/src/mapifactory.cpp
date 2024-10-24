@@ -23,6 +23,7 @@ void MapiFactory::generateObjects()
     FitData boardsData;
     if (boardsData.isReady() == false) {
         Print::PrintError("Configuration failed! Aborting");
+        exit(-1);
     }
     Print::PrintVerbose("Registering MAPI Objects");
 

@@ -7,7 +7,7 @@
 #include <string_view>
 #include "Equation.h"
 
-class EnvironmentFEE
+class EnvironmentVariables
 {
    public:
     struct Variable {

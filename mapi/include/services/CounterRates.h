@@ -1,10 +1,34 @@
 #pragma once
 
-#include "BasicFitIndefiniteMapi.h"
-#include "AlfResponseParser.h"
+#include "communication-utils/AlfResponseParser.h"
+#include "BasicRequestHandler.h"
 
-class CounterRates : BasicFitIndefiniteMapi
+#ifdef FIT_UNIT_TEST
+
+#include "../../test/mocks/include/mapi.h"
+#include "gtest/gtest.h"
+
+namespace
 {
+class CounterRatesTest_FifoAlfResponse_Test;
+} // namespace
+
+#else
+
+#include "Fred/Mapi/indefinitemapi.h"
+
+#endif
+
+class CounterRates : public BasicRequestHandler, public IndefiniteMapi
+{
+#ifdef FIT_UNIT_TEST
+    FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);
+#endif
+
+   public:
+    CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
+        : BasicRequestHandler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
+
     enum class FifoState {
         Empty,
         Single,
@@ -19,9 +43,8 @@ class CounterRates : BasicFitIndefiniteMapi
         Success
     };
 
-    uint32_t m_maxFifoWords;
     uint32_t m_numberOfCounters;
-    uint32_t m_fifoSize;
+    uint32_t m_maxFifoWords;
     optional<vector<uint32_t>> m_oldCounters;
     double m_counterUpdateRate;
     optional<vector<double>> m_counterRates;

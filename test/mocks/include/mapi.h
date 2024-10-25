@@ -21,12 +21,12 @@ struct Mapi {
     virtual string processInputMessage(string msg) = 0;
     virtual string processOutputMessage(string msg) = 0;
 
-    virtual ~Mapi();
+    virtual ~Mapi() = default;
     static void registerMapi(Fred* fred, string name);
 };
 
 struct Iterativemapi : Mapi {
-    Iterativemapi();
+    Iterativemapi() = default;
 
     void newRequest(string request);
     void publishAnswer(string message);
@@ -34,11 +34,26 @@ struct Iterativemapi : Mapi {
 };
 
 struct Mapigroup : Mapi {
-    Mapigroup();
+    Mapigroup() = default;
 
     void publishAnswer(string message);
     void publishError(string error);
 
     void newMapiGroupRequest(vector<pair<string, string>> requests);
     void newTopicGroupRequest(vector<pair<string, string>> requests);
+};
+
+struct IndefiniteMapi : Mapi {
+    IndefiniteMapi() = default;
+
+    void publishAnswer(string message);
+    void publishError(string error);
+
+    string processInputMessage(string msg) override;
+    string processOutputMessage(string msg) override;
+
+    string executeAlfSequence(string seq);
+    string waitForRequest(bool& running);
+
+    virtual void processExecution() = 0;
 };

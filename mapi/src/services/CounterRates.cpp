@@ -1,4 +1,4 @@
-#include "CounterRates.h"
+#include "services/CounterRates.h"
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -44,7 +44,7 @@ vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse)
     return counterValues;
 }
 
-CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clearOnly = false)
+CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clearOnly)
 {
     string request;
     for (uint32_t i = 0; i < fifoLoad; i++)
@@ -61,7 +61,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
     } else {
         size_t counterValuesSize = counterValues.size();
         const vector<uint32_t>& newValues = counterValues.back();
-        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : oldValues;
+        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_oldCounters;
         m_counterRates = vector<double>(m_numberOfCounters);
         for (size_t i = 0; i < m_numberOfCounters; i++)
             (*m_counterRates)[i] = (oldValues[i] - newValues[i]) / m_counterUpdateRate;
@@ -90,7 +90,7 @@ void CounterRates::processExecution()
             break;
         case FifoState::Multiple:
             publishError("Warning: multiple sets of counters in FIFO");
-        [[fallthrough]]
+            [[fallthrough]];
         case FifoState::Single:
             readFifo(*fifoLoad);
             break;

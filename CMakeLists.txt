@@ -59,6 +59,18 @@ create_test(WinCCMessage
     ${MOCKS}
 )
 
+create_test(CounterRates
+    test/CounterRates/CounterRatesTest.cpp
+    mapi/src/services/CounterRates.cpp
+    mapi/src/BasicRequestHandler.cpp 
+    mapi/src/Board.cpp  
+    mapi/src/communication-utils/SwtSequence.cpp 
+    mapi/src/communication-utils/AlfResponseParser.cpp 
+    mapi/src/communication-utils/WinCCRequest.cpp 
+    mapi/src/EnvironmentVariables.cpp 
+    ${MOCKS}
+)
+
 # create_test(Board
 #     test/Board/BoardTest.cpp
 #     mapi/src/Board.cpp 

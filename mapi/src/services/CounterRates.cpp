@@ -11,7 +11,7 @@ optional<uint32_t> CounterRates::getFifoLoad()
     return line.frame.data;
 }
 
-CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad)
+CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
 {
     if (fifoLoad == 0) {
         return FifoState::Empty;
@@ -26,7 +26,7 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad)
     }
 }
 
-vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse)
+vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse) const
 {
     AlfResponseParser parser(alfResponse);
     if (!parser.isSuccess())
@@ -54,7 +54,11 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 
     vector<vector<uint32_t>> counterValues = parseFifoAlfResponse(alfResponse);
     if (counterValues.empty())
-        return FifoReadResult::Failed;
+        return FifoReadResult::Failure;
+
+    if (clearOnly)
+        return FifoReadResult::SuccessCleared;
+    
     if (counterValues.size() == 1 && !m_oldCounters.has_value()) {
         m_oldCounters = counterValues[0];
         return FifoReadResult::SuccessNoRates;
@@ -84,22 +88,50 @@ void CounterRates::processExecution()
         return;
     }
 
+    FifoReadResult readResult;
     switch (evaluateFifoState(*fifoLoad)) {
+        case FifoState::Unexpected:
+            publishError("Unexpected FIFO state");
+            return;
         case FifoState::Empty:
-            publishError("No data");
-            break;
+            publishAnswer("No counter data");
+            return;
         case FifoState::Multiple:
             publishError("Warning: multiple sets of counters in FIFO");
             [[fallthrough]];
         case FifoState::Single:
-            readFifo(*fifoLoad);
+            readResult = readFifo(*fifoLoad);
             break;
         case FifoState::Full:
             publishError("FIFO is full, clearing");
-            readFifo(*fifoLoad, true);
-            break;
-        case FifoState::Unexpected:
-            publishError("Unexpected FIFO state");
+            readResult = clearFifo(*fifoLoad);
             break;
     }
+
+    switch (readResult) {
+        case FifoReadResult::Success:
+            publishAnswer(generateResponse());
+            break;
+        case FifoReadResult::SuccessNoRates:
+            publishAnswer("No rate data for first counter measurement");
+            break;
+        case FifoReadResult::SuccessCleared:
+            publishAnswer("No data: FIFO cleared successfully");
+            break;
+        case FifoReadResult::Failure:
+            publishError("Couldn't read FIFO");
+            break;
+    }
+}
+
+string CounterRates::generateResponse() const {
+    if (!m_counterRates.has_value())
+        return "Unexpected: no counter data";
+    
+    stringstream ss;
+    for (auto rate : *m_counterRates) {
+        ss << rate << '\n';
+    }
+
+    return ss.str();
 }

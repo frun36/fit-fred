@@ -38,8 +38,9 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     };
 
     enum class FifoReadResult {
-        Failed,
+        Failure,
         SuccessNoRates,
+        SuccessCleared,
         Success
     };
 
@@ -50,10 +51,13 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     optional<vector<double>> m_counterRates;
 
     optional<uint32_t> getFifoLoad();
-    FifoState evaluateFifoState(uint32_t fifoLoad);
+    FifoState evaluateFifoState(uint32_t fifoLoad) const;
 
-    vector<vector<uint32_t>> parseFifoAlfResponse(string alfResponse);
+    vector<vector<uint32_t>> parseFifoAlfResponse(string alfResponse) const;
     FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false);
+    inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
+
+    string generateResponse() const;
 
     void processExecution() override;
 };

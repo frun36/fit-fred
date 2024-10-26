@@ -18,7 +18,7 @@ unordered_map<string, Board::ParameterInfo> testMap = {
 
 TEST(ConfigurationsTest, PmPim)
 {
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'PMA7';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'PMA7'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
     };
@@ -53,7 +53,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_THROW(tcmCfg.processOutputMessage("success"), runtime_error);
 
     // Send test - idle, no delay
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'TCM'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
     };
@@ -64,7 +64,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleNoDelaysResult, tcmPimIdleNoDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, nullopt);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, nullopt);
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
@@ -87,7 +87,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_THROW(tcmCfg.processInputMessage("_CONTINUE"), runtime_error);
 
     // Send test - idle, with delay
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'TCM'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
         { new Box<string>("DELAY_A"), new Box<double>(5.) },
@@ -104,7 +104,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult, tcmPimIdleDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -116,7 +116,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPomApplyingDelaysResult, tcmPomApplyingDelaysExpected);
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::DelaysApplied);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -133,7 +133,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysContinueResult, tcmPimIdleNoDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -150,7 +150,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
     // No delay - ALF failure test
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'TCM'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
     };
@@ -161,7 +161,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleNoDelaysResult2, tcmPimIdleNoDelaysExpected2.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, nullopt);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, nullopt);
     EXPECT_EQ(tcmCfg.m_delayDifference, 0);
@@ -176,7 +176,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
     // Delay - ALF failure on Delay
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'TCM'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
         { new Box<string>("DELAY_A"), new Box<double>(0.) },
@@ -193,7 +193,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult2, tcmPimIdleDelaysExpected2.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -208,7 +208,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmCfg.m_delayResponse, nullopt);
 
     // Delay - ALF failure on Data
-    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM parameters p JOIN configurations c ON p.parameter_id = c.parameter_id WHERE configuration_name = 'TEST' AND board_name = 'TCM';"] = {
+    DatabaseInterface::s_queryResults["SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = 'TEST' AND board_name = 'TCM'"] = {
         { new Box<string>("UNSIGNED_HALF"), new Box<double>(7.) },
         { new Box<string>("SIGNED_HALF"), new Box<double>(0.) },
         { new Box<string>("DELAY_A"), new Box<double>(0.) },
@@ -225,7 +225,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult3, tcmPimIdleDelaysExpected3.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -236,7 +236,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPomApplyingDelaysResult, tcmPomApplyingDelaysExpected);
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::DelaysApplied);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -249,7 +249,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysContinueResult3, tcmPimIdleNoDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7\nSIGNED_HALF,WRITE,0\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);

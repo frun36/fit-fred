@@ -123,7 +123,7 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
         if (cDelayDifference > m_delayDifference)
             m_delayDifference = cDelayDifference;
         if (cDelayDifference != 0)
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayA.value()));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayC.value()));
     }
 
     return processMessageFromWinCC(request);

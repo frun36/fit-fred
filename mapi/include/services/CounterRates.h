@@ -29,6 +29,12 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
         : BasicRequestHandler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
 
+    enum class UpdateRateState {
+        Invalid,
+        Changed,
+        Ok
+    };
+
     enum class FifoState {
         Empty,
         Single,
@@ -47,8 +53,11 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     uint32_t m_numberOfCounters;
     uint32_t m_maxFifoWords;
     optional<vector<uint32_t>> m_oldCounters;
-    double m_counterUpdateRate;
+    double m_updateRateSeconds;
     optional<vector<double>> m_counterRates;
+
+    static double mapUpdateRateCodeToSeconds(uint8_t code);
+    UpdateRateState handleUpdateRate();
 
     optional<uint32_t> getFifoLoad();
     FifoState evaluateFifoState(uint32_t fifoLoad) const;

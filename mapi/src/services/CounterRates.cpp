@@ -1,4 +1,5 @@
 #include "services/CounterRates.h"
+#include "CounterRates.h"
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -9,6 +10,47 @@ optional<uint32_t> CounterRates::getFifoLoad()
         return nullopt;
     AlfResponseParser::Line line = *parser.begin();
     return line.frame.data;
+}
+
+double CounterRates::mapUpdateRateCodeToSeconds(uint8_t code)
+{
+    switch (code) {
+        case 0:
+            return 0.;
+        case 1:
+            return 0.1;
+        case 2:
+            return 0.2;
+        case 3:
+            return 0.5;
+        case 4:
+            return 1.0;
+        case 5:
+            return 2.0;
+        case 6:
+            return 5.0;
+        case 7:
+            return 10.0;
+        default:
+            return NAN;
+    }
+}
+
+CounterRates::UpdateRateState CounterRates::handleUpdateRate()
+{
+    optional<uint8_t> currUpdateRateCode = m_board->at("COUNTER_UPD_RATE").getStoredValueOptional();
+    double currUpdateRateSeconds = mapUpdateRateCodeToSeconds(*currUpdateRateCode);
+
+    if (!currUpdateRateCode.has_value() || *currUpdateRateCode < 1 || *currUpdateRateCode > 7) {
+        return UpdateRateState::Invalid;
+    } else if (m_updateRateSeconds != currUpdateRateSeconds) {
+        m_updateRateSeconds = currUpdateRateSeconds;
+        m_oldCounters = nullopt;
+        m_counterRates = nullopt;
+        return UpdateRateState::Changed;
+    } else {
+        return UpdateRateState::Ok;
+    }
 }
 
 CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
@@ -58,7 +100,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 
     if (clearOnly)
         return FifoReadResult::SuccessCleared;
-    
+
     if (counterValues.size() == 1 && !m_oldCounters.has_value()) {
         m_oldCounters = counterValues[0];
         return FifoReadResult::SuccessNoRates;
@@ -68,7 +110,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
         const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_oldCounters;
         m_counterRates = vector<double>(m_numberOfCounters);
         for (size_t i = 0; i < m_numberOfCounters; i++)
-            (*m_counterRates)[i] = (oldValues[i] - newValues[i]) / m_counterUpdateRate;
+            (*m_counterRates)[i] = (oldValues[i] - newValues[i]) / m_updateRateSeconds;
         return FifoReadResult::Success;
     }
 }
@@ -82,14 +124,24 @@ void CounterRates::processExecution()
         return;
     }
 
+    UpdateRateState updateRateState = handleUpdateRate();
+
+    if (updateRateState == UpdateRateState::Invalid) {
+        publishError("Invalid update rate");
+    }
+
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
         publishError("Couldn't read FIFO state");
         return;
     }
+    FifoState fifoState = evaluateFifoState(*fifoLoad);
+
+    if (updateRateState == UpdateRateState::Changed)
+        fifoState = FifoState::Full;
 
     FifoReadResult readResult;
-    switch (evaluateFifoState(*fifoLoad)) {
+    switch (fifoState) {
         case FifoState::Unexpected:
             publishError("Unexpected FIFO state");
             return;
@@ -124,10 +176,11 @@ void CounterRates::processExecution()
     }
 }
 
-string CounterRates::generateResponse() const {
+string CounterRates::generateResponse() const
+{
     if (!m_counterRates.has_value())
         return "Unexpected: no counter data";
-    
+
     stringstream ss;
     for (auto rate : *m_counterRates) {
         ss << rate << '\n';

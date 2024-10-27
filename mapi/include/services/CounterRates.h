@@ -11,6 +11,7 @@
 namespace
 {
 class CounterRatesTest_FifoAlfResponse_Test;
+class CounterRatesTest_HandleCounterValues_Test;
 } // namespace
 
 #else
@@ -23,6 +24,7 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
 {
 #ifdef FIT_UNIT_TEST
     FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);
+    FRIEND_TEST(::CounterRatesTest, HandleCounterValues);
 #endif
 
    public:
@@ -63,8 +65,10 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     FifoState evaluateFifoState(uint32_t fifoLoad) const;
 
     vector<vector<uint32_t>> parseFifoAlfResponse(string alfResponse) const;
+    FifoReadResult handleCounterValues(const vector<vector<uint32_t>>& counterValues, bool clearOnly);
     FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false);
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
+    void resetService();
 
     string generateResponse() const;
 

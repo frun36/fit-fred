@@ -1,5 +1,4 @@
 #include "services/CounterRates.h"
-#include "CounterRates.h"
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -36,6 +35,12 @@ double CounterRates::mapUpdateRateCodeToSeconds(uint8_t code)
     }
 }
 
+void CounterRates::resetService()
+{
+    m_oldCounters = nullopt;
+    m_counterRates = nullopt;
+}
+
 CounterRates::UpdateRateState CounterRates::handleUpdateRate()
 {
     optional<uint8_t> currUpdateRateCode = m_board->at("COUNTER_UPD_RATE").getStoredValueOptional();
@@ -45,8 +50,7 @@ CounterRates::UpdateRateState CounterRates::handleUpdateRate()
         return UpdateRateState::Invalid;
     } else if (m_updateRateSeconds != currUpdateRateSeconds) {
         m_updateRateSeconds = currUpdateRateSeconds;
-        m_oldCounters = nullopt;
-        m_counterRates = nullopt;
+        resetService();
         return UpdateRateState::Changed;
     } else {
         return UpdateRateState::Ok;
@@ -86,6 +90,32 @@ vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse) 
     return counterValues;
 }
 
+CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vector<uint32_t>>& counterValues, bool clearOnly)
+{
+    if (counterValues.empty())
+        return FifoReadResult::Failure;
+
+    if (clearOnly) {
+        resetService();
+        return FifoReadResult::SuccessCleared;
+    }
+
+    if (counterValues.size() == 1 && !m_oldCounters.has_value()) {
+        m_oldCounters = counterValues[0];
+        return FifoReadResult::SuccessNoRates;
+    } else {
+        size_t counterValuesSize = counterValues.size();
+        const vector<uint32_t>& newValues = counterValues.back();
+        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_oldCounters;
+        if (!m_counterRates.has_value())
+            m_counterRates = vector<double>(m_numberOfCounters);
+        for (size_t i = 0; i < m_numberOfCounters; i++)
+            m_counterRates->at(i) = (newValues[i] - oldValues[i]) / m_updateRateSeconds;
+        m_oldCounters = newValues;
+        return FifoReadResult::Success;
+    }
+}
+
 CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clearOnly)
 {
     string request;
@@ -95,24 +125,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
     string alfResponse = executeAlfSequence(seq.getSequence());
 
     vector<vector<uint32_t>> counterValues = parseFifoAlfResponse(alfResponse);
-    if (counterValues.empty())
-        return FifoReadResult::Failure;
-
-    if (clearOnly)
-        return FifoReadResult::SuccessCleared;
-
-    if (counterValues.size() == 1 && !m_oldCounters.has_value()) {
-        m_oldCounters = counterValues[0];
-        return FifoReadResult::SuccessNoRates;
-    } else {
-        size_t counterValuesSize = counterValues.size();
-        const vector<uint32_t>& newValues = counterValues.back();
-        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_oldCounters;
-        m_counterRates = vector<double>(m_numberOfCounters);
-        for (size_t i = 0; i < m_numberOfCounters; i++)
-            (*m_counterRates)[i] = (oldValues[i] - newValues[i]) / m_updateRateSeconds;
-        return FifoReadResult::Success;
-    }
+    return handleCounterValues(counterValues, clearOnly);
 }
 
 void CounterRates::processExecution()
@@ -124,7 +137,11 @@ void CounterRates::processExecution()
         return;
     }
 
+#ifndef FIT_UNIT_TEST
     UpdateRateState updateRateState = handleUpdateRate();
+#else
+    UpdateRateState updateRateState = UpdateRateState::Ok;
+#endif
 
     if (updateRateState == UpdateRateState::Invalid) {
         publishError("Invalid update rate");

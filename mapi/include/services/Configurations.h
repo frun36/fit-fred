@@ -157,8 +157,6 @@ class Configurations : public Mapigroup
                            DelaysApplied,
                            ApplyingData } m_state = State::Idle;
 
-        // ControlServer stores delays as i16, and waits for (MAX_DELAY_DIFFERENCE + 10) milliseconds,
-        // which is odd, since the delay range is in nanoseconds
         double m_delayDifference = 0;
 
         optional<double> getDelayA() const

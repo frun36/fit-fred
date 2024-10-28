@@ -87,6 +87,9 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
     }
 
+    if (delayA.has_value() || delayC.has_value())
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESET", 1));
+
     return ConfigurationInfo(request, delayA, delayC);
 }
 
@@ -172,8 +175,11 @@ string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
 
     m_delayResponse = response;
     m_state = State::DelaysApplied;
-    // Time unit needs to be considered after electronics analysis
-    usleep((static_cast<useconds_t>(m_delayDifference) + 10) * 1000);
+
+    // Change of delays is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
+    // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set
+    // This sleep waits for the phase shift to finish, and the bit will be cleared along with the rest of the configuration
+    usleep((static_cast<useconds_t>(m_board->calculateRaw("DELAY_A", m_delayDifference)) + 10) * 1000);
     newRequest(CONTINUE_MESSAGE);
     noReturn = true;
     return "";
@@ -184,6 +190,10 @@ string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
     auto parsedResponse = processMessageFromALF(msg);
     string response = parsedResponse.getContents();
     response = m_delayResponse.value_or("") + response;
+
+    // Control Server sleeps 10 ms if CH_MASK_A or CH_MASK_C was changed
+    // In CS this is done before reset errors - this may prove problematic...
+    usleep(10000);
 
     if (parsedResponse.isError()) {
         response = "TCM configuration " + m_configurationName.value_or("<no name>") + (m_delayResponse.has_value() ? " was applied partially\n" : " was not applied\n") + response;

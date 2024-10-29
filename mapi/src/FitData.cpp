@@ -2,8 +2,33 @@
 #include "FitData.h"
 #include "Alfred/print.h"
 #include "utils.h"
+#include "Database/sql.h"
 #include <sstream>
 #include <iomanip>
+
+///
+
+FitData::Device::Device(std::vector<MultiBase*>& dbRow)
+{
+    name = dbRow[db_tables::ConnectedDevices::BoardName.idx]->getString();
+    std::string type = dbRow[db_tables::ConnectedDevices::BoardType.idx]->getString();
+
+    if (type == db_tables::ConnectedDevices::TypePM)
+        this->type = BoardType::PM;
+    else if (type == db_tables::ConnectedDevices::TypeTCM)
+        this->type = BoardType::TCM;
+    else
+        throw std::runtime_error("Invalid board type in Connected Devices table");
+
+    if (this->type == BoardType::PM) {
+        if (name.find("C") != std::string::npos)
+            this->side = Side::C;
+        else
+            this->side = Side::A;
+
+        this->index = std::stoi(name.substr(3, 1));
+    }
+}
 
 FitData::FitData() : m_ready(false)
 {
@@ -13,86 +38,181 @@ FitData::FitData() : m_ready(false)
         return;
     }
 
-    Print::PrintInfo("Fetching TCM register map");
-    auto parametersTCM = DatabaseInterface::executeQuery(ParametersTable::selectBoardParameters(BoardTypesTable::TypeTCM));
-    Print::PrintInfo("Fetched " + std::to_string(parametersTCM.size()) + " rows");
-    if (parametersTCM.size() == 0) {
-        Print::PrintError("TCM register data have not been found!");
+    if (!fetchBoardParamters(db_tables::BoardTypes::TypeTCM)) {
         return;
     }
-    m_templateBoards.emplace(BoardTypesTable::TypeTCM, parseTemplateBoard(parametersTCM));
-    m_statusParameters.emplace(BoardTypesTable::TypeTCM, constructStatusParametersList(BoardTypesTable::TypeTCM));
+    if (!fetchBoardParamters(db_tables::BoardTypes::TypePM)) {
+        return;
+    }
+    if (!fetchEnvironment()) {
+        return;
+    }
+    if (!fetchConnectedDevices()) {
+        return;
+    }
 
-    Print::PrintInfo("Fetching PM register map");
-    auto parametersPM = DatabaseInterface::executeQuery(ParametersTable::selectBoardParameters(BoardTypesTable::TypePM));
-    Print::PrintInfo("Fetched " + std::to_string(parametersPM.size()) + " rows");
-    if (parametersPM.size() == 0) {
-        Print::PrintError("PM register data have not been found!");
-        return;
+    m_ready = true;
+}
+
+bool FitData::fetchBoardParamters(std::string boardType)
+{
+    sql::SelectModel query;
+    query.select("*").from(db_tables::Parameters::TableName).where(sql::column(db_tables::Parameters::BoardType.name) == boardType);
+
+    Print::PrintInfo("Fetching" + boardType + " register map");
+    auto parameters = DatabaseInterface::executeQuery(query.str());
+    Print::PrintInfo("Fetched " + std::to_string(parameters.size()) + " rows");
+
+    if (parameters.size() == 0) {
+        Print::PrintError(boardType + " register data have not been found!");
+        return false;
     }
-    m_templateBoards.emplace(BoardTypesTable::TypePM, parseTemplateBoard(parametersPM));
-    m_statusParameters.emplace(BoardTypesTable::TypePM, constructStatusParametersList(BoardTypesTable::TypePM));
+
+    m_templateBoards.emplace(boardType, parseTemplateBoard(parameters));
+    m_statusParameters.emplace(boardType, constructStatusParametersList(boardType));
+    return true;
+}
+
+bool FitData::fetchEnvironment()
+{
+    Print::PrintInfo("Fetching information about unit defintion and others environement variables");
+    sql::SelectModel query;
+    query.select("*").from(db_tables::Environment::TableName);
+
+    auto environment = DatabaseInterface::executeQuery(query.str());
+    Print::PrintInfo("Fetched " + std::to_string(environment.size()) + " rows");
+    parseEnvVariables(environment);
+    if (!checkEnvironment()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool FitData::fetchConnectedDevices()
+{
+    sql::SelectModel query;
+    query.select("*").from(db_tables::ConnectedDevices::TableName);
 
     Print::PrintInfo("Fetching information about connected devices");
-    auto connectedDevices = DatabaseInterface::executeQuery(db_utils::selectQuery("CONNECTED_DEVICES", { "*" }));
+    auto connectedDevices = DatabaseInterface::executeQuery(query.str());
 
     Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if (connectedDevices.size() == 0) {
         Print::PrintError("Lacking data about connected devices");
-        return;
-    }
-
-    Print::PrintInfo("Fetching information about unit defintion and others settings");
-    auto settings = DatabaseInterface::executeQuery(db_utils::selectQuery("FEE_SETTINGS", { "*" }));
-    Print::PrintInfo("Fetched " + std::to_string(settings.size()) + " rows");
-    parseSettings(settings);
-    if (!checkSettings()) {
-        return;
+        return false;
     }
 
     std::shared_ptr<Board> TCM{ nullptr };
 
     for (auto& deviceRow : connectedDevices) {
-        ConnectedDevicesTable::Device device(deviceRow);
+        Device device(deviceRow);
         Print::PrintInfo("Registering " + device.name);
 
         switch (device.type) {
-            case ConnectedDevicesTable::Device::BoardType::PM: {
+            case Device::BoardType::PM: {
                 if (TCM.get() == nullptr) {
                     Print::PrintVerbose("PM row occured before TCM row!");
-                    return;
+                    return false;
                 }
 
                 switch (device.side) {
-                    case ConnectedDevicesTable::Device::Side::A:
+                    case Device::Side::A:
                         m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
                         break;
 
-                    case ConnectedDevicesTable::Device::Side::C:
+                    case Device::Side::C:
                         m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
                         break;
                 }
 
             } break;
 
-            case ConnectedDevicesTable::Device::BoardType::TCM: {
+            case Device::BoardType::TCM: {
                 TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
             } break;
         }
     }
 
-    m_ready = true;
+    return true;
 }
 
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0);
     for (auto& row : boardTable) {
-        Print::PrintVerbose("Parsing parameter: " + row[ParametersTable::Parameter::Name]->getString());
-        board->emplace(ParametersTable::Parameter::buildParameter(row));
+        Print::PrintVerbose("Parsing parameter: " + row[db_tables::Parameters::Name.idx]->getString());
+        board->emplace(parseParameter(row));
     }
     Print::PrintVerbose("Board parsed successfully");
     return board;
+}
+
+std::list<std::string> FitData::constructStatusParametersList(std::string_view boardName)
+{
+    std::list<std::string> statusList;
+    for (const auto& parameter : m_templateBoards.at(boardName.data())->getParameters()) {
+        if (parameter.second.refreshType == Board::ParameterInfo::RefreshType::SYNC) {
+            statusList.emplace_back(parameter.first);
+        }
+    }
+    return std::move(statusList);
+}
+
+Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
+{
+    Equation electronicToPhysic = (dbRow[db_tables::Parameters::EqElectronicToPhysic.idx] == NULL) ? Equation::Empty()
+                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqElectronicToPhysic.idx]->getString());
+
+    Equation physicToElectronic = (dbRow[db_tables::Parameters::EqPhysicToElectronic.idx] == NULL) ? Equation::Empty()
+                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqPhysicToElectronic.idx]->getString());
+
+    Board::ParameterInfo::RefreshType refreshType = Board::ParameterInfo::RefreshType::NOT;
+
+    if (dbRow[db_tables::Parameters::RefreshType.idx] != NULL) {
+
+        if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshCNT) {
+            refreshType = Board::ParameterInfo::RefreshType::CNT;
+        } else if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshSYNC) {
+            refreshType = Board::ParameterInfo::RefreshType::SYNC;
+        }
+    }
+
+    Board::ParameterInfo::ValueEncoding encoding = db_tables::boolean::parse(dbRow[db_tables::Parameters::IsSigned.idx]) ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
+
+    uint32_t bitLength = dbRow[db_tables::Parameters::EndBit.idx]->getInt() - dbRow[db_tables::Parameters::StartBit.idx]->getInt() + 1;
+
+    double max = 0;
+    double min = 0;
+    if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
+        min = static_cast<double>(
+            (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : twosComplementDecode<int32_t>((1u << (bitLength - 1)), bitLength));
+    } else {
+        min = dbRow[db_tables::Parameters::MinValue.idx]->getDouble();
+    }
+
+    if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
+        max = static_cast<double>(
+            (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1u << bitLength) - 1) : twosComplementDecode<int32_t>((1u << (bitLength - 1)) - 1, bitLength));
+    } else {
+        max = dbRow[db_tables::Parameters::MaxValue.idx]->getDouble();
+    }
+
+    return {
+        dbRow[db_tables::Parameters::Name.idx]->getString(),
+        db_tables::hex::parse(dbRow[db_tables::Parameters::BaseAddress.idx]),
+        static_cast<uint8_t>(dbRow[db_tables::Parameters::StartBit.idx]->getInt()),
+        static_cast<uint8_t>(bitLength),
+        static_cast<uint8_t>(dbRow[db_tables::Parameters::RegBlockSize.idx]->getInt()),
+        encoding,
+        min,
+        max,
+        electronicToPhysic,
+        physicToElectronic,
+        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsFifo.idx]),
+        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsReadOnly.idx]),
+        refreshType
+    };
 }
 
 std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
@@ -105,12 +225,12 @@ std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uin
     return board;
 }
 
-void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
+void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTable)
 {
     m_settings = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
-        std::string name = row[SettingsTable::Variable::Name]->getString();
-        Equation equation = db_utils::parseEquation(row[SettingsTable::Variable::Equation]->getString());
+        std::string name = row[db_tables::Environment::Name.idx]->getString();
+        Equation equation = db_tables::equation::parseEquation(row[db_tables::Environment::Equation.idx]->getString());
         Print::PrintVerbose("Parsing " + name);
         Print::PrintVerbose("Equation: " + equation.equation);
         m_settings->emplace(
@@ -120,14 +240,14 @@ void FitData::parseSettings(std::vector<std::vector<MultiBase*>>& settingsTable)
         }
     }
     for (auto& row : settingsTable) {
-        std::string name = row[SettingsTable::Variable::Name]->getString();
+        std::string name = row[db_tables::Environment::Name.idx]->getString();
         Print::PrintVerbose("Updating " + name);
         m_settings->updateVariable(name);
         Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_settings->getVariable(name)));
     }
 }
 
-bool FitData::checkSettings()
+bool FitData::checkEnvironment()
 {
     if (!m_settings->doesExist(environment::parameters::ExtenalClock.data())) {
         Print::PrintError(std::string(environment::parameters::ExtenalClock.data()) + " env variable does not exist! Aborting!");
@@ -198,15 +318,4 @@ bool FitData::checkSettings()
     }
 
     return true;
-}
-
-std::list<std::string> FitData::constructStatusParametersList(std::string_view boardName)
-{
-    std::list<std::string> statusList;
-    for (const auto& parameter : m_templateBoards.at(boardName.data())->getParameters()) {
-        if (parameter.second.refreshType == Board::ParameterInfo::RefreshType::SYNC) {
-            statusList.emplace_back(parameter.first);
-        }
-    }
-    return std::move(statusList);
 }

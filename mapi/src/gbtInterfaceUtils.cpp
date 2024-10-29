@@ -1,5 +1,5 @@
 #include "gbtInterfaceUtils.h"
-#include"Alfred/print.h"
+#include "Alfred/print.h"
 #include <cstring>
 
 namespace gbt
@@ -7,13 +7,12 @@ namespace gbt
 
 Unknown::Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    
 }
 
 [[nodiscard]] WinCCResponse Unknown::createWinCCResponse()
 {
     WinCCResponse respone;
-    respone.addParameter("GBT_ERR_UNKNOWN",{1});
+    respone.addParameter("GBT_ERR_UNKNOWN", { 1 });
     return respone;
 }
 

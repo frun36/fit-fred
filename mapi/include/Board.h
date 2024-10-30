@@ -111,8 +111,8 @@ class Board
     void setEnvironment(const std::string& variableName, double value);
     void updateEnvironment(const std::string& variableName);
 
-    double calculatePhysical(const std::string& param, uint32_t raw);
-    uint32_t calculateRaw(const std::string& param, double physcial);
+    double calculatePhysical(const std::string& param, uint32_t raw) const;
+    uint32_t calculateRaw(const std::string& param, double physcial) const;
 
     uint32_t getAddress() const { return m_address; }
 

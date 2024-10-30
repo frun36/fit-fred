@@ -202,7 +202,8 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
         }
     }
 
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
+    std::string equation = info.physicToElectronic.equation;
+    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(equation, info.physicToElectronic.variables, values));
 
     if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
         return twosComplementEncode(calculated, info.bitLength) << info.startBit;

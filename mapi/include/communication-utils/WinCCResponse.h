@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
-
+#include <cmath>
 class WinCCResponse
 {
    private:

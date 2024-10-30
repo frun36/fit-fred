@@ -45,8 +45,8 @@ class Board
             uint8_t bitLength,
             uint32_t regBlockSize,
             ValueEncoding valueEncoding,
-            double minValue,
-            double maxValue,
+            uint32_t minValue,
+            uint32_t maxValue,
             Equation electronicToPhysic,
             Equation physicToElectronic,
             bool isFifo,
@@ -59,8 +59,8 @@ class Board
         const uint8_t bitLength{ 0 };
         const size_t regBlockSize{ 1 };
         const ValueEncoding valueEncoding{ ValueEncoding::Unsigned };
-        const double minValue{ 0 };
-        const double maxValue{ 0 };
+        const uint32_t minValue{ 0 };
+        const uint32_t maxValue{ 0 };
 
         Equation electronicToPhysic;
         Equation physicToElectronic;
@@ -87,8 +87,6 @@ class Board
         {
             return m_value;
         }
-
-        bool boundCheck(double value) const { return (value < minValue || value > maxValue); }
 
        private:
         std::optional<double> m_value;

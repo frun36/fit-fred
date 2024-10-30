@@ -87,6 +87,9 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
     }
 
     uint32_t rawValue = m_board->calculateRaw(parameter.name, command.value.value());
+    if(rawValue > parameter.maxValue || rawValue < parameter.minValue){
+        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range");
+    }
 
     if (parameter.bitLength == 32) {
         return SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, { rawValue });

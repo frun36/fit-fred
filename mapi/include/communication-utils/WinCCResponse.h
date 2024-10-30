@@ -15,8 +15,14 @@ class WinCCResponse
         std::stringstream ss;
         ss << name;
 
-        for (const auto& val : data)
-            ss << "," << val;
+        for (const auto& val : data){
+            if(trunc(val) == val){
+                ss << "," << static_cast<int64_t>(val);
+            }
+            else{
+                ss << "," << val;
+            }
+        }
 
         ss << "\n";
 

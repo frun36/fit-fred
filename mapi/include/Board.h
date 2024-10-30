@@ -41,8 +41,8 @@ class Board
         ParameterInfo(
             std::string name,
             uint32_t baseAddress,
-            uint8_t startBit,
-            uint8_t bitLength,
+            uint32_t startBit,
+            uint32_t bitLength,
             uint32_t regBlockSize,
             ValueEncoding valueEncoding,
             uint32_t minValue,
@@ -55,8 +55,8 @@ class Board
 
         const std::string name{ 0 };
         const uint32_t baseAddress{ 0 };
-        const uint8_t startBit{ 0 };
-        const uint8_t bitLength{ 0 };
+        const uint32_t startBit{ 0 };
+        const uint32_t bitLength{ 0 };
         const size_t regBlockSize{ 1 };
         const ValueEncoding valueEncoding{ ValueEncoding::Unsigned };
         const uint32_t minValue{ 0 };

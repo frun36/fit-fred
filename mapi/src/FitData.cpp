@@ -179,28 +179,28 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     }
 
     Board::ParameterInfo::ValueEncoding encoding = db_tables::boolean::parse(dbRow[db_tables::Parameters::IsSigned.idx]) ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
-    uint8_t startBit = dbRow[db_tables::Parameters::EndBit.idx]->getInt();
-    uint32_t bitLength = startBit - dbRow[db_tables::Parameters::StartBit.idx]->getInt() + 1;
+    uint32_t startBit = dbRow[db_tables::Parameters::StartBit.idx]->getInt();
+    uint32_t bitLength = dbRow[db_tables::Parameters::EndBit.idx]->getInt() - startBit + 1;
 
     uint32_t max = 0;
     uint32_t min = 0;
     if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
         min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1u << (bitLength - 1)) << startBit;
     } else {
-        min = twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble()), bitLength) << startBit;
+        min = ( (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? static_cast<uint32_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble()) : twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble()), bitLength) ) << startBit;
     }
 
     if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
         max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1u << bitLength) - 1) << startBit : (1u << (bitLength - 1)) << startBit;
     } else {
-        max = twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble()), bitLength) << startBit;
+        max =  ((encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? static_cast<uint32_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble()) : twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble()), bitLength) ) << startBit;
     }
 
     return {
         dbRow[db_tables::Parameters::Name.idx]->getString(),
         db_tables::hex::parse(dbRow[db_tables::Parameters::BaseAddress.idx]),
-        static_cast<uint8_t>(dbRow[db_tables::Parameters::StartBit.idx]->getInt()),
-        static_cast<uint8_t>(bitLength),
+        startBit,
+        bitLength,
         static_cast<uint8_t>(dbRow[db_tables::Parameters::RegBlockSize.idx]->getInt()),
         encoding,
         min,

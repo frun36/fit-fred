@@ -45,8 +45,8 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
 Board::ParameterInfo::ParameterInfo(
     std::string name_,
     uint32_t baseAddress_,
-    uint8_t startBit_,
-    uint8_t bitLength_,
+    uint32_t startBit_,
+    uint32_t bitLength_,
     uint32_t regBlockSize_,
     ValueEncoding valueEncoding_,
     uint32_t minValue_,

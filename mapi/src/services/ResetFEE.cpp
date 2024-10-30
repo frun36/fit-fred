@@ -261,11 +261,11 @@ std::string ResetFEE::seqSetSystemId()
 BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
 {
     std::stringstream request;
-    double trigger1Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger1Signature.data())));
-    double trigger2Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger2Signature.data())));
-    double trigger3Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger3Signature.data())));
-    double trigger4Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger4Signature.data())));
-    double trigger5Sign = static_cast<double>(prepareSign(m_board->getEnvironment(environment::parameters::Trigger5Signature.data())));
+    double trigger1Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger1Signature.data()));
+    double trigger2Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger2Signature.data()));
+    double trigger3Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger3Signature.data()));
+    double trigger4Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger4Signature.data()));
+    double trigger5Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
 
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger1Signature, trigger1Sign) << "\n";
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger2Signature, trigger2Sign) << "\n";

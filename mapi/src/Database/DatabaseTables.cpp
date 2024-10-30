@@ -55,50 +55,50 @@ uint32_t parse(MultiBase* field)
 } // namespace hex
 
 // BoardTypes class
-std::string BoardTypes::TypeTCM{ "TCM" };
-std::string BoardTypes::TypePM{ "PM" };
+const std::string BoardTypes::TypeTCM{ "TCM" };
+const std::string BoardTypes::TypePM{ "PM" };
 
 // Parameters class
-std::string Parameters::TableName{ "BOARD_PARAMETERS" };
-Column Parameters::BoardType{ 0, "BOARD_TYPE" };
-Column Parameters::Name{ 1, "PARAM_NAME" };
-Column Parameters::BaseAddress{ 2, "BASE_ADDRESS" };
-Column Parameters::StartBit{ 3, "START_BIT" };
-Column Parameters::EndBit{ 4, "END_BIT" };
-Column Parameters::RegBlockSize{ 5, "REG_BLOCK_SIZE" };
-Column Parameters::MinValue{ 6, "MIN_VALUE" };
-Column Parameters::MaxValue{ 7, "MAX_VALUE" };
-Column Parameters::IsSigned{ 8, "IS_SIGNED" };
-Column Parameters::IsFifo{ 9, "IS_FIFO" };
-Column Parameters::IsReadOnly{ 10, "IS_READ_ONLY" };
-Column Parameters::EqElectronicToPhysic{ 11, "EQ_ELECTRONIC_TO_PHYSIC" };
-Column Parameters::EqPhysicToElectronic{ 12, "EQ_PHYSIC_TO_ELECTRONIC" };
-Column Parameters::RefreshType{ 13, "REFRESH_TYPE" };
-std::string Parameters::RefreshSYNC{ "SYNC" };
-std::string Parameters::RefreshCNT{ "CNT" };
+const std::string Parameters::TableName{ "BOARD_PARAMETERS" };
+const Column Parameters::BoardType{ 0, "BOARD_TYPE" };
+const Column Parameters::Name{ 1, "PARAM_NAME" };
+const Column Parameters::BaseAddress{ 2, "BASE_ADDRESS" };
+const Column Parameters::StartBit{ 3, "START_BIT" };
+const Column Parameters::EndBit{ 4, "END_BIT" };
+const Column Parameters::RegBlockSize{ 5, "REG_BLOCK_SIZE" };
+const Column Parameters::MinValue{ 6, "MIN_VALUE" };
+const Column Parameters::MaxValue{ 7, "MAX_VALUE" };
+const Column Parameters::IsSigned{ 8, "IS_SIGNED" };
+const Column Parameters::IsFifo{ 9, "IS_FIFO" };
+const Column Parameters::IsReadOnly{ 10, "IS_READ_ONLY" };
+const Column Parameters::EqElectronicToPhysic{ 11, "EQ_ELECTRONIC_TO_PHYSIC" };
+const Column Parameters::EqPhysicToElectronic{ 12, "EQ_PHYSIC_TO_ELECTRONIC" };
+const Column Parameters::RefreshType{ 13, "REFRESH_TYPE" };
+const std::string Parameters::RefreshSYNC{ "SYNC" };
+const std::string Parameters::RefreshCNT{ "CNT" };
 
 // ConnectedDevices class
-std::string ConnectedDevices::TableName{ "CONNECTED_DEVICES" };
-Column ConnectedDevices::BoardName{ 0, "BOARD_NAME" };
-Column ConnectedDevices::BoardType{ 1, "BOARD_TYPE" };
-std::string ConnectedDevices::TypePM{ "PM" };
-std::string ConnectedDevices::TypeTCM{ "TCM" };
+const std::string ConnectedDevices::TableName{ "CONNECTED_DEVICES" };
+const Column ConnectedDevices::BoardName{ 0, "BOARD_NAME" };
+const Column ConnectedDevices::BoardType{ 1, "BOARD_TYPE" };
+const std::string ConnectedDevices::TypePM{ "PM" };
+const std::string ConnectedDevices::TypeTCM{ "TCM" };
 
 // Environment class
-std::string Environment::TableName{ "FEE_SETTINGS" };
-Column Environment::Name{ 0, "NAME" };
-Column Environment::Equation{ 1, "EQUATION" };
+const std::string Environment::TableName{ "FEE_SETTINGS" };
+const Column Environment::Name{ 0, "NAME" };
+const Column Environment::Equation{ 1, "EQUATION" };
 
 // Configurations class
-std::string Configurations::TableName{ "CONFIGURATIONS" };
-Column Configurations::ConfigurationName{ 0, "CONFIGURATION_NAME" };
+const std::string Configurations::TableName{ "CONFIGURATIONS" };
+const Column Configurations::ConfigurationName{ 0, "CONFIGURATION_NAME" };
 
 // ConfigurationParameters class
-std::string ConfigurationParameters::TableName{ "CONFIGURATION_PARAMETERS" };
-Column ConfigurationParameters::ConfigurationName{ 0, "CONFIGURATION_NAME" };
-Column ConfigurationParameters::BoardName{ 1, "BOARD_NAME" };
-Column ConfigurationParameters::BoardType{ 2, "BOARD_TYPE" };
-Column ConfigurationParameters::ParameterName{ 3, "PARAMETER_NAME" };
-Column ConfigurationParameters::Value{ 4, "PARAMETER_VALUE" };
+const std::string ConfigurationParameters::TableName{ "CONFIGURATION_PARAMETERS" };
+const Column ConfigurationParameters::ConfigurationName{ 0, "CONFIGURATION_NAME" };
+const Column ConfigurationParameters::BoardName{ 1, "BOARD_NAME" };
+const Column ConfigurationParameters::BoardType{ 2, "BOARD_TYPE" };
+const Column ConfigurationParameters::ParameterName{ 3, "PARAMETER_NAME" };
+const Column ConfigurationParameters::Value{ 4, "PARAMETER_VALUE" };
 
 } // namespace db_tables

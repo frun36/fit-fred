@@ -126,6 +126,6 @@ class Board
     std::string m_name;
     uint32_t m_address;
     std::shared_ptr<Board> m_mainBoard;
-    std::shared_ptr<EnvironmentVariables> m_settings;
+    std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

@@ -21,8 +21,8 @@ class FitData
     std::unordered_map<std::string, std::list<std::string>>& getStatusList() { return m_statusParameters; }
 
    private:
-    struct Device {
-        Device(std::vector<MultiBase*>&);
+    struct DeviceInfo {
+        DeviceInfo(std::vector<MultiBase*>&);
 
         std::string name;
         enum class Side { A,
@@ -49,5 +49,5 @@ class FitData
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::list<std::string>> m_statusParameters;
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;
-    std::shared_ptr<EnvironmentVariables> m_settings;
+    std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
 };

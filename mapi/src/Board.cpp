@@ -12,7 +12,7 @@
 
 #endif
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_mainBoard(main), m_environmentalVariables(settings)
 {
     if (name.find("TCM") != std::string::npos) {
         m_identity.type = Type::TCM;
@@ -118,17 +118,17 @@ bool Board::doesExist(const std::string& param)
 
 double Board::getEnvironment(const std::string& variableName)
 {
-    return m_settings->getVariable(variableName);
+    return m_environmentalVariables->getVariable(variableName);
 }
 
 void Board::setEnvironment(const std::string& variableName, double value)
 {
-    m_settings->setVariable(variableName, value);
+    m_environmentalVariables->setVariable(variableName, value);
 }
 
 void Board::updateEnvironment(const std::string& variableName)
 {
-    m_settings->updateVariable(variableName);
+    m_environmentalVariables->updateVariable(variableName);
 }
 
 double Board::calculatePhysical(const std::string& param, uint32_t raw)
@@ -158,8 +158,8 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
             values.emplace_back(m_parameters.at(var).getStoredValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
-        } else if (m_settings != nullptr && m_settings->doesExist(var)) {
-            values.emplace_back(m_settings->getVariable(var));
+        } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
+            values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
@@ -194,8 +194,8 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
             values.emplace_back(m_parameters.at(var).getStoredValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
-        } else if (m_settings != nullptr && m_settings->doesExist(var)) {
-            values.emplace_back(m_settings->getVariable(var));
+        } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
+            values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }

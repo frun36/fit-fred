@@ -8,7 +8,7 @@
 
 ///
 
-FitData::Device::Device(std::vector<MultiBase*>& dbRow)
+FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 {
     name = dbRow[db_tables::ConnectedDevices::BoardName.idx]->getString();
     std::string type = dbRow[db_tables::ConnectedDevices::BoardType.idx]->getString();
@@ -106,29 +106,29 @@ bool FitData::fetchConnectedDevices()
     std::shared_ptr<Board> TCM{ nullptr };
 
     for (auto& deviceRow : connectedDevices) {
-        Device device(deviceRow);
+        DeviceInfo device(deviceRow);
         Print::PrintInfo("Registering " + device.name);
 
         switch (device.type) {
-            case Device::BoardType::PM: {
+            case DeviceInfo::BoardType::PM: {
                 if (TCM.get() == nullptr) {
                     Print::PrintVerbose("PM row occured before TCM row!");
                     return false;
                 }
 
                 switch (device.side) {
-                    case Device::Side::A:
+                    case DeviceInfo::Side::A:
                         m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
                         break;
 
-                    case Device::Side::C:
+                    case DeviceInfo::Side::C:
                         m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
                         break;
                 }
 
             } break;
 
-            case Device::BoardType::TCM: {
+            case DeviceInfo::BoardType::TCM: {
                 TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
             } break;
         }
@@ -215,7 +215,7 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
 
 std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
 {
-    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main, m_settings);
+    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main, m_environmentalVariables);
     for (const auto& parameter : templateBoard->getParameters()) {
         board->emplace(parameter.second);
     }
@@ -225,92 +225,92 @@ std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uin
 
 void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTable)
 {
-    m_settings = std::make_shared<EnvironmentVariables>();
+    m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
         std::string name = row[db_tables::Environment::Name.idx]->getString();
         Equation equation = db_tables::equation::parseEquation(row[db_tables::Environment::Equation.idx]->getString());
         Print::PrintVerbose("Parsing " + name);
         Print::PrintVerbose("Equation: " + equation.equation);
-        m_settings->emplace(
+        m_environmentalVariables->emplace(
             EnvironmentVariables::Variable(name, equation));
         if (equation.variables.empty()) {
-            m_settings->updateVariable(name);
+            m_environmentalVariables->updateVariable(name);
         }
     }
     for (auto& row : settingsTable) {
         std::string name = row[db_tables::Environment::Name.idx]->getString();
         Print::PrintVerbose("Updating " + name);
-        m_settings->updateVariable(name);
-        Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_settings->getVariable(name)));
+        m_environmentalVariables->updateVariable(name);
+        Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_environmentalVariables->getVariable(name)));
     }
 }
 
 bool FitData::checkEnvironment()
 {
-    if (!m_settings->doesExist(environment::parameters::ExtenalClock.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::ExtenalClock.data())) {
         Print::PrintError(std::string(environment::parameters::ExtenalClock.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::InternalClock.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::InternalClock.data())) {
         Print::PrintError(std::string(environment::parameters::InternalClock.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::SystemClock.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::SystemClock.data())) {
         Print::PrintError(std::string(environment::parameters::SystemClock.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::TDC.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::TDC.data())) {
         Print::PrintError(std::string(environment::parameters::TDC.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::PmA0BoardId.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::PmA0BoardId.data())) {
         Print::PrintError(std::string(environment::parameters::PmA0BoardId.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::PmC0BoardId.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::PmC0BoardId.data())) {
         Print::PrintError(std::string(environment::parameters::PmC0BoardId.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::TcmBoardId.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::TcmBoardId.data())) {
         Print::PrintError(std::string(environment::parameters::TcmBoardId.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::SystemId.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::SystemId.data())) {
         Print::PrintError(std::string(environment::parameters::SystemId.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::BcIdOffsetDefault.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::BcIdOffsetDefault.data())) {
         Print::PrintError(std::string(environment::parameters::BcIdOffsetDefault.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::Trigger1Signature.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::Trigger1Signature.data())) {
         Print::PrintError(std::string(environment::parameters::Trigger1Signature.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::Trigger2Signature.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::Trigger2Signature.data())) {
         Print::PrintError(std::string(environment::parameters::Trigger2Signature.data()) + " env variable does not exist! Aborting!");
         return false;
     }
-    if (!m_settings->doesExist(environment::parameters::Trigger3Signature.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::Trigger3Signature.data())) {
         Print::PrintError(std::string(environment::parameters::Trigger3Signature.data()) + " env variable does not exist! Aborting!");
         return false;
     }
-    if (!m_settings->doesExist(environment::parameters::Trigger4Signature.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::Trigger4Signature.data())) {
         Print::PrintError(std::string(environment::parameters::Trigger4Signature.data()) + " env variable does not exist! Aborting!");
         return false;
     }
 
-    if (!m_settings->doesExist(environment::parameters::Trigger5Signature.data())) {
+    if (!m_environmentalVariables->doesExist(environment::parameters::Trigger5Signature.data())) {
         Print::PrintError(std::string(environment::parameters::Trigger5Signature.data()) + " env variable does not exist! Aborting!");
         return false;
     }

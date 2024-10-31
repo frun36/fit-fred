@@ -86,10 +86,12 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
         throw std::runtime_error(parameter.name + ": no data for WRITE operation");
     }
 
-    uint32_t rawValue = m_board->calculateRaw(parameter.name, command.value.value());
-    if(rawValue > parameter.maxValue || rawValue < parameter.minValue){
+    int64_t electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
+    if(electronicValue > parameter.maxValue || electronicValue < parameter.minValue){
         throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range");
     }
+
+    uint32_t rawValue = m_board->convertElectronicToRaw(parameter.name, electronicValue);
 
     if (parameter.bitLength == 32) {
         return SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, { rawValue });

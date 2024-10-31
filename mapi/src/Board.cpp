@@ -49,8 +49,8 @@ Board::ParameterInfo::ParameterInfo(
     uint32_t bitLength_,
     uint32_t regBlockSize_,
     ValueEncoding valueEncoding_,
-    uint32_t minValue_,
-    uint32_t maxValue_,
+    int64_t minValue_,
+    int64_t maxValue_,
     Equation electronicToPhysic_,
     Equation physicToRaw_,
     bool isFifo_,
@@ -172,7 +172,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw) const
     return Utility::calculateEquation(equation, variables, values);
 }
 
-uint32_t Board::calculateRaw(const std::string& param, double physical) const
+int64_t Board::calculateElectronic(const std::string& param, double physical) const
 {
     if (m_parameters.find(param) == m_parameters.end()) {
         throw std::runtime_error(param + " does not exist!");
@@ -182,9 +182,9 @@ uint32_t Board::calculateRaw(const std::string& param, double physical) const
 
     if (info.physicToElectronic.equation == "") {
         if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
-            return twosComplementEncode(static_cast<int32_t>(physical), info.bitLength) << info.startBit;
+            return twosComplementEncode(static_cast<int64_t>(physical), info.bitLength) << info.startBit;
         }
-        return static_cast<uint32_t>(physical) << info.startBit;
+        return static_cast<int64_t>(physical) << info.startBit;
     }
 
     std::vector<double> values;
@@ -206,11 +206,20 @@ uint32_t Board::calculateRaw(const std::string& param, double physical) const
     std::string equation = info.physicToElectronic.equation;
     std::vector<std::string> variables = info.physicToElectronic.variables;
 
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(equation, variables, values));
+    return static_cast<int64_t>(Utility::calculateEquation(equation, variables, values));
+}
 
-    if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
-        return twosComplementEncode(calculated, info.bitLength) << info.startBit;
+uint32_t Board::convertElectronicToRaw(const std::string& param, int64_t physcial) const
+{
+    if (m_parameters.find(param) == m_parameters.end()) {
+        throw std::runtime_error(param + " does not exist!");
     }
 
-    return static_cast<uint32_t>(calculated) << info.startBit;
+    const ParameterInfo& info = m_parameters.at(param);
+
+    if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
+        return twosComplementEncode(physcial, info.bitLength) << info.startBit;
+    }
+
+    return static_cast<uint32_t>(physcial) << info.startBit;
 }

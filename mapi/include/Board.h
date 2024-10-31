@@ -45,8 +45,8 @@ class Board
             uint32_t bitLength,
             uint32_t regBlockSize,
             ValueEncoding valueEncoding,
-            uint32_t minValue,
-            uint32_t maxValue,
+            int64_t minValue,
+            int64_t maxValue,
             Equation electronicToPhysic,
             Equation physicToElectronic,
             bool isFifo,
@@ -59,8 +59,8 @@ class Board
         const uint32_t bitLength{ 0 };
         const size_t regBlockSize{ 1 };
         const ValueEncoding valueEncoding{ ValueEncoding::Unsigned };
-        const uint32_t minValue{ 0 };
-        const uint32_t maxValue{ 0 };
+        const int64_t minValue{ 0 };
+        const int64_t maxValue{ 0 };
 
         Equation electronicToPhysic;
         Equation physicToElectronic;
@@ -110,7 +110,8 @@ class Board
     void updateEnvironment(const std::string& variableName);
 
     double calculatePhysical(const std::string& param, uint32_t raw) const;
-    uint32_t calculateRaw(const std::string& param, double physcial) const;
+    int64_t calculateElectronic(const std::string& param, double physcial) const;
+    uint32_t convertElectronicToRaw(const std::string& param, int64_t physcial) const;
 
     uint32_t getAddress() const { return m_address; }
 

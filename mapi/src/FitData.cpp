@@ -185,15 +185,15 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     uint32_t max = 0;
     uint32_t min = 0;
     if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
-        min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1u << (bitLength - 1)) << startBit;
+        min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1u << (bitLength - 1));
     } else {
-        min = ( (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? static_cast<uint32_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble()) : twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble()), bitLength) ) << startBit;
+        min = static_cast<int64_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble());
     }
 
     if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
-        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1u << bitLength) - 1) << startBit : (1u << (bitLength - 1)) << startBit;
+        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1u << bitLength) - 1): (1u << (bitLength - 1));
     } else {
-        max =  ((encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? static_cast<uint32_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble()) : twosComplementEncode(static_cast<int32_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble()), bitLength) ) << startBit;
+        max =  static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
     }
 
     return {

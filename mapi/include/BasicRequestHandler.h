@@ -64,7 +64,7 @@ class BasicRequestHandler
         ParameterToHandle(const std::string& name_, const std::optional<double>& toCompare_) : name(name_), toCompare(toCompare_) {}
         ParameterToHandle(const std::string& name_, std::optional<double>&& toCompare_) : name(name_), toCompare(toCompare_) {}
         std::string name;
-        std::optional<double> toCompare;
+        std::optional<uint32_t> toCompare;
     };
 
     void resetExecutionData();

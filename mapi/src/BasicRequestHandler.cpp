@@ -22,7 +22,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess, bool 
             SwtSequence::SwtOperation operation = createSwtOperation(cmd);
             Board::ParameterInfo& info = m_board->at(cmd.name);
 
-            m_registerTasks[info.baseAddress].emplace_back(info.name, cmd.value);
+            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value != std::nullopt) ? operation.data[1] >> info.startBit: cmd.value);
 
             if (m_operations.find(info.baseAddress) != m_operations.end()) {
                 mergeOperation(m_operations.at(info.baseAddress), operation);
@@ -138,7 +138,9 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
     for (auto& parameterToHandle : m_registerTasks.at(read.frame.address)) {
         try {
             double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
-            if (parameterToHandle.toCompare.has_value() && value != parameterToHandle.toCompare.value()) {
+            Board::ParameterInfo info = m_board->at(parameterToHandle.name);
+
+            if (parameterToHandle.toCompare.has_value() && getBitField(read.frame.data, info.startBit, info.bitLength) != parameterToHandle.toCompare.value()) {
                 report.emplace_back(
                     parameterToHandle.name,
                     "WRITE FAILED: Received " + std::to_string(value) +

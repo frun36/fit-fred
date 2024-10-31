@@ -3,7 +3,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 #include <cmath>
+
 class WinCCResponse
 {
    private:
@@ -20,7 +22,7 @@ class WinCCResponse
                 ss << "," << static_cast<int64_t>(val);
             }
             else{
-                ss << "," << val;
+                ss << "," << std::fixed << std::setprecision(3) << val;
             }
         }
 

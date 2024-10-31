@@ -181,10 +181,7 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
     const ParameterInfo& info = m_parameters.at(param);
 
     if (info.physicToElectronic.equation == "") {
-        if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
-            return twosComplementEncode(static_cast<int64_t>(physical), info.bitLength) << info.startBit;
-        }
-        return static_cast<int64_t>(physical) << info.startBit;
+        return static_cast<int64_t>(physical);
     }
 
     std::vector<double> values;

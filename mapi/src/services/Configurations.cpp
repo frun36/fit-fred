@@ -47,35 +47,19 @@ string Configurations::processInputMessage(string msg)
     return "";
 }
 
-std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(std::string_view configuration, std::string_view board)
+std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(string_view configuration, string_view board)
 {
-    return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + std::string(configuration) + "' AND board_name = '" + std::string(board) + "'");
+    return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + string(configuration) + "' AND board_name = '" + string(board) + "'");
 }
 
-std::string Configurations::BoardConfigurations::convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration)
+Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
 {
-    string request;
-    for (const auto& row : configuration) {
-        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
-            throw runtime_error(string_utils::concatenate(name, ": invalid CONFIGURATIONS data row"));
-
-        string parameterName = row[0]->getString();
-        double parameterValue = row[1]->getDouble();
-        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
-    }
-    return request;
-}
-
-Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(const string& name)
-{
-    vector<SwtSequence::SwtOperation> sequenceVec;
     optional<double> delayA = nullopt;
     optional<double> delayC = nullopt;
-    auto dbData = DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + name + "' AND board_name = '" + m_board->getName() + "'");
     string request;
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
-            throw runtime_error(name + ": invalid CONFIGURATIONS data row");
+            throw runtime_error(string_utils::concatenate(configurationName, ": invalid CONFIGURATIONS data row"));
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();
@@ -95,7 +79,7 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
 
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
-    return processMessageFromWinCC(getConfigurationInfo(name).req).getSequence();
+    return processMessageFromWinCC(fetchAndGetConfigurationInfo(name).req).getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
@@ -138,7 +122,7 @@ string Configurations::TcmConfigurations::handleConfigurationStart(const string&
     if (msg == CONTINUE_MESSAGE)
         throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
     m_configurationName.emplace(msg);
-    m_configurationInfo.emplace(getConfigurationInfo(msg));
+    m_configurationInfo.emplace(fetchAndGetConfigurationInfo(msg));
     delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
     if (delaySequence.has_value()) {
         m_state = State::ApplyingDelays;

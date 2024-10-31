@@ -102,11 +102,14 @@ class Configurations : public Mapigroup
             ConfigurationInfo(const string& req, optional<double> delayA, optional<double> delayC) : req(req), delayA(delayA), delayC(delayC) {}
         };
 
-        ConfigurationInfo getConfigurationInfo(const string& name);
-
         BoardConfigurations(std::shared_ptr<Board> board) : BoardCommunicationHandler(board) {}
-        static std::vector<std::vector<MultiBase*>> fetchConfiguration(std::string_view configuration, std::string_view board);
-        static std::string convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration);
+        static std::vector<std::vector<MultiBase*>> fetchConfiguration(string_view configuration, string_view board);
+        static ConfigurationInfo getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
+        
+        inline ConfigurationInfo fetchAndGetConfigurationInfo(string_view name) const {
+            auto dbData = fetchConfiguration(name, m_board->getName());
+            return getConfigurationInfo(name, dbData);
+        }
 
         virtual ~BoardConfigurations() = default;
     };
@@ -140,11 +143,8 @@ class Configurations : public Mapigroup
 
        private:
         string handleConfigurationStart(const string& msg);
-
         string handleConfigurationContinuation(const string& msg);
-
         string handleDelayResponse(const string& msg);
-
         string handleDataResponse(const string& msg);
 
         string processInputMessage(string msg) override;

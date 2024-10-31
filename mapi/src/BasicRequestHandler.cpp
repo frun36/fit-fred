@@ -88,7 +88,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
 
     int64_t electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
     if(electronicValue > parameter.maxValue || electronicValue < parameter.minValue){
-        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range");
+        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range - value: " + std::to_string(electronicValue));
     }
 
     uint32_t rawValue = m_board->convertElectronicToRaw(parameter.name, electronicValue);

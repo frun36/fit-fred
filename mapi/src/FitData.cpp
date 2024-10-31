@@ -182,8 +182,8 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     uint32_t startBit = dbRow[db_tables::Parameters::StartBit.idx]->getInt();
     uint32_t bitLength = dbRow[db_tables::Parameters::EndBit.idx]->getInt() - startBit + 1;
 
-    uint32_t max = 0;
-    uint32_t min = 0;
+    int64_t max = 0;
+    int64_t min = 0;
     if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
         min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1u << (bitLength - 1));
     } else {

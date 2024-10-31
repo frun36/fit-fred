@@ -131,13 +131,13 @@ void Board::updateEnvironment(const std::string& variableName)
     m_settings->updateVariable(variableName);
 }
 
-double Board::calculatePhysical(const std::string& param, uint32_t raw)
+double Board::calculatePhysical(const std::string& param, uint32_t raw) const
 {
     if (m_parameters.find(param) == m_parameters.end()) {
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters.at(param);
+    const ParameterInfo& info = m_parameters.at(param);
     int64_t decoded = 0;
 
     if (info.valueEncoding == ParameterInfo::ValueEncoding::Unsigned) {
@@ -167,16 +167,18 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw)
     if (values.size() != info.electronicToPhysic.variables.size()) {
         throw std::runtime_error("Parameter " + param + ": parsing equation failed!");
     }
-    return Utility::calculateEquation(info.electronicToPhysic.equation, info.electronicToPhysic.variables, values);
+    std::string equation = info.electronicToPhysic.equation;
+    std::vector<std::string> variables = info.electronicToPhysic.variables;
+    return Utility::calculateEquation(equation, variables, values);
 }
 
-uint32_t Board::calculateRaw(const std::string& param, double physical)
+uint32_t Board::calculateRaw(const std::string& param, double physical) const
 {
     if (m_parameters.find(param) == m_parameters.end()) {
         throw std::runtime_error(param + " does not exist!");
     }
 
-    ParameterInfo& info = m_parameters.at(param);
+    const ParameterInfo& info = m_parameters.at(param);
 
     if (info.physicToElectronic.equation == "") {
         if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
@@ -201,7 +203,10 @@ uint32_t Board::calculateRaw(const std::string& param, double physical)
         }
     }
 
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
+    std::string equation = info.physicToElectronic.equation;
+    std::vector<std::string> variables = info.physicToElectronic.variables;
+
+    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(equation, variables, values));
 
     if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
         return twosComplementEncode(calculated, info.bitLength) << info.startBit;

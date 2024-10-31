@@ -71,9 +71,9 @@ TEST(WinCCMessageTest, MixingRejection)
 TEST(WinCCMessageTest, Response)
 {
     WinCCResponse res;
-    res.addParameter("TEST1", { 0.7 }).addParameter("TEST2", { -123, 27.8, 312.9 }).addParameter("TEST3", {});
+    res.addParameter("TEST1", { 0.7 }).addParameter("TEST2", { -123, 27.8, 1234567890.1234567890 }).addParameter("TEST3", {});
 
-    EXPECT_EQ(res.getContents(), "TEST1,0.7\nTEST2,-123,27.8,312.9\nTEST3\n");
+    EXPECT_EQ(res.getContents(), "TEST1,0.700\nTEST2,-123,27.800,1234567890.123\nTEST3\n");
 }
 
 } // namespace

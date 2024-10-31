@@ -185,7 +185,7 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
     }
 
     std::vector<double> values;
-    for (const auto& var : info.electronicToPhysic.variables) {
+    for (const auto& var : info.physicToElectronic.variables) {
         if (var == info.name) {
             values.emplace_back(physical);
             continue;

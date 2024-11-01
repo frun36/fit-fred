@@ -228,7 +228,7 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
     }
 
     uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u) << idx));
-    masked |= static_cast<uint32_t>(1u) << idx;
+    masked |= static_cast<uint32_t>(mask) << idx;
 
     return WinCCRequest::writeRequest(spiMask.name, masked);
 }

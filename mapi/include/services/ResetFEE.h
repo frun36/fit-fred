@@ -33,10 +33,6 @@ class ResetFEE : public BasicFitIndefiniteMapi
     BasicRequestHandler::ParsedResponse applyTriggersSign();
 
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
-    uint32_t prepareSign(double sign)
-    {
-        return static_cast<uint32_t>(sign) << 7 | (~static_cast<uint32_t>(sign) & 0x7F);
-    }
 
     static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE_DEFAULT_GBT_CONFIG" };
     static constexpr std::string_view ForceLocalClock{ "FORCE LOCAL CLOCK" };

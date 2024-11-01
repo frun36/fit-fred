@@ -54,7 +54,7 @@ class BasicRequestHandler
         }
     };
 
-    SwtSequence processMessageFromWinCC(std::string, bool=true);
+    SwtSequence processMessageFromWinCC(std::string, bool = true);
     virtual ParsedResponse processMessageFromALF(std::string);
 
     std::shared_ptr<Board> getBoard() { return m_board; }
@@ -64,7 +64,7 @@ class BasicRequestHandler
         ParameterToHandle(const std::string& name_, const std::optional<double>& toCompare_) : name(name_), toCompare(toCompare_) {}
         ParameterToHandle(const std::string& name_, std::optional<double>&& toCompare_) : name(name_), toCompare(toCompare_) {}
         std::string name;
-        std::optional<double> toCompare;
+        std::optional<uint32_t> toCompare;
     };
 
     void resetExecutionData();

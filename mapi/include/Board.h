@@ -41,12 +41,12 @@ class Board
         ParameterInfo(
             std::string name,
             uint32_t baseAddress,
-            uint8_t startBit,
-            uint8_t bitLength,
+            uint32_t startBit,
+            uint32_t bitLength,
             uint32_t regBlockSize,
             ValueEncoding valueEncoding,
-            double minValue,
-            double maxValue,
+            int64_t minValue,
+            int64_t maxValue,
             Equation electronicToPhysic,
             Equation physicToElectronic,
             bool isFifo,
@@ -55,12 +55,12 @@ class Board
 
         const std::string name{ 0 };
         const uint32_t baseAddress{ 0 };
-        const uint8_t startBit{ 0 };
-        const uint8_t bitLength{ 0 };
+        const uint32_t startBit{ 0 };
+        const uint32_t bitLength{ 0 };
         const size_t regBlockSize{ 1 };
         const ValueEncoding valueEncoding{ ValueEncoding::Unsigned };
-        const double minValue{ 0 };
-        const double maxValue{ 0 };
+        const int64_t minValue{ 0 };
+        const int64_t maxValue{ 0 };
 
         Equation electronicToPhysic;
         Equation physicToElectronic;
@@ -88,8 +88,6 @@ class Board
             return m_value;
         }
 
-        bool boundCheck(double value) const { return (value < minValue || value > maxValue); }
-
        private:
         std::optional<double> m_value;
     };
@@ -112,7 +110,8 @@ class Board
     void updateEnvironment(const std::string& variableName);
 
     double calculatePhysical(const std::string& param, uint32_t raw) const;
-    uint32_t calculateRaw(const std::string& param, double physcial) const;
+    int64_t calculateElectronic(const std::string& param, double physcial) const;
+    uint32_t convertElectronicToRaw(const std::string& param, int64_t physcial) const;
 
     uint32_t getAddress() const { return m_address; }
 
@@ -128,6 +127,6 @@ class Board
     std::string m_name;
     uint32_t m_address;
     std::shared_ptr<Board> m_mainBoard;
-    std::shared_ptr<EnvironmentVariables> m_settings;
+    std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

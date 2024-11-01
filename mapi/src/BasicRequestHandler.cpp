@@ -22,7 +22,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess, bool 
             SwtSequence::SwtOperation operation = createSwtOperation(cmd);
             Board::ParameterInfo& info = m_board->at(cmd.name);
 
-            m_registerTasks[info.baseAddress].emplace_back(info.name, cmd.value);
+            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value != std::nullopt) ? operation.data[1] >> info.startBit: cmd.value);
 
             if (m_operations.find(info.baseAddress) != m_operations.end()) {
                 mergeOperation(m_operations.at(info.baseAddress), operation);
@@ -86,7 +86,12 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
         throw std::runtime_error(parameter.name + ": no data for WRITE operation");
     }
 
-    uint32_t rawValue = m_board->calculateRaw(parameter.name, command.value.value());
+    int64_t electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
+    if(electronicValue > parameter.maxValue || electronicValue < parameter.minValue){
+        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range - value: " + std::to_string(electronicValue));
+    }
+
+    uint32_t rawValue = m_board->convertElectronicToRaw(parameter.name, electronicValue);
 
     if (parameter.bitLength == 32) {
         return SwtSequence::SwtOperation(SwtSequence::Operation::Write, parameter.baseAddress, { rawValue });
@@ -133,7 +138,9 @@ void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read
     for (auto& parameterToHandle : m_registerTasks.at(read.frame.address)) {
         try {
             double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
-            if (parameterToHandle.toCompare.has_value() && value != parameterToHandle.toCompare.value()) {
+            Board::ParameterInfo info = m_board->at(parameterToHandle.name);
+
+            if (parameterToHandle.toCompare.has_value() && getBitField(read.frame.data, info.startBit, info.bitLength) != parameterToHandle.toCompare.value()) {
                 report.emplace_back(
                     parameterToHandle.name,
                     "WRITE FAILED: Received " + std::to_string(value) +

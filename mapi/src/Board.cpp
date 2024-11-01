@@ -12,7 +12,7 @@
 
 #endif
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_mainBoard(main), m_settings(settings)
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_mainBoard(main), m_environmentalVariables(settings)
 {
     if (name.find("TCM") != std::string::npos) {
         m_identity.type = Type::TCM;
@@ -45,12 +45,12 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
 Board::ParameterInfo::ParameterInfo(
     std::string name_,
     uint32_t baseAddress_,
-    uint8_t startBit_,
-    uint8_t bitLength_,
+    uint32_t startBit_,
+    uint32_t bitLength_,
     uint32_t regBlockSize_,
     ValueEncoding valueEncoding_,
-    double minValue_,
-    double maxValue_,
+    int64_t minValue_,
+    int64_t maxValue_,
     Equation electronicToPhysic_,
     Equation physicToRaw_,
     bool isFifo_,
@@ -118,17 +118,17 @@ bool Board::doesExist(const std::string& param)
 
 double Board::getEnvironment(const std::string& variableName)
 {
-    return m_settings->getVariable(variableName);
+    return m_environmentalVariables->getVariable(variableName);
 }
 
 void Board::setEnvironment(const std::string& variableName, double value)
 {
-    m_settings->setVariable(variableName, value);
+    m_environmentalVariables->setVariable(variableName, value);
 }
 
 void Board::updateEnvironment(const std::string& variableName)
 {
-    m_settings->updateVariable(variableName);
+    m_environmentalVariables->updateVariable(variableName);
 }
 
 double Board::calculatePhysical(const std::string& param, uint32_t raw) const
@@ -158,8 +158,8 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw) const
             values.emplace_back(m_parameters.at(var).getStoredValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
-        } else if (m_settings != nullptr && m_settings->doesExist(var)) {
-            values.emplace_back(m_settings->getVariable(var));
+        } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
+            values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
@@ -172,7 +172,7 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw) const
     return Utility::calculateEquation(equation, variables, values);
 }
 
-uint32_t Board::calculateRaw(const std::string& param, double physical) const
+int64_t Board::calculateElectronic(const std::string& param, double physical) const
 {
     if (m_parameters.find(param) == m_parameters.end()) {
         throw std::runtime_error(param + " does not exist!");
@@ -181,14 +181,11 @@ uint32_t Board::calculateRaw(const std::string& param, double physical) const
     const ParameterInfo& info = m_parameters.at(param);
 
     if (info.physicToElectronic.equation == "") {
-        if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
-            return twosComplementEncode(static_cast<int32_t>(physical), info.bitLength) << info.startBit;
-        }
-        return static_cast<uint32_t>(physical) << info.startBit;
+        return static_cast<int64_t>(physical);
     }
 
     std::vector<double> values;
-    for (const auto& var : info.electronicToPhysic.variables) {
+    for (const auto& var : info.physicToElectronic.variables) {
         if (var == info.name) {
             values.emplace_back(physical);
             continue;
@@ -196,8 +193,8 @@ uint32_t Board::calculateRaw(const std::string& param, double physical) const
             values.emplace_back(m_parameters.at(var).getStoredValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
             values.emplace_back(m_mainBoard->at(var).getStoredValue());
-        } else if (m_settings != nullptr && m_settings->doesExist(var)) {
-            values.emplace_back(m_settings->getVariable(var));
+        } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
+            values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
             throw std::runtime_error("Parameter " + var + " does not exist!");
         }
@@ -206,11 +203,20 @@ uint32_t Board::calculateRaw(const std::string& param, double physical) const
     std::string equation = info.physicToElectronic.equation;
     std::vector<std::string> variables = info.physicToElectronic.variables;
 
-    int32_t calculated = static_cast<int32_t>(Utility::calculateEquation(equation, variables, values));
+    return static_cast<int64_t>(Utility::calculateEquation(equation, variables, values));
+}
 
-    if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
-        return twosComplementEncode(calculated, info.bitLength) << info.startBit;
+uint32_t Board::convertElectronicToRaw(const std::string& param, int64_t physcial) const
+{
+    if (m_parameters.find(param) == m_parameters.end()) {
+        throw std::runtime_error(param + " does not exist!");
     }
 
-    return static_cast<uint32_t>(calculated) << info.startBit;
+    const ParameterInfo& info = m_parameters.at(param);
+
+    if (info.valueEncoding != ParameterInfo::ValueEncoding::Unsigned) {
+        return twosComplementEncode(physcial, info.bitLength) << info.startBit;
+    }
+
+    return static_cast<uint32_t>(physcial) << info.startBit;
 }

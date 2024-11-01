@@ -12,7 +12,7 @@ class ResetErrors : public BasicFitIndefiniteMapi
    private:
     BasicRequestHandler::ParsedResponse applyResetBoard(BasicRequestHandler& boardHandler);
     std::string getReqClearErrors();
-    
+
     std::vector<BasicRequestHandler> m_PMs;
     std::string m_reqClearResetBits;
     std::string m_reqClearAndUnlock;

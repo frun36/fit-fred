@@ -6,9 +6,6 @@
 template <typename IntegerType, typename RawType>
 RawType twosComplementEncode(IntegerType value, uint32_t bitsNumber)
 {
-    static_assert(sizeof(IntegerType) == sizeof(RawType),
-                  "IntegerType and RawType must be the same size");
-
     if (bitsNumber == sizeof(RawType) * 8u) {
         return static_cast<RawType>(value);
     } else {

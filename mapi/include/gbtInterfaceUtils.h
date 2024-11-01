@@ -25,7 +25,7 @@ constexpr std::string_view FifoEmpty{ "GBT_FIFO_EMPTY_ERROR_REPORT" };
 // 0xD8
 constexpr std::string_view ResetOrbitSync{ "GBT_RESET_ORBIT_SYNC" };
 constexpr std::string_view ResetDataCounters{ "GBT_RESET_DATA_COUNTERS" };
-constexpr std::string_view ResetStartEmulation{"GBT_START_OF_EMULATION"};
+constexpr std::string_view ResetStartEmulation{ "GBT_START_OF_EMULATION" };
 constexpr std::string_view ResetRxError{ "GBT_RESET_RX_ERROR" };
 constexpr std::string_view Reset{ "GBT_RESET" };
 constexpr std::string_view ResetRxPhaseError{ "GBT_RESET_RX_PHASE_ERROR" };

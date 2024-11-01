@@ -1,7 +1,7 @@
 #include "services/ResetErrors.h"
 #include "gbtInterfaceUtils.h"
 
-ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr<Board>> pms) : BasicFitIndefiniteMapi(tcm)
+ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr<Board>> pms) : m_TCM(tcm)
 {
     WinCCRequest::appendToRequest(m_reqClearResetBits, WinCCRequest::writeRequest(gbt::parameters::Reset, 0));
     WinCCRequest::appendToRequest(m_reqClearResetBits, WinCCRequest::writeRequest(gbt::parameters::ResetDataCounters, 0));
@@ -42,7 +42,7 @@ void ResetErrors::processExecution()
     }
 
     {
-        auto parsedResponse = applyResetBoard(*this);
+        auto parsedResponse = applyResetBoard(m_TCM);
         if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
             return;
@@ -60,24 +60,24 @@ void ResetErrors::processExecution()
     publishAnswer("SUCCESS");
 }
 
-BasicRequestHandler::ParsedResponse ResetErrors::applyResetBoard(BasicRequestHandler& boardHandler)
+BoardCommunicationHandler::ParsedResponse ResetErrors::applyResetBoard(BoardCommunicationHandler& boardHandler)
 {
     {
-        auto parsedResponse = processSequenceExternalHandler(boardHandler, m_reqClearResetBits);
+        auto parsedResponse = processSequenceThroughHandler(boardHandler, m_reqClearResetBits);
         if (parsedResponse.isError()) {
             return parsedResponse;
         }
     }
 
     {
-        auto parsedResponse = processSequenceExternalHandler(boardHandler, m_reqApplyResets);
+        auto parsedResponse = processSequenceThroughHandler(boardHandler, m_reqApplyResets);
         if (parsedResponse.isError()) {
             return parsedResponse;
         }
     }
 
     {
-        auto parsedResponse = processSequenceExternalHandler(boardHandler, m_reqClearAndUnlock);
+        auto parsedResponse = processSequenceThroughHandler(boardHandler, m_reqClearAndUnlock);
         if (parsedResponse.isError()) {
             return parsedResponse;
         }

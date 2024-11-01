@@ -62,17 +62,17 @@ void ResetFEE::processExecution()
     publishAnswer("SUCCESS");
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
+BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 {
     {
-        auto parsedResponse = processSequenceExternalHandler(*this, seqSwitchGBTErrorReports(false));
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSwitchGBTErrorReports(false));
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
     }
 
     {
-        auto parsedResponse = processSequenceExternalHandler(*this, seqSetResetSystem());
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetSystem());
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
@@ -81,14 +81,14 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     std::this_thread::sleep_for(m_sleepAfterReset);
 
     {
-        auto parsedResponse = processSequenceExternalHandler(*this, seqSetResetFinished(), false);
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetFinished(), false);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
     }
 
     {
-        auto parsedResponse = processSequenceExternalHandler(*this, seqSwitchGBTErrorReports(true));
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSwitchGBTErrorReports(true));
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
@@ -97,25 +97,25 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyResetFEE()
     return EmptyResponse;
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::testPMLinks()
+BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 {
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::HighVoltage);
 
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
         {
-            auto parsedResponse = processSequenceExternalHandler(*this, seqMaskPMLink(pmIdx, true));
+            auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, true));
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
             }
         }
 
         {
-            auto parsedResponse = processSequenceExternalHandler(pm, pmRequest);
+            auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
-                (void)processSequenceExternalHandler(*this, seqMaskPMLink(pmIdx, false));
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
             } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF) {
-                (void)processSequenceExternalHandler(*this, seqMaskPMLink(pmIdx, false));
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
             }
         }
     }
@@ -123,31 +123,31 @@ BasicRequestHandler::ParsedResponse ResetFEE::testPMLinks()
     return EmptyResponse;
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
+BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
     auto isBoardIdCorrect = [this](std::shared_ptr<Board> board) {
         return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
-                (board->at(gbt::parameters::SystemId).getStoredValue() != m_board->getEnvironment(environment::parameters::SystemId.data())));
+                (board->at(gbt::parameters::SystemId).getStoredValue() != m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data())));
     };
     std::string readFEEId = WinCCRequest::readRequest(gbt::parameters::BoardId) + "\n" + WinCCRequest::readRequest(gbt::parameters::SystemId);
 
     // Reading TCM ID
     {
-        auto parsedResponse = processSequenceExternalHandler(*this, readFEEId);
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, readFEEId);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
     }
 
-    if (isBoardIdCorrect(m_board) || m_enforceDefGbtConfig) {
-        auto parsedResponse = applyGbtConfigurationToBoard(*this);
+    if (isBoardIdCorrect(m_TCM.getBoard()) || m_enforceDefGbtConfig) {
+        auto parsedResponse = applyGbtConfigurationToBoard(m_TCM);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
     }
 
-    auto checkSPIMask = [this](BasicRequestHandler& pmHandler) {
-        return (static_cast<uint32_t>(this->m_board->at(tcm_parameters::PmSpiMask).getStoredValue()) &
+    auto checkSPIMask = [this](BoardCommunicationHandler& pmHandler) {
+        return (static_cast<uint32_t>(this->m_TCM.getBoard()->at(tcm_parameters::PmSpiMask).getStoredValue()) &
                 static_cast<uint32_t>(1u << pmHandler.getBoard()->getIdentity().number));
     };
 
@@ -157,7 +157,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
         }
         // Reading PM ID
         {
-            auto parsedResponse = processSequenceExternalHandler(*this, readFEEId);
+            auto parsedResponse = processSequenceThroughHandler(pm, readFEEId);
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
             }
@@ -174,7 +174,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
     return EmptyResponse;
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler)
+BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler)
 {
     auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, gbt::GbtConfigurationBoardName);
     if (configuration.empty()) {
@@ -186,7 +186,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
     request << Configurations::BoardConfigurations::convertConfigToRequest(gbt::GbtConfigurationName, configuration);
     if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValueOptional() == std::nullopt) {
         request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay,
-                                              static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
+                                              static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
                 << "\n";
     } else {
         request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValue()) << "\n";
@@ -195,7 +195,7 @@ BasicRequestHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(Basic
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
     request << seqSetSystemId();
 
-    return processSequenceExternalHandler(boardHandler, request.str());
+    return processSequenceThroughHandler(boardHandler, request.str());
 }
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
@@ -222,7 +222,7 @@ std::string ResetFEE::seqSetResetFinished()
 
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
-    Board::ParameterInfo& spiMask = m_board->at(tcm_parameters::PmSpiMask.data());
+    Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
     if (spiMask.getStoredValueOptional() == std::nullopt) {
         spiMask.storeValue(0x0);
     }
@@ -244,33 +244,33 @@ uint32_t ResetFEE::getEnvBoardId(std::shared_ptr<Board> board)
     uint32_t id = 0;
 
     if (identity.type == Board::Type::PM && identity.side == Board::Side::A) {
-        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::PmA0BoardId.data())) + identity.number;
+        id = static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::PmA0BoardId.data())) + identity.number;
     } else if (identity.type == Board::Type::PM && identity.side == Board::Side::C) {
-        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::PmC0BoardId.data())) + identity.number;
+        id = static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::PmC0BoardId.data())) + identity.number;
     } else {
-        id = static_cast<uint32_t>(m_board->getEnvironment(environment::parameters::TcmBoardId.data()));
+        id = static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::TcmBoardId.data()));
     }
     return id;
 }
 
 std::string ResetFEE::seqSetSystemId()
 {
-    return WinCCRequest::writeRequest(gbt::parameters::SystemId, m_board->getEnvironment(environment::parameters::SystemId.data()));
+    return WinCCRequest::writeRequest(gbt::parameters::SystemId, m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data()));
 }
 
-BasicRequestHandler::ParsedResponse ResetFEE::applyTriggersSign()
+BoardCommunicationHandler::ParsedResponse ResetFEE::applyTriggersSign()
 {
     std::stringstream request;
-    double trigger1Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger1Signature.data()));
-    double trigger2Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger2Signature.data()));
-    double trigger3Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger3Signature.data()));
-    double trigger4Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger4Signature.data()));
-    double trigger5Sign = static_cast<double>(m_board->getEnvironment(environment::parameters::Trigger5Signature.data()));
+    double trigger1Sign = static_cast<double>(m_TCM.getBoard()->getEnvironment(environment::parameters::Trigger1Signature.data()));
+    double trigger2Sign = static_cast<double>(m_TCM.getBoard()->getEnvironment(environment::parameters::Trigger2Signature.data()));
+    double trigger3Sign = static_cast<double>(m_TCM.getBoard()->getEnvironment(environment::parameters::Trigger3Signature.data()));
+    double trigger4Sign = static_cast<double>(m_TCM.getBoard()->getEnvironment(environment::parameters::Trigger4Signature.data()));
+    double trigger5Sign = static_cast<double>(m_TCM.getBoard()->getEnvironment(environment::parameters::Trigger5Signature.data()));
 
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger1Signature, trigger1Sign) << "\n";
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger2Signature, trigger2Sign) << "\n";
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger3Signature, trigger3Sign) << "\n";
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger4Signature, trigger4Sign) << "\n";
     request << WinCCRequest::writeRequest(tcm_parameters::Trigger5Signature, trigger5Sign);
-    return processSequenceExternalHandler(*this, request.str());
+    return processSequenceThroughHandler(m_TCM, request.str());
 }

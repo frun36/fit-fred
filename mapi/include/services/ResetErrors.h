@@ -1,5 +1,5 @@
 #include "BasicFitIndefiniteMapi.h"
-#include "../BasicRequestHandler.h"
+#include "../BoardCommunicationHandler.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include "../utils.h"
 
@@ -10,10 +10,11 @@ class ResetErrors : public BasicFitIndefiniteMapi
     void processExecution() override;
 
    private:
-    BasicRequestHandler::ParsedResponse applyResetBoard(BasicRequestHandler& boardHandler);
+    BoardCommunicationHandler::ParsedResponse applyResetBoard(BoardCommunicationHandler& boardHandler);
     std::string getReqClearErrors();
 
-    std::vector<BasicRequestHandler> m_PMs;
+    std::vector<BoardCommunicationHandler> m_PMs;
+    BoardCommunicationHandler m_TCM;
     std::string m_reqClearResetBits;
     std::string m_reqClearAndUnlock;
     std::string m_reqApplyResets;

@@ -11,13 +11,13 @@
 #include "communication-utils/WinCCResponse.h"
 #include "Board.h"
 
-class BasicRequestHandler
+class BoardCommunicationHandler
 {
    public:
-    BasicRequestHandler(std::shared_ptr<Board> board) : m_board(board)
+    BoardCommunicationHandler(std::shared_ptr<Board> board) : m_board(board)
     {
     }
-    virtual ~BasicRequestHandler() = default;
+    virtual ~BoardCommunicationHandler() = default;
 
     struct ErrorReport {
         ErrorReport() = default;

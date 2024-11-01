@@ -9,7 +9,7 @@
 class ResetFEE : public BasicFitIndefiniteMapi
 {
    public:
-    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : BasicFitIndefiniteMapi(TCM)
+    ResetFEE(std::shared_ptr<Board> TCM, std::vector<std::shared_ptr<Board>> pms) : m_TCM(TCM)
     {
         for (auto& pm : pms) {
             m_PMs.emplace_back(pm);
@@ -26,11 +26,11 @@ class ResetFEE : public BasicFitIndefiniteMapi
     std::string seqSetSystemId();
     std::string seqMaskPMLink(uint32_t idx, bool mask);
 
-    BasicRequestHandler::ParsedResponse applyResetFEE();
-    BasicRequestHandler::ParsedResponse testPMLinks();
-    BasicRequestHandler::ParsedResponse applyGbtConfiguration();
-    BasicRequestHandler::ParsedResponse applyGbtConfigurationToBoard(BasicRequestHandler& boardHandler);
-    BasicRequestHandler::ParsedResponse applyTriggersSign();
+    BoardCommunicationHandler::ParsedResponse applyResetFEE();
+    BoardCommunicationHandler::ParsedResponse testPMLinks();
+    BoardCommunicationHandler::ParsedResponse applyGbtConfiguration();
+    BoardCommunicationHandler::ParsedResponse applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler);
+    BoardCommunicationHandler::ParsedResponse applyTriggersSign();
 
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
 
@@ -41,5 +41,6 @@ class ResetFEE : public BasicFitIndefiniteMapi
     bool m_forceLocalClock{ false };
 
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
-    std::vector<BasicRequestHandler> m_PMs;
+    std::vector<BoardCommunicationHandler> m_PMs;
+    BoardCommunicationHandler m_TCM;
 };

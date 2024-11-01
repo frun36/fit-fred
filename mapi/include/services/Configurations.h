@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BasicRequestHandler.h"
+#include "BoardCommunicationHandler.h"
 #include <optional>
 #include <unordered_map>
 #include <cstring>
@@ -91,7 +91,7 @@ class Configurations : public Mapigroup
 #endif
 
    public:
-    class BoardConfigurations : public BasicRequestHandler
+    class BoardConfigurations : public BoardCommunicationHandler
     {
        public:
         struct ConfigurationInfo {
@@ -104,7 +104,7 @@ class Configurations : public Mapigroup
 
         ConfigurationInfo getConfigurationInfo(const string& name);
 
-        BoardConfigurations(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
+        BoardConfigurations(std::shared_ptr<Board> board) : BoardCommunicationHandler(board) {}
         static std::vector<std::vector<MultiBase*>> fetchConfiguration(std::string_view configuration, std::string_view board);
         static std::string convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration);
 

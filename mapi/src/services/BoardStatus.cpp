@@ -2,7 +2,7 @@
 #include "Alfred/print.h"
 #include <sstream>
 
-BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : BasicRequestHandler(board)
+BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board)
 {
     std::stringstream requestStream;
     for (auto& paramName : toRefresh) {
@@ -10,7 +10,7 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
     }
     std::string request = requestStream.str();
     request.pop_back();
-    m_request = processMessageFromWinCC(request);
+    m_request = m_boardHandler.processMessageFromWinCC(request);
 }
 
 void BoardStatus::processExecution()
@@ -25,7 +25,7 @@ void BoardStatus::processExecution()
 
     updateTimePoint();
 
-    auto parsedResponse = processMessageFromALF(response);
+    auto parsedResponse = m_boardHandler.processMessageFromALF(response);
 
     if (parsedResponse.errors.empty() == false) {
         returnError = true;
@@ -39,13 +39,13 @@ void BoardStatus::processExecution()
         return;
     }
 
-    if (m_board->type() == Board::Type::TCM) {
+    if (m_boardHandler.getBoard()->type() == Board::Type::TCM) {
         updateEnvironment();
     }
 
     WinCCResponse gbtErrors = checkGbtErrors();
-    Board::ParameterInfo& wordsCount = m_board->at(gbt::parameters::WordsCount);
-    Board::ParameterInfo& eventsCount = m_board->at(gbt::parameters::EventsCount);
+    Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
+    Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
 
     Print::PrintVerbose("Publishing board status data");
@@ -54,18 +54,18 @@ void BoardStatus::processExecution()
 
 void BoardStatus::updateEnvironment()
 {
-    m_board->setEnvironment(environment::parameters::SystemClock.data(),
-                            (m_board->at(ActualSystemClock).getStoredValue() == environment::constants::SourceExternalClock) ? m_board->getEnvironment(environment::parameters::ExtenalClock.data()) : m_board->getEnvironment(environment::parameters::InternalClock.data()));
-    m_board->updateEnvironment(environment::parameters::TDC.data());
+    m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
+                            (m_boardHandler.getBoard()->at(ActualSystemClock).getStoredValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
+    m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
 }
 
 WinCCResponse BoardStatus::checkGbtErrors()
 {
-    if (m_board->at(gbt::parameters::FifoEmpty).getStoredValue() == gbt::constants::FifoEmpty) {
+    if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getStoredValue() == gbt::constants::FifoEmpty) {
         return WinCCResponse();
     }
 
-    Board::ParameterInfo& fifo = m_board->at(gbt::parameters::Fifo);
+    Board::ParameterInfo& fifo = m_boardHandler.getBoard()->at(gbt::parameters::Fifo);
     SwtSequence gbtErrorFifoRead;
     for (uint32_t idx = 0; idx < fifo.regBlockSize; idx++) {
         gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);

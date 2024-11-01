@@ -7,10 +7,10 @@
 
 #include "Fred/Mapi/mapi.h"
 #include "Fred/Mapi/indefinitemapi.h"
-#include "BasicRequestHandler.h"
+#include "BoardCommunicationHandler.h"
 #include "gbtInterfaceUtils.h"
 
-class BoardStatus : public IndefiniteMapi, BasicRequestHandler, gbt::GbtRateMonitor
+class BoardStatus : public IndefiniteMapi, gbt::GbtRateMonitor
 {
    public:
     BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh);
@@ -21,5 +21,6 @@ class BoardStatus : public IndefiniteMapi, BasicRequestHandler, gbt::GbtRateMoni
     void updateEnvironment();
     WinCCResponse checkGbtErrors();
 
+    BoardCommunicationHandler m_boardHandler;
     SwtSequence m_request;
 };

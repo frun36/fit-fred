@@ -1,3 +1,3 @@
 #include "services/BasicFitIndefiniteMapi.h"
 
-const BasicRequestHandler::ParsedResponse BasicFitIndefiniteMapi::EmptyResponse({ WinCCResponse(), {} });
+const BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::EmptyResponse({ WinCCResponse(), {} });

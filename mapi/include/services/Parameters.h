@@ -4,12 +4,15 @@
 #include <string>
 
 #include "Fred/Mapi/mapi.h"
-#include "BasicRequestHandler.h"
+#include "BoardCommunicationHandler.h"
 
-class Parameters : public Mapi, BasicRequestHandler
+class Parameters : public Mapi
 {
    public:
-    Parameters(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
+    Parameters(std::shared_ptr<Board> board) : m_boardHandler(board) {}
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
+
+    private:
+    BoardCommunicationHandler m_boardHandler;
 };

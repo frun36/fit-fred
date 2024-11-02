@@ -1,15 +1,15 @@
-#include "BasicRequestHandler.h"
+#include "BoardCommunicationHandler.h"
 #include "Board.h"
 #include "utils.h"
 #include "Alfred/print.h"
 
-void BasicRequestHandler::resetExecutionData()
+void BoardCommunicationHandler::resetExecutionData()
 {
     m_registerTasks.clear();
     m_operations.clear();
 }
 
-SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess, bool readAfterWrite)
+SwtSequence BoardCommunicationHandler::processMessageFromWinCC(std::string mess, bool readAfterWrite)
 {
     resetExecutionData();
     SwtSequence sequence;
@@ -49,7 +49,7 @@ SwtSequence BasicRequestHandler::processMessageFromWinCC(std::string mess, bool 
     return sequence;
 }
 
-void BasicRequestHandler::mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge)
+void BoardCommunicationHandler::mergeOperation(SwtSequence::SwtOperation& operation, SwtSequence::SwtOperation& toMerge)
 {
     if (operation.type != toMerge.type) {
         throw std::runtime_error("Cannot merge operation of diffrent types!");
@@ -68,7 +68,7 @@ void BasicRequestHandler::mergeOperation(SwtSequence::SwtOperation& operation, S
     }
 }
 
-SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCRequest::Command& command) const
+SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const WinCCRequest::Command& command) const
 {
     Board::ParameterInfo& parameter = m_board->at(command.name);
     if (parameter.regBlockSize != 1) {
@@ -101,7 +101,7 @@ SwtSequence::SwtOperation BasicRequestHandler::createSwtOperation(const WinCCReq
                                      { SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue });
 }
 
-BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(std::string alfresponse)
+BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::processMessageFromALF(std::string alfresponse)
 {
     WinCCResponse response;
     std::list<ErrorReport> report;
@@ -133,7 +133,7 @@ BasicRequestHandler::ParsedResponse BasicRequestHandler::processMessageFromALF(s
     return { std::move(response), std::move(report) };
 }
 
-void BasicRequestHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
+void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
 {
     for (auto& parameterToHandle : m_registerTasks.at(read.frame.address)) {
         try {

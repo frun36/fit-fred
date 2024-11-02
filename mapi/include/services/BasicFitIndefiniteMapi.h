@@ -1,16 +1,16 @@
 #pragma once
 
-#include "../BasicRequestHandler.h"
+#include "../BoardCommunicationHandler.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include "../utils.h"
 
-class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
+class BasicFitIndefiniteMapi : public IndefiniteMapi
 {
    public:
-    BasicFitIndefiniteMapi(std::shared_ptr<Board> board) : BasicRequestHandler(board) {}
+    BasicFitIndefiniteMapi() {}
 
    protected:
-    BasicRequestHandler::ParsedResponse processSequenceExternalHandler(BasicRequestHandler& handler, std::string request, bool raw = true)
+    BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool raw = true)
     {
         std::string seq;
         try {
@@ -21,10 +21,5 @@ class BasicFitIndefiniteMapi : public BasicRequestHandler, public IndefiniteMapi
         return handler.processMessageFromALF(executeAlfSequence(seq));
     }
 
-    BasicRequestHandler::ParsedResponse processSequence(std::string request)
-    {
-        return processSequenceExternalHandler(*this, request);
-    }
-
-    static const BasicRequestHandler::ParsedResponse EmptyResponse;
+    static const BoardCommunicationHandler::ParsedResponse EmptyResponse;
 };

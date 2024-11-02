@@ -145,6 +145,7 @@ void CounterRates::processExecution()
 
     if (updateRateState == UpdateRateState::Invalid) {
         publishError("Invalid update rate");
+        return;
     }
 
     optional<uint32_t> fifoLoad = getFifoLoad();
@@ -154,46 +155,89 @@ void CounterRates::processExecution()
     }
     FifoState fifoState = evaluateFifoState(*fifoLoad);
 
-    if (updateRateState == UpdateRateState::Changed)
+    Response response;
+
+    if (updateRateState == UpdateRateState::Changed) {
         fifoState = FifoState::Full;
-
-    FifoReadResult readResult;
-    switch (fifoState) {
-        case FifoState::Unexpected:
-            publishError("Unexpected FIFO state");
-            return;
-        case FifoState::Empty:
-            publishAnswer("No counter data");
-            return;
-        case FifoState::Multiple:
-            publishError("Warning: multiple sets of counters in FIFO");
-            [[fallthrough]];
-        case FifoState::Single:
-            readResult = readFifo(*fifoLoad);
-            break;
-        case FifoState::Full:
-            publishError("FIFO is full, clearing");
-            readResult = clearFifo(*fifoLoad);
-            break;
+        response.addUpdateRateChanged();
     }
 
-    switch (readResult) {
-        case FifoReadResult::Success:
-            publishAnswer(generateResponse());
-            break;
-        case FifoReadResult::SuccessNoRates:
-            publishAnswer("No rate data for first counter measurement");
-            break;
-        case FifoReadResult::SuccessCleared:
-            publishAnswer("No data: FIFO cleared successfully");
-            break;
-        case FifoReadResult::Failure:
-            publishError("Couldn't read FIFO");
-            break;
+    response.addFifoState(fifoState);
+
+    FifoReadResult readResult = FifoReadResult::NotPerformed;
+    if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
+        readResult = readFifo(*fifoLoad);
+    } else if (fifoState == FifoState::Full) {
+        readResult = clearFifo(*fifoLoad);
     }
+    
+    response.addFifoReadResult(readResult);
+
+    if (readResult == FifoReadResult::Success)
+        response.addRatesResponse(generateRatesResponse());
+
+    if (response.isError())
+        publishError(response);
+    else
+        publishAnswer(response);
 }
 
-string CounterRates::generateResponse() const
+CounterRates::Response& CounterRates::Response::addUpdateRateChanged() {
+    m_msg += "Update rate changed\n";
+    return *this;
+}
+
+CounterRates::Response& CounterRates::Response::addFifoState(FifoState fifoState) {
+    switch (fifoState) {
+        case FifoState::Unexpected:
+            m_msg += "FIFO state: unexpected\n";
+            m_isError = true;
+            break;
+        case FifoState::Empty:
+            m_msg += "FIFO state: empty\n";
+            break;
+        case FifoState::Multiple:
+            m_msg += "FIFO state: warning - multiple counter sets in FIFO\n";
+            break;
+        case FifoState::Single:
+            m_msg += "FIFO state: ok\n";
+            break;
+        case FifoState::Full:
+            m_msg += "FIFO state: full\n";
+            break;
+    }
+    return *this;
+}
+
+CounterRates::Response& CounterRates::Response::addFifoReadResult(FifoReadResult fifoReadResult) {
+    switch (fifoReadResult) {
+        case FifoReadResult::Success:
+            m_msg += "FIFO read: successful\n";
+            break;
+        case FifoReadResult::SuccessNoRates:
+            m_msg += "FIFO read: successful, no rates\n";
+            break;
+        case FifoReadResult::SuccessCleared:
+            m_msg += "FIFO read: successful, cleared\n";
+            break;
+        case FifoReadResult::Failure:
+            m_isError = true;
+            m_msg += "FIFO read: failed\n";
+            break;
+        case FifoReadResult::NotPerformed:
+            m_msg += "FIFO read: not performed\n";
+            break;
+    }
+
+    return *this;
+}
+
+CounterRates::Response& CounterRates::Response::addRatesResponse(string ratesResponse) {
+    m_msg += ratesResponse;
+    return *this;
+}
+
+string CounterRates::generateRatesResponse() const
 {
     if (!m_counterRates.has_value())
         return "Unexpected: no counter data";

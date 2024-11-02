@@ -49,7 +49,29 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
         Failure,
         SuccessNoRates,
         SuccessCleared,
-        Success
+        Success,
+        NotPerformed
+    };
+
+    class Response {
+    private:
+        string m_msg;
+        bool m_isError;
+    public:
+        Response(string msg = "", bool isError = false) : m_msg(msg), m_isError(isError) {}
+
+        Response& addUpdateRateChanged();
+        Response& addFifoState(FifoState fifoState);
+        Response& addFifoReadResult(FifoReadResult fifoReadResult);
+        Response& addRatesResponse(string ratesResponse);
+
+        bool isError() const {
+            return m_isError;
+        }
+
+        operator string() const {
+            return m_msg;
+        }
     };
 
     uint32_t m_numberOfCounters;
@@ -70,7 +92,7 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     void resetService();
 
-    string generateResponse() const;
+    string generateRatesResponse() const;
 
     void processExecution() override;
 };

@@ -91,7 +91,7 @@ class Configurations : public Mapigroup
 #endif
 
    public:
-    class BoardConfigurations : public BoardCommunicationHandler
+    class BoardConfigurations
     {
        public:
         struct ConfigurationInfo {
@@ -102,12 +102,14 @@ class Configurations : public Mapigroup
             ConfigurationInfo(const string& req, optional<double> delayA, optional<double> delayC) : req(req), delayA(delayA), delayC(delayC) {}
         };
 
-        BoardConfigurations(std::shared_ptr<Board> board) : BoardCommunicationHandler(board) {}
-        static std::vector<std::vector<MultiBase*>> fetchConfiguration(string_view configuration, string_view board);
+        static vector<vector<MultiBase*>> fetchConfiguration(string_view configuration, string_view board);
         static ConfigurationInfo getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
-        
-        inline ConfigurationInfo fetchAndGetConfigurationInfo(string_view name) const {
-            auto dbData = fetchConfiguration(name, m_board->getName());
+
+        virtual string_view getBoardName() const = 0;
+
+        inline ConfigurationInfo fetchAndGetConfigurationInfo(string_view name) const
+        {
+            auto dbData = fetchConfiguration(name, getBoardName());
             return getConfigurationInfo(name, dbData);
         }
 
@@ -121,8 +123,13 @@ class Configurations : public Mapigroup
         FRIEND_TEST(::ConfigurationsTest, Delays);
         FRIEND_TEST(::ConfigurationsTest, PmPim);
 #endif
+       private:
+        BoardCommunicationHandler m_pm;
+
        public:
-        PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
+        PmConfigurations(std::shared_ptr<Board> board) : m_pm(board) {}
+
+        string_view getBoardName() const override { return m_pm.getBoard()->getName(); }
 
         string processInputMessage(string msg);
         string processOutputMessage(string msg);
@@ -135,13 +142,17 @@ class Configurations : public Mapigroup
         FRIEND_TEST(::ConfigurationsTest, Tcm);
 #endif
        public:
-        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
+        TcmConfigurations(std::shared_ptr<Board> board) : m_tcm(board)
         {
             if (!board->doesExist("DELAY_A") || !board->doesExist("DELAY_C"))
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
         }
 
        private:
+        BoardCommunicationHandler m_tcm;
+        
+        string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
+
         string handleConfigurationStart(const string& msg);
         string handleConfigurationContinuation(const string& msg);
         string handleDelayResponse(const string& msg);
@@ -161,12 +172,12 @@ class Configurations : public Mapigroup
 
         optional<double> getDelayA() const
         {
-            return m_board->at("DELAY_A").getPhysicalValueOptional();
+            return m_tcm.getBoard()->at("DELAY_A").getPhysicalValueOptional();
         }
 
         optional<double> getDelayC() const
         {
-            return m_board->at("DELAY_C").getPhysicalValueOptional();
+            return m_tcm.getBoard()->at("DELAY_C").getPhysicalValueOptional();
         }
 
         optional<string> m_delayResponse = nullopt;

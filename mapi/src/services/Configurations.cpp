@@ -79,12 +79,12 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
 
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
-    return processMessageFromWinCC(fetchAndGetConfigurationInfo(name).req).getSequence();
+    return m_pm.processMessageFromWinCC(fetchAndGetConfigurationInfo(name).req).getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
 {
-    auto parsedResponse = processMessageFromALF(msg);
+    auto parsedResponse = m_pm.processMessageFromALF(msg);
     if (parsedResponse.isError())
         returnError = true;
     return parsedResponse.getContents();
@@ -113,7 +113,7 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayC.value()));
     }
 
-    return processMessageFromWinCC(request);
+    return m_tcm.processMessageFromWinCC(request);
 }
 
 string Configurations::TcmConfigurations::handleConfigurationStart(const string& msg)
@@ -129,7 +129,7 @@ string Configurations::TcmConfigurations::handleConfigurationStart(const string&
         return delaySequence->getSequence();
     } else {
         m_state = State::ApplyingData;
-        return processMessageFromWinCC(m_configurationInfo->req).getSequence();
+        return m_tcm.processMessageFromWinCC(m_configurationInfo->req).getSequence();
     }
 }
 
@@ -142,12 +142,12 @@ string Configurations::TcmConfigurations::handleConfigurationContinuation(const 
         throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
 
     m_state = State::ApplyingData;
-    return processMessageFromWinCC(m_configurationInfo->req).getSequence();
+    return m_tcm.processMessageFromWinCC(m_configurationInfo->req).getSequence();
 }
 
 string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
 {
-    auto parsedResponse = processMessageFromALF(msg);
+    auto parsedResponse = m_tcm.processMessageFromALF(msg);
     string response = parsedResponse.getContents();
 
     if (parsedResponse.isError()) {
@@ -163,7 +163,7 @@ string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
     // Change of delays is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
     // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set
     // This sleep waits for the phase shift to finish, and the bit will be cleared along with the rest of the configuration
-    usleep((static_cast<useconds_t>(m_board->calculateRaw("DELAY_A", m_delayDifference)) + 10) * 1000);
+    usleep((static_cast<useconds_t>(m_tcm.getBoard()->calculateElectronic("DELAY_A", m_delayDifference)) + 10) * 1000);
     newRequest(CONTINUE_MESSAGE);
     noReturn = true;
     return "";
@@ -171,7 +171,7 @@ string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
 
 string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
 {
-    auto parsedResponse = processMessageFromALF(msg);
+    auto parsedResponse = m_tcm.processMessageFromALF(msg);
     string response = parsedResponse.getContents();
     response = m_delayResponse.value_or("") + response;
 

@@ -22,7 +22,7 @@ SwtSequence BoardCommunicationHandler::processMessageFromWinCC(std::string mess,
             SwtSequence::SwtOperation operation = createSwtOperation(cmd);
             Board::ParameterInfo& info = m_board->at(cmd.name);
 
-            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value != std::nullopt) ? operation.data[1] >> info.startBit: cmd.value);
+            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value != std::nullopt) ? ((operation.type == SwtSequence::Operation::Write)?  operation.data[0]: operation.data[1] >> info.startBit): cmd.value);
 
             if (m_operations.find(info.baseAddress) != m_operations.end()) {
                 mergeOperation(m_operations.at(info.baseAddress), operation);

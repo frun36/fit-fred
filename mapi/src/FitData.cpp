@@ -185,13 +185,13 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     int64_t max = 0;
     int64_t min = 0;
     if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
-        min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1u << (bitLength - 1));
+        min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : (1ull << (bitLength - 1));
     } else {
         min = static_cast<int64_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble());
     }
 
     if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
-        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1u << bitLength) - 1): (1u << (bitLength - 1));
+        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1ull << bitLength) - 1): (1ull << (bitLength - 1));
     } else {
         max =  static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
     }

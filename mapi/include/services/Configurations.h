@@ -13,13 +13,6 @@
 #include "../../test/mocks/include/utility.h"
 #include "gtest/gtest.h"
 
-namespace
-{
-class ConfigurationsTest_Delays_Test;
-class ConfigurationsTest_PmPim_Test;
-class ConfigurationsTest_Tcm_Test;
-} // namespace
-
 #else
 
 #include "Parser/utility.h"
@@ -76,12 +69,6 @@ If everything was successful, create log entry
 
 class Configurations : public Mapigroup
 {
-#ifdef FIT_UNIT_TEST
-    FRIEND_TEST(::ConfigurationsTest, Delays);
-    FRIEND_TEST(::ConfigurationsTest, PmPim);
-    FRIEND_TEST(::ConfigurationsTest, Tcm);
-#endif
-
    public:
     class BoardConfigurations
     {
@@ -111,10 +98,6 @@ class Configurations : public Mapigroup
    private:
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
-#ifdef FIT_UNIT_TEST
-        FRIEND_TEST(::ConfigurationsTest, Delays);
-        FRIEND_TEST(::ConfigurationsTest, PmPim);
-#endif
        private:
         BoardCommunicationHandler m_pm;
 
@@ -129,10 +112,6 @@ class Configurations : public Mapigroup
 
     class TcmConfigurations : public IndefiniteMapi, public BoardConfigurations
     {
-#ifdef FIT_UNIT_TEST
-        FRIEND_TEST(::ConfigurationsTest, Delays);
-        FRIEND_TEST(::ConfigurationsTest, Tcm);
-#endif
        public:
         TcmConfigurations(std::shared_ptr<Board> board) : m_tcm(board)
         {

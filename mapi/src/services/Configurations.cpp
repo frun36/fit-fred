@@ -3,14 +3,17 @@
 #include <unistd.h>
 #include <sstream>
 #include "utils.h"
+#include <Database/sql.h>
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
     for (auto [name, board] : boards) {
-        if (name == "TCM")
+        if (name.find("TCM") != string::npos)
             m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
-        else
+        else if (name.find("PM") != string::npos)
             m_boardCofigurationServices[name] = make_unique<PmConfigurations>(board);
+        else
+            throw runtime_error("Unexpected board name: " + name);
     }
 }
 
@@ -22,12 +25,18 @@ string Configurations::processInputMessage(string msg)
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
 
-    auto boardNamesData = DatabaseInterface::executeQuery("SELECT DISTINCT board_name FROM configuration_parameters WHERE configuration_name = '" + configurationName + "'");
-    if (boardNamesData.empty())
+    sql::SelectModel query;
+    query
+        .select("board_name")
+        .distinct()
+        .from("configuration_parameters")
+        .where(sql::column("configuration_name") == configurationName);
+    auto boardNameData = DatabaseInterface::executeQuery(query.str());
+    if (boardNameData.empty())
         throw runtime_error(configurationName + ": configuration not found");
 
-    vector<pair<string, string>> requests(boardNamesData.size());
-    std::transform(boardNamesData.begin(), boardNamesData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
+    vector<pair<string, string>> requests(boardNameData.size());
+    std::transform(boardNameData.begin(), boardNameData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
         if (!entry[0]->isString())
             throw runtime_error(configurationName + ": invalid board name format in DB");
 
@@ -49,9 +58,14 @@ string Configurations::processInputMessage(string msg)
 
 // BoardConfigurations
 
-std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(string_view configuration, string_view board)
+std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(string_view configurationName, string_view boardName)
 {
-    return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + string(configuration) + "' AND board_name = '" + string(board) + "'");
+    sql::SelectModel query;
+    query
+        .select("parameter_name", "parameter_value")
+        .from("configuration_parameters")
+        .where(sql::column("configuration_name") == string(configurationName) && sql::column("board_name") == string(boardName));
+    return DatabaseInterface::executeQuery(query.str());
 }
 
 Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)

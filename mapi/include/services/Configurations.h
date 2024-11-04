@@ -72,14 +72,6 @@ then write 0x4 to 0xF
  - write chosen value to 0x50 if in range - 0: no update; 1: 0.1s; 2: 0.2s, 3: 0.5s, 4: 1s; 5: 2s; 6: 5s; 7: 10s
 If everything was successful, create log entry
 
-
-Configurations DB structure:
-CONFIGURATIONS:
-CONFIGURATION_NAME
-BOARD_NAME
-PARAMETER_ID
-PARAMETER_VALUE
-
 */
 
 class Configurations : public Mapigroup
@@ -148,40 +140,26 @@ class Configurations : public Mapigroup
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
         }
 
-       private:
-        BoardCommunicationHandler m_tcm;
-
-        string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
-
-        optional<string> m_configurationName = nullopt;
-        optional<ConfigurationInfo> m_configurationInfo = nullopt;
-
-        double m_delayDifference = 0;
-
-        optional<double> getDelayA() const
-        {
-            return m_tcm.getBoard()->at("DELAY_A").getPhysicalValueOptional();
-        }
-
-        optional<double> getDelayC() const
-        {
-            return m_tcm.getBoard()->at("DELAY_C").getPhysicalValueOptional();
-        }
-
-        optional<SwtSequence> processDelayInput(optional<double> delayA, optional<double> delayC);
-
-        bool handleDelays(string& response);
-        bool handleData(string& response);
-        void handleResetErrors();
-
         void processExecution() override;
 
-        void reset()
-        {
-            m_configurationName = nullopt;
-            m_configurationInfo = nullopt;
-            m_delayDifference = 0;
-        }
+       private:
+        BoardCommunicationHandler m_tcm;
+        string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
+
+        optional<int64_t> getDelayAElectronic() const;
+        optional<int64_t> getDelayCElectronic() const;
+
+        struct DelayInfo {
+            const string req;
+            const uint32_t delayDifference;
+
+            DelayInfo(const string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
+        };
+        optional<DelayInfo> processDelayInput(optional<double> delayA, optional<double> delayC);
+
+        bool handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
+        bool handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
+        void handleResetErrors();
     };
 
    public:

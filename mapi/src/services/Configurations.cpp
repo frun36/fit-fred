@@ -47,6 +47,8 @@ string Configurations::processInputMessage(string msg)
     return "";
 }
 
+// BoardConfigurations
+
 std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchConfiguration(string_view configuration, string_view board)
 {
     return DatabaseInterface::executeQuery("SELECT parameter_name, parameter_value FROM configuration_parameters WHERE configuration_name = '" + string(configuration) + "' AND board_name = '" + string(board) + "'");
@@ -74,6 +76,8 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
     return ConfigurationInfo(request, delayA, delayC);
 }
 
+// PmConfigurations
+
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
     return m_pm.processMessageFromWinCC(fetchAndGetConfigurationInfo(name).req).getSequence();
@@ -87,47 +91,68 @@ string Configurations::PmConfigurations::processOutputMessage(string msg)
     return parsedResponse.getContents();
 }
 
-optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optional<double> delayA, optional<double> delayC)
+// TcmConfigurations
+
+optional<int64_t> Configurations::TcmConfigurations::getDelayAElectronic() const
+{
+    optional<double> delayNs = m_tcm.getBoard()->at("DELAY_A").getStoredValueOptional();
+    if (delayNs.has_value())
+        return m_tcm.getBoard()->calculateElectronic("DELAY_A", *delayNs);
+    else
+        return nullopt;
+}
+
+optional<int64_t> Configurations::TcmConfigurations::getDelayCElectronic() const
+{
+    optional<double> delayNs = m_tcm.getBoard()->at("DELAY_C").getStoredValueOptional();
+    if (delayNs.has_value())
+        return m_tcm.getBoard()->calculateElectronic("DELAY_C", *delayNs);
+    else
+        return nullopt;
+}
+
+optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfigurations::processDelayInput(optional<double> delayA, optional<double> delayC)
 {
     if (!delayA.has_value() && !delayC.has_value())
         return nullopt;
 
-    m_delayDifference = 0;
-
     string request;
+    uint32_t delayDifference;
 
     if (delayA.has_value()) {
-        m_delayDifference = abs(delayA.value() - getDelayA().value_or(0));
-        if (m_delayDifference != 0)
+        int64_t delayAElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_A", *delayA);
+        delayDifference = abs(delayAElectronic - getDelayAElectronic().value_or(0));
+        if (delayDifference != 0)
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_A", delayA.value()));
     }
 
     if (delayC.has_value()) {
-        int16_t cDelayDifference = abs(delayC.value() - getDelayC().value_or(0));
-        if (cDelayDifference > m_delayDifference)
-            m_delayDifference = cDelayDifference;
+        int64_t delayCElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_C", *delayC);
+        uint32_t cDelayDifference = abs(delayCElectronic - getDelayCElectronic().value_or(0));
+        if (cDelayDifference > delayDifference)
+            delayDifference = cDelayDifference;
         if (cDelayDifference != 0)
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayC.value()));
     }
 
-    return m_tcm.processMessageFromWinCC(request);
+    return make_optional<DelayInfo>(request, delayDifference);
 }
 
-bool Configurations::TcmConfigurations::handleDelays(string& response)
+bool Configurations::TcmConfigurations::handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
-    optional<SwtSequence> delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
+    optional<DelayInfo> delayInfo = processDelayInput(configurationInfo.delayA, configurationInfo.delayC);
 
-    if (!delaySequence.has_value()) {
+    if (!delayInfo.has_value()) {
         return true;
     }
 
-    string delayResponse = executeAlfSequence(delaySequence->getSequence());
+    string delaySequence = m_tcm.processMessageFromWinCC(delayInfo->req).getSequence();
+    string delayResponse = executeAlfSequence(delaySequence);
     auto parsedResponse = m_tcm.processMessageFromALF(delayResponse);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
     if (parsedResponse.isError()) {
-        response.insert(0, "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n");
-        reset();
+        response.insert(0, "TCM configuration " + configurationName + " was not applied: delay change failed\n");
         publishError(response);
         return false;
     }
@@ -135,20 +160,20 @@ bool Configurations::TcmConfigurations::handleDelays(string& response)
     // Change of delays/phase is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
     // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set.
     // This sleep waits for the phase shift to finish, and the bit will be cleared later in the procedure
-    usleep((static_cast<useconds_t>(m_tcm.getBoard()->calculateElectronic("DELAY_A", m_delayDifference)) + 10) * 1000);
+    usleep((static_cast<useconds_t>(delayInfo->delayDifference) + 10) * 1000);
     return true;
 }
 
-bool Configurations::TcmConfigurations::handleData(string& response)
+bool Configurations::TcmConfigurations::handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
-    SwtSequence dataSequence = m_tcm.processMessageFromWinCC(m_configurationInfo->req);
+    SwtSequence dataSequence = m_tcm.processMessageFromWinCC(configurationInfo.req);
 
     string dataResponse = executeAlfSequence(dataSequence.getSequence());
     auto parsedResponse = m_tcm.processMessageFromALF(dataResponse);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
     if (parsedResponse.isError()) {
-        response.insert(0, "TCM configuration " + m_configurationName.value_or("<no name>") + (response.empty() ? " was not applied\n" : " was applied partially\n"));
+        response.insert(0, "TCM configuration " + configurationName + (response.empty() ? " was not applied\n" : " was applied partially\n"));
         publishError(response);
         return false;
     }
@@ -176,15 +201,14 @@ void Configurations::TcmConfigurations::processExecution()
         return;
     }
 
-    m_configurationName.emplace(request);
-    m_configurationInfo.emplace(fetchAndGetConfigurationInfo(*m_configurationName));
+    string configurationName = request;
+    ConfigurationInfo configurationInfo = fetchAndGetConfigurationInfo(configurationName);
 
     string response;
-    if (!handleDelays(response))
+    if (!handleDelays(configurationName, configurationInfo, response))
         return;
-    if (!handleData(response))
+    if (!handleData(configurationName, configurationInfo, response))
         return;
     handleResetErrors();
-    reset();
     publishAnswer(response);
 }

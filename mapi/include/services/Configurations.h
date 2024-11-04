@@ -25,7 +25,7 @@ class ConfigurationsTest_Tcm_Test;
 #include "Parser/utility.h"
 #include "Database/databaseinterface.h"
 #include "Fred/Mapi/mapi.h"
-#include "Fred/Mapi/iterativemapi.h"
+#include "Fred/Mapi/indefinitemapi.h"
 #include "Fred/Mapi/mapigroup.h"
 
 #endif
@@ -135,7 +135,7 @@ class Configurations : public Mapigroup
         string processOutputMessage(string msg);
     };
 
-    class TcmConfigurations : public Iterativemapi, public BoardConfigurations
+    class TcmConfigurations : public IndefiniteMapi, public BoardConfigurations
     {
 #ifdef FIT_UNIT_TEST
         FRIEND_TEST(::ConfigurationsTest, Delays);
@@ -150,23 +150,11 @@ class Configurations : public Mapigroup
 
        private:
         BoardCommunicationHandler m_tcm;
-        
+
         string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
-
-        string handleConfigurationStart(const string& msg);
-        string handleConfigurationContinuation(const string& msg);
-        string handleDelayResponse(const string& msg);
-        string handleDataResponse(const string& msg);
-
-        string processInputMessage(string msg) override;
-        string processOutputMessage(string msg) override;
 
         optional<string> m_configurationName = nullopt;
         optional<ConfigurationInfo> m_configurationInfo = nullopt;
-        enum class State { Idle,
-                           ApplyingDelays,
-                           DelaysApplied,
-                           ApplyingData } m_state = State::Idle;
 
         double m_delayDifference = 0;
 
@@ -180,19 +168,19 @@ class Configurations : public Mapigroup
             return m_tcm.getBoard()->at("DELAY_C").getPhysicalValueOptional();
         }
 
-        optional<string> m_delayResponse = nullopt;
-
-        static constexpr const char* CONTINUE_MESSAGE = "_CONTINUE";
-
         optional<SwtSequence> processDelayInput(optional<double> delayA, optional<double> delayC);
+
+        bool handleDelays(string& response);
+        bool handleData(string& response);
+        void handleResetErrors();
+
+        void processExecution() override;
 
         void reset()
         {
             m_configurationName = nullopt;
             m_configurationInfo = nullopt;
             m_delayDifference = 0;
-            m_delayResponse = nullopt;
-            m_state = State::Idle;
         }
     };
 

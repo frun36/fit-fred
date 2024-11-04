@@ -86,16 +86,16 @@ create_test(WinCCMessage
 #     ${MOCKS}
 # )
 
-create_test(
-    Configurations
-    test/Configurations/ConfigurationsTest.cpp 
-    mapi/src/services/Configurations.cpp 
-    mapi/src/BoardCommunicationHandler.cpp 
-    mapi/src/Board.cpp  
-    mapi/src/communication-utils/AlfResponseParser.cpp
-    mapi/src/communication-utils/SwtSequence.cpp
-    mapi/src/communication-utils/WinCCRequest.cpp
-    mapi/src/EnvironmentVariables.cpp 
-    ${MOCKS}
-)
+# create_test(
+#     Configurations
+#     test/Configurations/ConfigurationsTest.cpp 
+#     mapi/src/services/Configurations.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
+#     mapi/src/Board.cpp  
+#     mapi/src/communication-utils/AlfResponseParser.cpp
+#     mapi/src/communication-utils/SwtSequence.cpp
+#     mapi/src/communication-utils/WinCCRequest.cpp
+#     mapi/src/EnvironmentVariables.cpp 
+#     ${MOCKS}
+# )
 

@@ -71,9 +71,6 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
     }
 
-    if (delayA.has_value() || delayC.has_value())
-        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESET", 1));
-
     return ConfigurationInfo(request, delayA, delayC);
 }
 
@@ -116,102 +113,78 @@ optional<SwtSequence> Configurations::TcmConfigurations::processDelayInput(optio
     return m_tcm.processMessageFromWinCC(request);
 }
 
-string Configurations::TcmConfigurations::handleConfigurationStart(const string& msg)
+bool Configurations::TcmConfigurations::handleDelays(string& response)
 {
-    optional<SwtSequence> delaySequence;
-    if (msg == CONTINUE_MESSAGE)
-        throw runtime_error("TcmConfigurations: invalid state - use of internal message while idle");
-    m_configurationName.emplace(msg);
-    m_configurationInfo.emplace(fetchAndGetConfigurationInfo(msg));
-    delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
-    if (delaySequence.has_value()) {
-        m_state = State::ApplyingDelays;
-        return delaySequence->getSequence();
-    } else {
-        m_state = State::ApplyingData;
-        return m_tcm.processMessageFromWinCC(m_configurationInfo->req).getSequence();
+    optional<SwtSequence> delaySequence = processDelayInput(m_configurationInfo->delayA, m_configurationInfo->delayC);
+
+    if (!delaySequence.has_value()) {
+        return true;
     }
-}
 
-string Configurations::TcmConfigurations::handleConfigurationContinuation(const string& msg)
-{
-    if (msg != CONTINUE_MESSAGE)
-        throw runtime_error("TcmConfigurations: previous configuration still in progress");
-
-    if (!m_configurationInfo.has_value())
-        throw runtime_error("TcmConfigurations: invalid state - no configuration stored");
-
-    m_state = State::ApplyingData;
-    return m_tcm.processMessageFromWinCC(m_configurationInfo->req).getSequence();
-}
-
-string Configurations::TcmConfigurations::handleDelayResponse(const string& msg)
-{
-    auto parsedResponse = m_tcm.processMessageFromALF(msg);
-    string response = parsedResponse.getContents();
-
+    string delayResponse = executeAlfSequence(delaySequence->getSequence());
+    auto parsedResponse = m_tcm.processMessageFromALF(delayResponse);
+    string parsedResponseString = parsedResponse.getContents();
+    response += parsedResponseString;
     if (parsedResponse.isError()) {
-        response = "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n" + response;
+        response.insert(0, "TCM configuration " + m_configurationName.value_or("<no name>") + " was not applied: delay change failed\n");
         reset();
-        returnError = true;
-        return response;
+        publishError(response);
+        return false;
     }
 
-    m_delayResponse = response;
-    m_state = State::DelaysApplied;
-
-    // Change of delays is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
-    // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set
-    // This sleep waits for the phase shift to finish, and the bit will be cleared along with the rest of the configuration
+    // Change of delays/phase is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
+    // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set.
+    // This sleep waits for the phase shift to finish, and the bit will be cleared later in the procedure
     usleep((static_cast<useconds_t>(m_tcm.getBoard()->calculateElectronic("DELAY_A", m_delayDifference)) + 10) * 1000);
-    newRequest(CONTINUE_MESSAGE);
-    noReturn = true;
-    return "";
+    return true;
 }
 
-string Configurations::TcmConfigurations::handleDataResponse(const string& msg)
+bool Configurations::TcmConfigurations::handleData(string& response)
 {
-    auto parsedResponse = m_tcm.processMessageFromALF(msg);
-    string response = parsedResponse.getContents();
-    response = m_delayResponse.value_or("") + response;
+    SwtSequence dataSequence = m_tcm.processMessageFromWinCC(m_configurationInfo->req);
+
+    string dataResponse = executeAlfSequence(dataSequence.getSequence());
+    auto parsedResponse = m_tcm.processMessageFromALF(dataResponse);
+    string parsedResponseString = parsedResponse.getContents();
+    response += parsedResponseString;
+    if (parsedResponse.isError()) {
+        response.insert(0, "TCM configuration " + m_configurationName.value_or("<no name>") + (response.empty() ? " was not applied\n" : " was applied partially\n"));
+        publishError(response);
+        return false;
+    }
 
     // Control Server sleeps 10 ms if CH_MASK_A or CH_MASK_C was changed
-    // In CS this is done before reset errors - this may prove problematic...
     usleep(10000);
+    return true;
+}
 
-    if (parsedResponse.isError()) {
-        response = "TCM configuration " + m_configurationName.value_or("<no name>") + (m_delayResponse.has_value() ? " was applied partially\n" : " was not applied\n") + response;
-        returnError = true;
+void Configurations::TcmConfigurations::handleResetErrors()
+{
+    // Control Server performs entire reset errors - to be tested
+    string resetReq;
+    WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_RESET_ERRORS", 1));
+    SwtSequence resetSequence = m_tcm.processMessageFromWinCC(resetReq, false);
+    executeAlfSequence(resetSequence.getSequence());
+    return;
+}
+
+void Configurations::TcmConfigurations::processExecution()
+{
+    bool running = true;
+    string request = waitForRequest(running);
+    if (running == false) {
+        return;
     }
 
+    m_configurationName.emplace(request);
+    m_configurationInfo.emplace(fetchAndGetConfigurationInfo(*m_configurationName));
+
+    string response;
+    if (!handleDelays(response))
+        return;
+    if (!handleData(response))
+        return;
+    handleResetErrors();
     reset();
-    return response;
-}
-
-string Configurations::TcmConfigurations::processInputMessage(string msg)
-{
-    switch (m_state) {
-        case State::Idle:
-            return handleConfigurationStart(msg);
-
-        case State::DelaysApplied:
-            return handleConfigurationContinuation(msg);
-
-        default:
-            throw runtime_error("TcmConfigurations: invalid state in PIM");
-    }
-}
-
-string Configurations::TcmConfigurations::processOutputMessage(string msg)
-{
-    switch (m_state) {
-        case State::ApplyingDelays:
-            return handleDelayResponse(msg);
-
-        case State::ApplyingData:
-            return handleDataResponse(msg);
-
-        default:
-            throw runtime_error("TcmConfigurations: invalid state in POM");
-    }
+    publishAnswer(response);
 }

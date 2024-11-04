@@ -1,7 +1,7 @@
 #pragma once
 
 #include "communication-utils/AlfResponseParser.h"
-#include "BasicRequestHandler.h"
+#include "BoardCommunicationHandler.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -20,7 +20,7 @@ class CounterRatesTest_HandleCounterValues_Test;
 
 #endif
 
-class CounterRates : public BasicRequestHandler, public IndefiniteMapi
+class CounterRates : public IndefiniteMapi
 {
 #ifdef FIT_UNIT_TEST
     FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);
@@ -29,7 +29,7 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
 
    public:
     CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
-        : BasicRequestHandler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
+        : m_handler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
 
     enum class UpdateRateState {
         Invalid,
@@ -53,11 +53,13 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
         NotPerformed
     };
 
-    class Response {
-    private:
+    class Response
+    {
+       private:
         string m_msg;
         bool m_isError;
-    public:
+
+       public:
         Response(string msg = "", bool isError = false) : m_msg(msg), m_isError(isError) {}
 
         Response& addUpdateRateChanged();
@@ -65,15 +67,19 @@ class CounterRates : public BasicRequestHandler, public IndefiniteMapi
         Response& addFifoReadResult(FifoReadResult fifoReadResult);
         Response& addRatesResponse(string ratesResponse);
 
-        bool isError() const {
+        bool isError() const
+        {
             return m_isError;
         }
 
-        operator string() const {
+        operator string() const
+        {
             return m_msg;
         }
     };
 
+   private:
+    BoardCommunicationHandler m_handler;
     uint32_t m_numberOfCounters;
     uint32_t m_maxFifoWords;
     optional<vector<uint32_t>> m_oldCounters;

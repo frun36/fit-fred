@@ -2,7 +2,7 @@
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    SwtSequence seq = processMessageFromWinCC(WinCCRequest::readRequest("CTR_FIFO_LOAD"));
+    SwtSequence seq = m_handler.processMessageFromWinCC(WinCCRequest::readRequest("CTR_FIFO_LOAD"));
     string alfResponse = executeAlfSequence(seq.getSequence());
     AlfResponseParser parser(alfResponse);
     if (!parser.isSuccess())
@@ -43,7 +43,7 @@ void CounterRates::resetService()
 
 CounterRates::UpdateRateState CounterRates::handleUpdateRate()
 {
-    optional<uint8_t> currUpdateRateCode = m_board->at("COUNTER_UPD_RATE").getStoredValueOptional();
+    optional<uint8_t> currUpdateRateCode = m_handler.getBoard()->at("COUNTER_UPD_RATE").getStoredValueOptional();
     double currUpdateRateSeconds = mapUpdateRateCodeToSeconds(*currUpdateRateCode);
 
     if (!currUpdateRateCode.has_value() || *currUpdateRateCode < 1 || *currUpdateRateCode > 7) {
@@ -121,7 +121,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
     string request;
     for (uint32_t i = 0; i < fifoLoad; i++)
         WinCCRequest::appendToRequest(request, WinCCRequest::readRequest("CTR_FIFO"));
-    SwtSequence seq = processMessageFromWinCC(request);
+    SwtSequence seq = m_handler.processMessageFromWinCC(request);
     string alfResponse = executeAlfSequence(seq.getSequence());
 
     vector<vector<uint32_t>> counterValues = parseFifoAlfResponse(alfResponse);

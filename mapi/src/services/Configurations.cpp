@@ -4,6 +4,7 @@
 #include <sstream>
 #include "utils.h"
 #include <Database/sql.h>
+#include <Database/DatabaseTables.h>
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
@@ -27,10 +28,10 @@ string Configurations::processInputMessage(string msg)
 
     sql::SelectModel query;
     query
-        .select("board_name")
+        .select(db_tables::ConfigurationParameters::BoardName.name)
         .distinct()
-        .from("configuration_parameters")
-        .where(sql::column("configuration_name") == configurationName);
+        .from(db_tables::ConfigurationParameters::TableName)
+        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
     auto boardNameData = DatabaseInterface::executeQuery(query.str());
     if (boardNameData.empty())
         throw runtime_error(configurationName + ": configuration not found");
@@ -62,9 +63,9 @@ std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchC
 {
     sql::SelectModel query;
     query
-        .select("parameter_name", "parameter_value")
-        .from("configuration_parameters")
-        .where(sql::column("configuration_name") == string(configurationName) && sql::column("board_name") == string(boardName));
+        .select(db_tables::ConfigurationParameters::ParameterName.name, db_tables::ConfigurationParameters::Value.name)
+        .from(db_tables::ConfigurationParameters::TableName)
+        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == string(configurationName) && sql::column(db_tables::ConfigurationParameters::BoardName.name) == string(boardName));
     return DatabaseInterface::executeQuery(query.str());
 }
 
@@ -131,7 +132,7 @@ optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfig
         return nullopt;
 
     string request;
-    uint32_t delayDifference;
+    uint32_t delayDifference = 0;
 
     if (delayA.has_value()) {
         int64_t delayAElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_A", *delayA);
@@ -160,9 +161,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
         return true;
     }
 
-    string delaySequence = m_tcm.processMessageFromWinCC(delayInfo->req).getSequence();
-    string delayResponse = executeAlfSequence(delaySequence);
-    auto parsedResponse = m_tcm.processMessageFromALF(delayResponse);
+    auto parsedResponse = processSequenceThroughHandler(m_tcm, delayInfo->req);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
     if (parsedResponse.isError()) {
@@ -180,10 +179,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
 
 bool Configurations::TcmConfigurations::handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
-    SwtSequence dataSequence = m_tcm.processMessageFromWinCC(configurationInfo.req);
-
-    string dataResponse = executeAlfSequence(dataSequence.getSequence());
-    auto parsedResponse = m_tcm.processMessageFromALF(dataResponse);
+    auto parsedResponse = processSequenceThroughHandler(m_tcm, configurationInfo.req);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
     if (parsedResponse.isError()) {

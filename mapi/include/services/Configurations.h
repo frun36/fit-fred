@@ -20,6 +20,7 @@
 #include "Fred/Mapi/mapi.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include "Fred/Mapi/mapigroup.h"
+#include "services/BasicFitIndefiniteMapi.h"
 
 #endif
 
@@ -110,7 +111,7 @@ class Configurations : public Mapigroup
         string processOutputMessage(string msg);
     };
 
-    class TcmConfigurations : public IndefiniteMapi, public BoardConfigurations
+    class TcmConfigurations : public BasicFitIndefiniteMapi, public BoardConfigurations
     {
        public:
         TcmConfigurations(std::shared_ptr<Board> board) : m_tcm(board)

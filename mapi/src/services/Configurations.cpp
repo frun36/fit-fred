@@ -5,9 +5,11 @@
 #include "utils.h"
 #include <Database/sql.h>
 #include <Database/DatabaseTables.h>
+#include <Alfred/print.h>
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
+    string names;
     for (auto [name, board] : boards) {
         if (name.find("TCM") != string::npos)
             m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
@@ -15,7 +17,9 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
             m_boardCofigurationServices[name] = make_unique<PmConfigurations>(board);
         else
             throw runtime_error("Unexpected board name: " + name);
+        names += name + "; ";
     }
+    Print::PrintInfo("CONFIGURATIONS initialized for boards: " + names);
 }
 
 string Configurations::processInputMessage(string msg)
@@ -95,7 +99,9 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
 
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
-    return m_pm.processMessageFromWinCC(fetchAndGetConfigurationInfo(name).req).getSequence();
+    const string& req = fetchAndGetConfigurationInfo(name).req;
+    Print::PrintVerbose("Sending request to " + string(getBoardName()) + " _INTERNAL_CONFIGURATIONS for configuration '" + name + "':\n" + req);
+    return m_pm.processMessageFromWinCC(req).getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
@@ -211,8 +217,9 @@ void Configurations::TcmConfigurations::processExecution()
         return;
     }
 
-    string configurationName = request;
+    const string& configurationName = request;
     ConfigurationInfo configurationInfo = fetchAndGetConfigurationInfo(configurationName);
+    Print::PrintVerbose("TcmConfigurations: configuration '" + name + "', req:\n" + configurationInfo.req + (configurationInfo.delayA && configurationInfo.delayC ? "delay change" : "no delay change"));
 
     string response;
     if (!handleDelays(configurationName, configurationInfo, response))

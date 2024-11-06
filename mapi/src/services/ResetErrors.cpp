@@ -1,5 +1,6 @@
 #include "services/ResetErrors.h"
 #include "gbtInterfaceUtils.h"
+#include"TCM.h"
 
 ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr<Board>> pms) : m_TCM(tcm)
 {
@@ -51,6 +52,14 @@ void ResetErrors::processExecution()
 
     for (auto& pmHandler : m_PMs) {
         auto parsedResponse = applyResetBoard(pmHandler);
+        if (parsedResponse.isError()) {
+            publishError(parsedResponse.getContents());
+            return;
+        }
+    }
+
+    {
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::SystemRestarted,1), false);
         if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
             return;

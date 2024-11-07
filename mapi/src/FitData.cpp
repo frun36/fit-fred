@@ -107,42 +107,33 @@ bool FitData::fetchConnectedDevices()
 
      for (auto& deviceRow : connectedDevices) {
         DeviceInfo device(deviceRow);
-        Print::PrintInfo("Registering " + device.name);
-
-        switch (device.type) {
-            
-            case DeviceInfo::BoardType::TCM: {
-                TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
-            } break;
+        if(device.type != DeviceInfo::BoardType::TCM){
+            continue;
         }
+        Print::PrintInfo("Registering " + device.name);
+        TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
     }
 
     for (auto& deviceRow : connectedDevices) {
         DeviceInfo device(deviceRow);
+        if(device.type == DeviceInfo::BoardType::TCM){
+            continue;
+        }
         Print::PrintInfo("Registering " + device.name);
 
-        switch (device.type) {
-            case DeviceInfo::BoardType::PM: {
-                if (TCM.get() == nullptr) {
-                    Print::PrintVerbose("PM row occured before TCM row!");
+        if (TCM.get() == nullptr) {
+                    Print::PrintVerbose("Missing TCM!");
                     return false;
-                }
+        }
 
-                switch (device.side) {
-                    case DeviceInfo::Side::A:
-                        m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
-                        break;
+        switch (device.side) {
+            case DeviceInfo::Side::A:
+                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
+                break;
 
-                    case DeviceInfo::Side::C:
-                        m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
-                        break;
-                }
-
-            } break;
-
-            //case DeviceInfo::BoardType::TCM: {
-            //    TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
-            //} break;
+            case DeviceInfo::Side::C:
+                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
+                break;
         }
     }
 

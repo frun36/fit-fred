@@ -87,7 +87,7 @@ void Unknown::saveErrorReport()
 
     file << timeStamp << "Unknown error report: ## IPbusWord" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
-        file << timeStamp <<  std::setw(2) << idx << " " << std::hex << data[idx] << std::endl;
+        file << timeStamp <<  std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
     }
 }
 
@@ -167,7 +167,7 @@ void PmEarlyHeader::saveErrorReport()
 
     file << timeStamp <<"Input packet corrupted: header too early ## GBTword" << std::endl;
     for(int i = 0; i < 14; i++){
-        file << timeStamp << std::setw(2) << i << " ";
+        file << timeStamp << std::setw(2) << std::setfill('0') << i << " ";
         for(int j = 0; j < GbtWord::WordSize; j++){
             file << std::hex << data.words[i].buffer[j] << ' ';
         }
@@ -210,7 +210,7 @@ void FifoOverload::saveErrorReport()
     file << timeStamp << data.rdRate << " read and " << data.wrRate << " operations in last 1000 cycles" << std::endl;
     file << timeStamp << "## GBT word" << std::endl;
     for(int idx = 0; idx < 13; idx++){
-        file << timeStamp << std::setw(2) << idx << " ";
+        file << timeStamp << std::setw(2) << std::setfill('0') << idx << " ";
         for(int j = 0; j < GbtWord::WordSize; j++){
             file << std::hex << data.words[idx].buffer[j] << ' ';
         }

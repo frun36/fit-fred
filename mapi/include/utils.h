@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTILS_FIT
+#define UTILS_FIT
 
 #include <cmath>
 #include <cstdint>
@@ -70,3 +71,7 @@ std::string concatenate(Args... args)
     return res;
 }
 } // namespace string_utils
+
+
+
+#endif

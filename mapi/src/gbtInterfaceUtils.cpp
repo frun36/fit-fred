@@ -5,6 +5,8 @@
 #include<ctime>
 #include"utils.h"
 
+namespace
+{
 uint32_t build32(const uint8_t* buffer, size_t& idx){
     uint32_t word = static_cast<uint32_t>(static_cast<uint32_t>(idx) << 23u) +
             static_cast<uint32_t>(static_cast<uint32_t>(idx+1) << 15u) +
@@ -20,6 +22,23 @@ uint16_t build16(const uint8_t* buffer, size_t& idx){
     return word;
 }
 
+std::string createTimestamp() {
+    std::time_t currentTime = std::time(nullptr);
+    std::tm* localTime = std::localtime(&currentTime);
+
+    // Create a string stream to format the timestamp
+    std::ostringstream oss;
+    oss << "[" << std::setfill('0')
+        << std::setw(2) << localTime->tm_mday << '/'
+        << std::setw(2) << (localTime->tm_mon + 1) << '/'
+        << (localTime->tm_year + 1900) << ' '
+        << std::setw(2) << localTime->tm_hour << ':'
+        << std::setw(2) << localTime->tm_min << ':'
+        << std::setw(2) << localTime->tm_sec << "]\t";
+
+    return oss.str();
+}
+}
 
 namespace gbt
 {
@@ -56,9 +75,8 @@ Unknown::Unknown(const std::array<uint8_t, constants::FifoSize>& fifoData)
 {
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
 
-    std::time_t currentTime = std::time(nullptr);
-    const std::tm* localTime = std::localtime(&currentTime);
-    std::string timeStamp = std::string("[") + std::asctime(localTime) + std::string("]");
+    file << "\n";
+    std::string timeStamp = createTimestamp();
 
     file << timeStamp << "Unknown error report: ## IPbusWord" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
@@ -97,9 +115,8 @@ WinCCResponse BCSyncLost::createWinCCResponse()
 {
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
 
-    std::time_t currentTime = std::time(nullptr);
-    const std::tm* localTime = std::localtime(&currentTime);
-    std::string timeStamp = std::asctime(localTime);
+    file << "\n";
+    std::string timeStamp = createTimestamp();
 
     file << timeStamp << "Board BCid: " << std::hex << data.orbitBoard << " " << std::hex << data.BCBoard << std::endl;
     file << timeStamp << "\tCRU BCid: " << std::hex << data.orbitCRU << " " << std::hex << data.BCCRU << std::endl;
@@ -132,9 +149,8 @@ WinCCResponse PmEarlyHeader::createWinCCResponse()
 {
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
     
-    std::time_t currentTime = std::time(nullptr);
-    const std::tm* localTime = std::localtime(&currentTime);
-    std::string timeStamp = std::asctime(localTime);
+    file << "\n";
+    std::string timeStamp = createTimestamp();
 
     file << timeStamp <<"Input packet corrupted: header too early ## GBTword" << std::endl;
     for(int i = 0; i < 14; i++){
@@ -171,9 +187,8 @@ WinCCResponse FifoOverload::createWinCCResponse()
 {
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
     
-    std::time_t currentTime = std::time(nullptr);
-    const std::tm* localTime = std::localtime(&currentTime);
-    std::string timeStamp = std::asctime(localTime);
+    file << "\n";
+    std::string timeStamp = createTimestamp();
 
     file << timeStamp << "Raw data FIFO overload" << std::endl;
     file << timeStamp << data.rdRate << " read and " << data.wrRate << " operations in last 1000 cycles" << std::endl;

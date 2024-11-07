@@ -73,6 +73,13 @@ Unknown::Unknown(const std::array<uint8_t, constants::FifoSize>& fifoData)
 
 [[nodiscard]] WinCCResponse Unknown::createWinCCResponse()
 {
+    WinCCResponse respone;
+    respone.addParameter("GBT_ERR_UNKNOWN", { 1 });
+    return respone;
+}
+
+void Unknown::saveErrorReport()
+{
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
 
     file << "\n";
@@ -82,10 +89,6 @@ Unknown::Unknown(const std::array<uint8_t, constants::FifoSize>& fifoData)
     for(int idx = 0; idx < data.size(); idx++){
         file << timeStamp <<  std::setw(2) << idx << " " << std::hex << data[idx] << std::endl;
     }
-    
-    WinCCResponse respone;
-    respone.addParameter("GBT_ERR_UNKNOWN", { 1 });
-    return respone;
 }
 
 BCSyncLost::BCSyncLost(const std::array<uint8_t, constants::FifoSize>& fifoData)
@@ -113,6 +116,13 @@ BCSyncLost::BCSyncLost(const std::array<uint8_t, constants::FifoSize>& fifoData)
 
 WinCCResponse BCSyncLost::createWinCCResponse()
 {
+    WinCCResponse response;
+    response.addParameter(gbt::parameters::BCSyncLost.data(), { 1 });
+    return std::move(response);
+}
+
+void BCSyncLost::saveErrorReport()
+{
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
 
     file << "\n";
@@ -128,10 +138,6 @@ WinCCResponse BCSyncLost::createWinCCResponse()
         }
         file << std::endl;
     }
-     
-    WinCCResponse response;
-    response.addParameter(gbt::parameters::BCSyncLost.data(), { 1 });
-    return std::move(response);
 }
 
 PmEarlyHeader::PmEarlyHeader(const std::array<uint8_t, constants::FifoSize>& fifoData)
@@ -147,6 +153,13 @@ PmEarlyHeader::PmEarlyHeader(const std::array<uint8_t, constants::FifoSize>& fif
 
 WinCCResponse PmEarlyHeader::createWinCCResponse()
 {
+    WinCCResponse response;
+    response.addParameter(gbt::parameters::PmEarlyHeader.data(), { 1 });
+    return std::move(response);
+}
+
+void PmEarlyHeader::saveErrorReport()
+{
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
     
     file << "\n";
@@ -160,10 +173,6 @@ WinCCResponse PmEarlyHeader::createWinCCResponse()
         }
         file << std::endl;
     }
-
-    WinCCResponse response;
-    response.addParameter(gbt::parameters::PmEarlyHeader.data(), { 1 });
-    return std::move(response);
 }
 
 FifoOverload::FifoOverload(const std::array<uint8_t, constants::FifoSize>& fifoData)
@@ -185,6 +194,13 @@ FifoOverload::FifoOverload(const std::array<uint8_t, constants::FifoSize>& fifoD
 
 WinCCResponse FifoOverload::createWinCCResponse()
 {
+    WinCCResponse response;
+    response.addParameter(gbt::parameters::FifoOverload.data(), { 1 });
+    return std::move(response);
+}
+
+void FifoOverload::saveErrorReport()
+{
     std::ofstream file(GbtErrorType::ErrorFile.data(), std::ios::app);
     
     file << "\n";
@@ -199,10 +215,6 @@ WinCCResponse FifoOverload::createWinCCResponse()
             file << std::hex << data.words[idx].buffer[j] << ' ';
         }
     }
-
-    WinCCResponse response;
-    response.addParameter(gbt::parameters::FifoOverload.data(), { 1 });
-    return std::move(response);
 }
 
 } // namespace gbt

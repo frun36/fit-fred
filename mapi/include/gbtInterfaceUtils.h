@@ -53,12 +53,14 @@ constexpr double FifoEmpty = 1;
 struct GbtErrorType {
     virtual ~GbtErrorType() = default;
     virtual WinCCResponse createWinCCResponse() = 0;
+    virtual void saveErrorReport() = 0;
     static constexpr std::string_view ErrorFile{"GbtErrorsRaport"};
 };
 
 struct BCSyncLost : public GbtErrorType {
     BCSyncLost(const std::array<uint8_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse() final;
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE000A; }
 
     struct Data {
@@ -79,6 +81,7 @@ struct BCSyncLost : public GbtErrorType {
 struct Unknown : public GbtErrorType {
     Unknown(const std::array<uint8_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0x00000000; }
 
     std::array<uint32_t, constants::FifoSize/sizeof(uint32_t)> data;
@@ -87,6 +90,7 @@ struct Unknown : public GbtErrorType {
 struct PmEarlyHeader : public GbtErrorType {
     PmEarlyHeader(const std::array<uint8_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE0009; }
 
     struct Data {
@@ -98,6 +102,7 @@ struct PmEarlyHeader : public GbtErrorType {
 struct FifoOverload : public GbtErrorType {
     FifoOverload(const std::array<uint8_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE0008; }
 
     struct Data {

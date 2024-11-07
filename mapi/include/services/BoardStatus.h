@@ -23,4 +23,7 @@ class BoardStatus : public IndefiniteMapi, gbt::GbtRateMonitor
 
     BoardCommunicationHandler m_boardHandler;
     SwtSequence m_request;
+
+    bool m_saveGbtErrorToFile;
+    std::shared_ptr<gbt::GbtErrorType> m_gbtError;
 };

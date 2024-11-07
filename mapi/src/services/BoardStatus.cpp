@@ -2,7 +2,7 @@
 #include "Alfred/print.h"
 #include <sstream>
 
-BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board)
+BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtError(nullptr)
 {
     std::stringstream requestStream;
     for (auto& paramName : toRefresh) {
@@ -50,6 +50,11 @@ void BoardStatus::processExecution()
 
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
+    
+    if(m_gbtError.get() != nullptr){
+        m_gbtError->saveErrorReport();
+        m_gbtError.reset();
+    }
 }
 
 void BoardStatus::updateEnvironment()
@@ -85,7 +90,7 @@ WinCCResponse BoardStatus::checkGbtErrors()
         fifoData[idx++] = line.frame.data & 0xFF;
     }
 
-    std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
+    m_gbtError = gbt::parseFifoData(fifoData);
 
-    return error->createWinCCResponse();
+    return m_gbtError->createWinCCResponse();
 }

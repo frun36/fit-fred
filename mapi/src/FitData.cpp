@@ -105,6 +105,18 @@ bool FitData::fetchConnectedDevices()
 
     std::shared_ptr<Board> TCM{ nullptr };
 
+     for (auto& deviceRow : connectedDevices) {
+        DeviceInfo device(deviceRow);
+        Print::PrintInfo("Registering " + device.name);
+
+        switch (device.type) {
+            
+            case DeviceInfo::BoardType::TCM: {
+                TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
+            } break;
+        }
+    }
+
     for (auto& deviceRow : connectedDevices) {
         DeviceInfo device(deviceRow);
         Print::PrintInfo("Registering " + device.name);
@@ -128,9 +140,9 @@ bool FitData::fetchConnectedDevices()
 
             } break;
 
-            case DeviceInfo::BoardType::TCM: {
-                TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
-            } break;
+            //case DeviceInfo::BoardType::TCM: {
+            //    TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
+            //} break;
         }
     }
 

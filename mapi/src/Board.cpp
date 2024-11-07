@@ -167,9 +167,8 @@ double Board::calculatePhysical(const std::string& param, uint32_t raw) const
     if (values.size() != info.electronicToPhysic.variables.size()) {
         throw std::runtime_error("Parameter " + param + ": parsing equation failed!");
     }
-    std::string equation = info.electronicToPhysic.equation;
-    std::vector<std::string> variables = info.electronicToPhysic.variables;
-    return Utility::calculateEquation(equation, variables, values);
+
+    return Equation::calculate(info.electronicToPhysic.equation, info.electronicToPhysic.variables, values);
 }
 
 int64_t Board::calculateElectronic(const std::string& param, double physical) const
@@ -200,10 +199,7 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
         }
     }
 
-    std::string equation = info.physicToElectronic.equation;
-    std::vector<std::string> variables = info.physicToElectronic.variables;
-
-    return static_cast<int64_t>(Utility::calculateEquation(equation, variables, values));
+    return static_cast<int64_t>(Equation::calculate(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
 }
 
 uint32_t Board::convertElectronicToRaw(const std::string& param, int64_t physcial) const

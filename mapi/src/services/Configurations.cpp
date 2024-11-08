@@ -50,7 +50,7 @@ string Configurations::processInputMessage(string msg)
         if (boardName == "TCM0")
             serviceName += "/TCM/TCM0/";
         else if (boardName.find("PM") != string::npos)
-            serviceName += "PM/" + boardName + "/";
+            serviceName += "/PM/" + boardName + "/";
         serviceName += "_INTERNAL_CONFIGURATIONS";
 
         return make_pair(serviceName, configurationName);

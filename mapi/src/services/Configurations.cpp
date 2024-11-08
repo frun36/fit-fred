@@ -203,7 +203,7 @@ void Configurations::TcmConfigurations::handleResetErrors()
 {
     // Control Server performs entire reset errors - to be tested
     string resetReq;
-    WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_RESET_ERRORS", 1));
+    WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
     SwtSequence resetSequence = m_tcm.processMessageFromWinCC(resetReq, false);
     executeAlfSequence(resetSequence.getSequence());
     return;
@@ -219,7 +219,7 @@ void Configurations::TcmConfigurations::processExecution()
 
     const string& configurationName = request;
     ConfigurationInfo configurationInfo = fetchAndGetConfigurationInfo(configurationName);
-    Print::PrintVerbose("TcmConfigurations: configuration '" + name + "', req:\n" + configurationInfo.req + (configurationInfo.delayA && configurationInfo.delayC ? "delay change" : "no delay change"));
+    Print::PrintVerbose("TcmConfigurations: configuration '" + name + "', req:\n" + configurationInfo.req + (configurationInfo.delayA || configurationInfo.delayC ? "Delay change" : "No delay change"));
 
     string response;
     if (!handleDelays(configurationName, configurationInfo, response))

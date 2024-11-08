@@ -100,7 +100,7 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
 string Configurations::PmConfigurations::processInputMessage(string name)
 {
     const string& req = fetchAndGetConfigurationInfo(name).req;
-    Print::PrintVerbose("Sending request to " + string(getBoardName()) + " _INTERNAL_CONFIGURATIONS for configuration '" + name + "':\n" + req);
+    Print::PrintVerbose("Configuration '" + name + "' for " + string(getBoardName()) + ":\n" + req);
     return m_pm.processMessageFromWinCC(req).getSequence();
 }
 
@@ -132,28 +132,28 @@ optional<int64_t> Configurations::TcmConfigurations::getDelayCElectronic() const
         return nullopt;
 }
 
-optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfigurations::processDelayInput(optional<double> delayA, optional<double> delayC)
+optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfigurations::processDelayInput(optional<double> newDelayA, optional<double> newDelayC)
 {
-    if (!delayA.has_value() && !delayC.has_value())
+    if (!newDelayA.has_value() && !newDelayC.has_value())
         return nullopt;
 
     string request;
     uint32_t delayDifference = 0;
 
-    if (delayA.has_value()) {
-        int64_t delayAElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_A", *delayA);
-        delayDifference = abs(delayAElectronic - getDelayAElectronic().value_or(0));
+    if (newDelayA.has_value()) {
+        int64_t newDelayAElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_A", *newDelayA);
+        delayDifference = abs(newDelayAElectronic - getDelayAElectronic().value_or(0));
         if (delayDifference != 0)
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_A", delayA.value()));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_A", newDelayA.value()));
     }
 
-    if (delayC.has_value()) {
-        int64_t delayCElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_C", *delayC);
-        uint32_t cDelayDifference = abs(delayCElectronic - getDelayCElectronic().value_or(0));
+    if (newDelayC.has_value()) {
+        int64_t newDelayCElectronic = m_tcm.getBoard()->calculateElectronic("DELAY_C", *newDelayC);
+        uint32_t cDelayDifference = abs(newDelayCElectronic - getDelayCElectronic().value_or(0));
         if (cDelayDifference > delayDifference)
             delayDifference = cDelayDifference;
         if (cDelayDifference != 0)
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", delayC.value()));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", newDelayC.value()));
     }
 
     return make_optional<DelayInfo>(request, delayDifference);
@@ -166,6 +166,8 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
     if (!delayInfo.has_value()) {
         return true;
     }
+
+    Print::PrintVerbose("Delay difference " + to_string(delayInfo->delayDifference) + ", req:\n" + delayInfo->req);
 
     auto parsedResponse = processSequenceThroughHandler(m_tcm, delayInfo->req);
     string parsedResponseString = parsedResponse.getContents();
@@ -185,6 +187,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
 
 bool Configurations::TcmConfigurations::handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
+    Print::PrintVerbose("Applying data, req:\n" + configurationInfo.req);
     auto parsedResponse = processSequenceThroughHandler(m_tcm, configurationInfo.req);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
@@ -219,7 +222,7 @@ void Configurations::TcmConfigurations::processExecution()
 
     const string& configurationName = request;
     ConfigurationInfo configurationInfo = fetchAndGetConfigurationInfo(configurationName);
-    Print::PrintVerbose("TcmConfigurations: configuration '" + name + "', req:\n" + configurationInfo.req + (configurationInfo.delayA || configurationInfo.delayC ? "Delay change" : "No delay change"));
+    Print::PrintVerbose("Configuration '" + name + "' for " + string(getBoardName()));
 
     string response;
     if (!handleDelays(configurationName, configurationInfo, response))

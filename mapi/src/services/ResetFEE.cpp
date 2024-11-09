@@ -224,7 +224,7 @@ std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
     if (spiMask.getStoredValueOptional() == std::nullopt) {
-        spiMask.storeValue(0x0);
+        spiMask.storeValue(0x0,0x0);
     }
 
     uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u) << idx));

@@ -70,9 +70,10 @@ class Board
 
         const RefreshType refreshType;
 
-        void storeValue(double value)
+        void storeValue(std::optional<double> physical, std::optional<int64_t> electronic)
         {
-            m_value = value;
+           m_value = physical;
+           m_electronicValue = electronic;
         }
 
         double getStoredValue() const
@@ -88,8 +89,22 @@ class Board
             return m_value;
         }
 
+        int64_t getElectronicValue() const
+        {
+            if(!m_electronicValue.has_value()){
+                throw std::runtime_error(name + ": tried to access non-existing stored value");
+            }
+            return *m_electronicValue;
+        }
+
+        std::optional<int64_t> getElectronicValueOptional() const
+        {
+            return m_electronicValue;
+        }
+
        private:
         std::optional<double> m_value;
+        std::optional<int64_t> m_electronicValue;
     };
 
     Board(std::string name, uint32_t address, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentVariables> settings = nullptr);
@@ -109,7 +124,9 @@ class Board
     void setEnvironment(const std::string& variableName, double value);
     void updateEnvironment(const std::string& variableName);
 
-    double calculatePhysical(const std::string& param, uint32_t raw) const;
+    double calculatePhysical(const std::string& param, int64_t electronic) const;
+    int64_t parseElectronic(const std::string& param, uint32_t raw) const;
+
     int64_t calculateElectronic(const std::string& param, double physcial) const;
     uint32_t convertElectronicToRaw(const std::string& param, int64_t physcial) const;
 

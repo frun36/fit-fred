@@ -81,6 +81,9 @@ WinCCResponse BoardStatus::checkGbtErrors()
     AlfResponseParser parser(alfResponse);
     uint32_t idx = 0;
     for (auto line : parser) {
+        if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
+            continue;
+        }
         if (idx >= gbt::constants::FifoSize)
             break;
         fifoData[idx++] = (line.frame.data >> 24) & 0xFF;

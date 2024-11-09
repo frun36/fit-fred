@@ -8,10 +8,10 @@
 namespace
 {
 uint32_t build32(const uint8_t* buffer, size_t& idx){
-    uint32_t word = static_cast<uint32_t>(static_cast<uint32_t>(idx) << 23u) +
-            static_cast<uint32_t>(static_cast<uint32_t>(idx+1) << 15u) +
-            static_cast<uint32_t>(static_cast<uint32_t>(idx+2) << 7u) +
-            static_cast<uint32_t>(idx+3);
+    uint32_t word = static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx]) << 23u) +
+            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+1]) << 15u) +
+            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+2]) << 7u) +
+            static_cast<uint32_t>(buffer[idx+3]);
     idx += 4;
     return word;
 }
@@ -85,7 +85,7 @@ void Unknown::saveErrorReport()
     file << "\n";
     std::string timeStamp = createTimestamp();
 
-    file << timeStamp << "Unknown error report: ## IPbusWord" << std::endl;
+    file << timeStamp << "Unknown error report: ## SWT Frames" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
         file << timeStamp <<  std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
     }

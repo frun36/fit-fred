@@ -16,8 +16,7 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
 void BoardStatus::processExecution()
 {
     bool running = true;
-    // while(running)
-    //{
+    
     std::string fromWinCC = waitForRequest(running);
     if (running == false)
         return;

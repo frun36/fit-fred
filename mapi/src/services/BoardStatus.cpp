@@ -46,7 +46,7 @@ void BoardStatus::processExecution()
     WinCCResponse gbtErrors = checkGbtErrors();
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
-    WinCCResponse gbtRates = updateRates(wordsCount.getStoredValue(), eventsCount.getStoredValue());
+    WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
 
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
@@ -55,13 +55,13 @@ void BoardStatus::processExecution()
 void BoardStatus::updateEnvironment()
 {
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
-                            (m_boardHandler.getBoard()->at(ActualSystemClock).getStoredValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
+                            (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
 }
 
 WinCCResponse BoardStatus::checkGbtErrors()
 {
-    if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getStoredValue() == gbt::constants::FifoEmpty) {
+    if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getPhysicalValue() == gbt::constants::FifoEmpty) {
         return WinCCResponse();
     }
 

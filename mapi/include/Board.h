@@ -72,21 +72,21 @@ class Board
 
         void storeValue(std::optional<double> physical, std::optional<int64_t> electronic)
         {
-           m_value = physical;
+           m_physicalValue = physical;
            m_electronicValue = electronic;
         }
 
-        double getStoredValue() const
+        double getPhysicalValue() const
         {
-            if (!m_value.has_value()) {
+            if (!m_physicalValue.has_value()) {
                 throw std::runtime_error(name + ": tried to access non-existing stored value");
             }
-            return *m_value;
+            return *m_physicalValue;
         }
 
-        std::optional<double> getStoredValueOptional() const
+        std::optional<double> getPhysicalValueOptional() const
         {
-            return m_value;
+            return m_physicalValue;
         }
 
         int64_t getElectronicValue() const
@@ -103,7 +103,7 @@ class Board
         }
 
        private:
-        std::optional<double> m_value;
+        std::optional<double> m_physicalValue;
         std::optional<int64_t> m_electronicValue;
     };
 

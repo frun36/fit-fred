@@ -163,12 +163,12 @@ class Configurations : public Mapigroup
 
         optional<double> getDelayA() const
         {
-            return m_board->at("DELAY_A").getStoredValueOptional();
+            return m_board->at("DELAY_A").getPhysicalValueOptional();
         }
 
         optional<double> getDelayC() const
         {
-            return m_board->at("DELAY_C").getStoredValueOptional();
+            return m_board->at("DELAY_C").getPhysicalValueOptional();
         }
 
         optional<string> m_delayResponse = nullopt;

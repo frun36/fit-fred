@@ -38,7 +38,7 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
                                                                                                isFifo(base.isFifo),
                                                                                                isReadonly(base.isReadonly),
                                                                                                refreshType(base.refreshType),
-                                                                                               m_value(std::nullopt)
+                                                                                               m_physicalValue(std::nullopt)
 {
 }
 
@@ -68,7 +68,7 @@ Board::ParameterInfo::ParameterInfo(
                                 isFifo(isFifo_),
                                 isReadonly(isReadonly_),
                                 refreshType(refreshType_),
-                                m_value(std::nullopt) {}
+                                m_physicalValue(std::nullopt) {}
 
 bool Board::emplace(const ParameterInfo& info)
 {
@@ -162,9 +162,9 @@ double Board::calculatePhysical(const std::string& param, int64_t electronic) co
         if (var == info.name) {
             values.emplace_back(electronic);
         } else if (m_parameters.find(var) != m_parameters.end()) {
-            values.emplace_back(m_parameters.at(var).getStoredValue());
+            values.emplace_back(m_parameters.at(var).getPhysicalValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
-            values.emplace_back(m_mainBoard->at(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getPhysicalValue());
         } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
             values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
@@ -197,9 +197,9 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
             values.emplace_back(physical);
             continue;
         } else if (m_parameters.find(var) != m_parameters.end()) {
-            values.emplace_back(m_parameters.at(var).getStoredValue());
+            values.emplace_back(m_parameters.at(var).getPhysicalValue());
         } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
-            values.emplace_back(m_mainBoard->at(var).getStoredValue());
+            values.emplace_back(m_mainBoard->at(var).getPhysicalValue());
         } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
             values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {

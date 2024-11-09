@@ -114,7 +114,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
-            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getStoredValue() == 0xFFFFF) {
+            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getPhysicalValue() == 0xFFFFF) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
             }
         }
@@ -126,8 +126,8 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
     auto isBoardIdCorrect = [this](std::shared_ptr<Board> board) {
-        return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getStoredValue()) != this->getEnvBoardId(board)) ||
-                (board->at(gbt::parameters::SystemId).getStoredValue() != m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data())));
+        return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getPhysicalValue()) != this->getEnvBoardId(board)) ||
+                (board->at(gbt::parameters::SystemId).getPhysicalValue() != m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data())));
     };
     std::string readFEEId = WinCCRequest::readRequest(gbt::parameters::BoardId) + "\n" + WinCCRequest::readRequest(gbt::parameters::SystemId);
 
@@ -147,7 +147,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
     }
 
     auto checkSPIMask = [this](BoardCommunicationHandler& pmHandler) {
-        return (static_cast<uint32_t>(this->m_TCM.getBoard()->at(tcm_parameters::PmSpiMask).getStoredValue()) &
+        return (static_cast<uint32_t>(this->m_TCM.getBoard()->at(tcm_parameters::PmSpiMask).getPhysicalValue()) &
                 static_cast<uint32_t>(1u << pmHandler.getBoard()->getIdentity().number));
     };
 
@@ -184,12 +184,12 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
     std::stringstream request;
 
     request << Configurations::BoardConfigurations::convertConfigToRequest(gbt::GbtConfigurationName, configuration);
-    if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValueOptional() == std::nullopt) {
+    if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getPhysicalValueOptional() == std::nullopt) {
         request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay,
                                               static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))
                 << "\n";
     } else {
-        request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getStoredValue()) << "\n";
+        request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay, boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getPhysicalValue()) << "\n";
     }
 
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
@@ -223,11 +223,11 @@ std::string ResetFEE::seqSetResetFinished()
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    if (spiMask.getStoredValueOptional() == std::nullopt) {
-        spiMask.storeValue(0x0);
+    if (spiMask.getPhysicalValueOptional() == std::nullopt) {
+        spiMask.storeValue(0x0,0x0);
     }
 
-    uint32_t masked = static_cast<uint32_t>(spiMask.getStoredValue()) & (~(static_cast<uint32_t>(1u) << idx));
+    uint32_t masked = static_cast<uint32_t>(spiMask.getPhysicalValue()) & (~(static_cast<uint32_t>(1u) << idx));
     masked |= static_cast<uint32_t>(mask) << idx;
 
     return WinCCRequest::writeRequest(spiMask.name, masked);

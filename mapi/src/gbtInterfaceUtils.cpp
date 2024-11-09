@@ -38,6 +38,12 @@ std::string createTimestamp() {
 
     return oss.str();
 }
+
+std::ostream& spacing(std::ostream& os,size_t len)
+{
+    return (os << std::setw(len) << std::setfill(' ') << '\t');
+}
+
 }
 
 namespace gbt
@@ -87,7 +93,7 @@ void Unknown::saveErrorReport()
 
     file << timeStamp << "Unknown error report: ## SWT Frames" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
-        file << timeStamp <<  std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
+        spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
     }
 }
 
@@ -129,10 +135,10 @@ void BCSyncLost::saveErrorReport()
     std::string timeStamp = createTimestamp();
 
     file << timeStamp << "Board BCid: " << std::hex << data.orbitBoard << " " << std::hex << data.BCBoard << std::endl;
-    file << timeStamp << "\tCRU BCid: " << std::hex << data.orbitCRU << " " << std::hex << data.BCCRU << std::endl;
-    file << timeStamp << "#### isData GBTword" << std::endl;
+    spacing(file, timeStamp.length()) << "CRU BCid: " << std::hex << data.orbitCRU << " " << std::hex << data.BCCRU << std::endl;
+    spacing(file, timeStamp.length()) << "#### isData GBTword" << std::endl;
     for(int i = 0; i < 10; i++){
-        file << timeStamp << std::setw(4) << data.words[i].counter << " " << std::setw(6) << (data.words[i].isData ? "true" : "false");
+        spacing(file, timeStamp.length()) << std::setw(4) << data.words[i].counter << " " << std::setw(6) << (data.words[i].isData ? "true" : "false");
         for(int j = 0; j < GbtWord::WordSize; j++){
             file << std::hex << data.words[i].data.buffer[j] << ' ';
         }
@@ -167,7 +173,7 @@ void PmEarlyHeader::saveErrorReport()
 
     file << timeStamp <<"Input packet corrupted: header too early ## GBTword" << std::endl;
     for(int i = 0; i < 14; i++){
-        file << timeStamp << std::setw(2) << std::setfill('0') << i << " ";
+        spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << i << " ";
         for(int j = 0; j < GbtWord::WordSize; j++){
             file << std::hex << data.words[i].buffer[j] << ' ';
         }
@@ -207,10 +213,10 @@ void FifoOverload::saveErrorReport()
     std::string timeStamp = createTimestamp();
 
     file << timeStamp << "Raw data FIFO overload" << std::endl;
-    file << timeStamp << data.rdRate << " read and " << data.wrRate << " operations in last 1000 cycles" << std::endl;
-    file << timeStamp << "## GBT word" << std::endl;
+    spacing(file, timeStamp.length()) << data.rdRate << " read and " << data.wrRate << " operations in last 1000 cycles" << std::endl;
+    spacing(file, timeStamp.length()) << "## GBT word" << std::endl;
     for(int idx = 0; idx < 13; idx++){
-        file << timeStamp << std::setw(2) << std::setfill('0') << idx << " ";
+        spacing(file, timeStamp.length()) << std::setw(timeStamp.length()) << "\t" << std::setw(2) << std::setfill('0') << idx << " ";
         for(int j = 0; j < GbtWord::WordSize; j++){
             file << std::hex << data.words[idx].buffer[j] << ' ';
         }

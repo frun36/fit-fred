@@ -137,7 +137,9 @@ void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line
 {
     for (auto& parameterToHandle : m_registerTasks.at(read.frame.address)) {
         try {
-            double value = m_board->calculatePhysical(parameterToHandle.name, read.frame.data);
+            int64_t electronic = m_board->parseElectronic(parameterToHandle.name, read.frame.data);
+            double value = m_board->calculatePhysical(parameterToHandle.name, electronic);
+
             Board::ParameterInfo info = m_board->at(parameterToHandle.name);
 
             if (parameterToHandle.toCompare.has_value() && getBitField(read.frame.data, info.startBit, info.bitLength) != parameterToHandle.toCompare.value()) {
@@ -145,11 +147,9 @@ void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line
                     parameterToHandle.name,
                     "WRITE FAILED: Received " + std::to_string(value) +
                         ", Expected " + std::to_string(parameterToHandle.toCompare.value()));
-                m_board->at(parameterToHandle.name).storeValue(value);
-                continue;
             }
             response.addParameter(parameterToHandle.name, { value });
-            m_board->at(parameterToHandle.name).storeValue(value);
+            m_board->at(parameterToHandle.name).storeValue(value, electronic);
 
         } catch (const std::exception& e) {
             report.emplace_back(parameterToHandle.name, e.what());

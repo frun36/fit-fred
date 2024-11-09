@@ -154,8 +154,10 @@ double Board::calculatePhysical(const std::string& param, int64_t electronic) co
     if (m_parameters.find(param) == m_parameters.end()) {
         throw std::runtime_error(param + " does not exist!");
     }
-
     const ParameterInfo& info = m_parameters.at(param);
+    if(info.electronicToPhysic.equation == ""){
+        return electronic;
+    }
 
     std::vector<double> values;
     for (const auto& var : info.electronicToPhysic.variables) {

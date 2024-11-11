@@ -7,17 +7,18 @@
 
 namespace
 {
+
 uint32_t build32(const uint8_t* buffer, size_t& idx){
-    uint32_t word = static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx]) << 23u) +
-            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+1]) << 15u) +
-            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+2]) << 7u) +
-            static_cast<uint32_t>(buffer[idx+3]);
+    uint32_t word = static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+3]) << 24u) +
+            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+2]) << 16u) +
+            static_cast<uint32_t>(static_cast<uint32_t>(buffer[idx+1]) << 8u) +
+            static_cast<uint32_t>(buffer[idx+1]);
     idx += 4;
     return word;
 }
 
 uint16_t build16(const uint8_t* buffer, size_t& idx){
-    uint16_t word = static_cast<uint32_t>(static_cast<uint32_t>(idx) << 7u) + static_cast<uint32_t>(idx+1);
+    uint16_t word = static_cast<uint16_t>(static_cast<uint16_t>(buffer[idx+1]) << 8u) + static_cast<uint16_t>(buffer[idx]);
     idx += 2;
     return word;
 }
@@ -44,37 +45,43 @@ std::ostream& spacing(std::ostream& os,size_t len)
     return (os << std::setw(len) << std::setfill(' ') << '\t');
 }
 
+std::ostream& operator<<(std::ostream& os, const GbtWord& word)
+{
+    os << std::hex << std::uppercase << word.buffer[4] << std::hex << word.buffer[3] << ' ';
+    os << std::hex << std::uppercase << word.buffer[2] << ' ';
+    os << std::hex << std::uppercase << word.buffer[1] << word.buffer[0];
+    return os;
+}
+
 }
 
 namespace gbt
 {
 
 
-[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint8_t, constants::FifoSize>& fifoData)
+[[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
     switch (fifoData[0]) {
-        case BCSyncLost::getErrorCode():
+        if(fifoData[0] == BCSyncLost::getErrorCode()){
             return std::make_shared<BCSyncLost>(fifoData);
+        }
 
-        case FifoOverload::getErrorCode():
+        if(fifoData[0] == FifoOverload::getErrorCode()){
             return std::make_shared<FifoOverload>(fifoData);
+        }
 
-        case PmEarlyHeader::getErrorCode():
+        if(fifoData[0] == PmEarlyHeader::getErrorCode()){
             return std::make_shared<PmEarlyHeader>(fifoData);
-
-        default:
-            Print::PrintError("Unsupported GBT ERROR!");
-            return std::make_shared<Unknown>(fifoData);
+        }
+        return std::make_shared<Unknown>(fifoData);
     }
 }
 
 
-Unknown::Unknown(const std::array<uint8_t, constants::FifoSize>& fifoData)
+Unknown::Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    size_t pos = 0;
-    for(size_t idx = 0; idx < constants::FifoSize; ){
-        data[pos++] = build32(fifoData.data(), idx);
-    }
+    static_assert(sizeof(data) == constants::FifoSize * sizeof(uint32_t));
+    std::memcpy((uint32_t*)&data, fifoData.data(), constants::FifoSize*sizeof(uint32_t));
 }
 
 [[nodiscard]] WinCCResponse Unknown::createWinCCResponse()
@@ -91,33 +98,17 @@ void Unknown::saveErrorReport()
     file << "\n";
     std::string timeStamp = createTimestamp();
 
-    file << timeStamp << "Unknown error report: ## SWT Frames" << std::endl;
+    file << timeStamp << "Unknown error report: ## FIFO content" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
         spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
     }
 }
 
-BCSyncLost::BCSyncLost(const std::array<uint8_t, constants::FifoSize>& fifoData)
+BCSyncLost::BCSyncLost(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    size_t index = 0;
-
-    data.errorCode = build32(fifoData.data(), index);
-
-    for (int i = 0; i < 10; ++i) {
-        for(int p = 0; p < GbtWord::WordSize; p++){
-            data.words[i].data.buffer[p] = build32(fifoData.data(),index);
-        }
-
-        data.words[i].counter = build16(fifoData.data(), index);
-        data.words[i].isData  = fifoData[index++];
-    }
-
-    data.BCCRU       = build16(fifoData.data(),index);
-    data.BCBoard     = build16(fifoData.data(),index);
-    data.orbitBoard  = build32(fifoData.data(),index);
-    data.orbitCRU    = build32(fifoData.data(),index);
-    data.reservedSpace[0] = build32(fifoData.data(),index);
-    data.reservedSpace[1] = build32(fifoData.data(),index);
+    static_assert(sizeof(data) == constants::FifoSize * sizeof(uint32_t));
+    std::memcpy((uint32_t*)&data, fifoData.data(), constants::FifoSize*sizeof(uint32_t));
+    return;
 }
 
 WinCCResponse BCSyncLost::createWinCCResponse()
@@ -134,27 +125,19 @@ void BCSyncLost::saveErrorReport()
     file << "\n";
     std::string timeStamp = createTimestamp();
 
-    file << timeStamp << "Board BCid: " << std::hex << data.orbitBoard << " " << std::hex << data.BCBoard << std::endl;
-    spacing(file, timeStamp.length()) << "CRU BCid: " << std::hex << data.orbitCRU << " " << std::hex << data.BCCRU << std::endl;
+    file << timeStamp << "Board BCid: " << std::hex << std::uppercase<< data.orbitBoard << " " << std::hex << std::uppercase << std::setw(3) << std::setfill('0') << data.BCBoard << std::endl;
+    spacing(file, timeStamp.length()) << "CRU BCid: " << std::hex << std::uppercase << data.orbitCRU << " " << std::hex << std::uppercase << std::setw(3) << std::setfill('0') << data.BCCRU << std::endl;
     spacing(file, timeStamp.length()) << "#### isData GBTword" << std::endl;
     for(int i = 0; i < 10; i++){
-        spacing(file, timeStamp.length()) << std::setw(4) << data.words[i].counter << " " << std::setw(6) << (data.words[i].isData ? "true" : "false");
-        for(int j = 0; j < GbtWord::WordSize; j++){
-            file << std::hex << data.words[i].data.buffer[j] << ' ';
-        }
-        file << std::endl;
+        spacing(file, timeStamp.length()) << std::setw(4) << std::dec << data.words[i].counter << " " << std::setw(6) << (data.words[i].isData ? "true" : "false") << " ";
+        file << data.words[i].data << std::endl;;
     }
 }
 
-PmEarlyHeader::PmEarlyHeader(const std::array<uint8_t, constants::FifoSize>& fifoData)
+PmEarlyHeader::PmEarlyHeader(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    size_t index = 0;
-    data.errorCode = build32(fifoData.data(), index);
-    for(int i = 0; i < 14; i++){
-        for(int p = 0; p < GbtWord::WordSize; p++){
-            data.words[i].buffer[p] = build32(fifoData.data(), index);
-        }
-    }
+    static_assert(sizeof(data) == constants::FifoSize * sizeof(uint32_t));
+    std::memcpy((uint32_t*)&data, fifoData.data(), constants::FifoSize*sizeof(uint32_t));
 }
 
 WinCCResponse PmEarlyHeader::createWinCCResponse()
@@ -174,28 +157,14 @@ void PmEarlyHeader::saveErrorReport()
     file << timeStamp <<"Input packet corrupted: header too early ## GBTword" << std::endl;
     for(int i = 0; i < 14; i++){
         spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << i << " ";
-        for(int j = 0; j < GbtWord::WordSize; j++){
-            file << std::hex << data.words[i].buffer[j] << ' ';
-        }
-        file << std::endl;
+        file << data.words[i] << std::endl;
     }
 }
 
-FifoOverload::FifoOverload(const std::array<uint8_t, constants::FifoSize>& fifoData)
+FifoOverload::FifoOverload(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    size_t index = 0;
-
-    data.errorCode = build32(fifoData.data(), index);
-    for(int i = 0; i<13; i++){
-        for(int p = 0; p < GbtWord::WordSize; p++){
-            data.words[i].buffer[p] = build32(fifoData.data(), index);
-        }
-    }
-
-    data.reservedSpace0 = build16(fifoData.data(), index);
-    data.rdRate = build16(fifoData.data(), index);
-    data.wrRate = build16(fifoData.data(), index);
-    data._reservedSpace1 = build16(fifoData.data(), index);
+    static_assert(sizeof(data) == constants::FifoSize * sizeof(uint32_t));
+    std::memcpy((uint32_t*)&data, fifoData.data(), constants::FifoSize*sizeof(uint32_t));
 }
 
 WinCCResponse FifoOverload::createWinCCResponse()
@@ -216,10 +185,8 @@ void FifoOverload::saveErrorReport()
     spacing(file, timeStamp.length()) << data.rdRate << " read and " << data.wrRate << " operations in last 1000 cycles" << std::endl;
     spacing(file, timeStamp.length()) << "## GBT word" << std::endl;
     for(int idx = 0; idx < 13; idx++){
-        spacing(file, timeStamp.length()) << std::setw(timeStamp.length()) << "\t" << std::setw(2) << std::setfill('0') << idx << " ";
-        for(int j = 0; j < GbtWord::WordSize; j++){
-            file << std::hex << data.words[idx].buffer[j] << ' ';
-        }
+        spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << idx << " ";
+        file << data.words[idx] << std::endl;
     }
 }
 

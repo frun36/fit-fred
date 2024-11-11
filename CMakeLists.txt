@@ -59,6 +59,11 @@ create_test(WinCCMessage
     ${MOCKS}
 )
 
+create_test(GbtErrorReports
+    test/GbtErrorReport/GbtErrors.cpp
+    mapi/src/gbtInterfaceUtils.cpp
+)
+
 # create_test(Board
 #     test/Board/BoardTest.cpp
 #     mapi/src/Board.cpp 
@@ -86,16 +91,4 @@ create_test(WinCCMessage
 #     ${MOCKS}
 # )
 
-create_test(
-    Configurations
-    test/Configurations/ConfigurationsTest.cpp 
-    mapi/src/services/Configurations.cpp 
-    mapi/src/BasicRequestHandler.cpp 
-    mapi/src/Board.cpp  
-    mapi/src/communication-utils/AlfResponseParser.cpp
-    mapi/src/communication-utils/SwtSequence.cpp
-    mapi/src/communication-utils/WinCCRequest.cpp
-    mapi/src/EnvironmentVariables.cpp 
-    ${MOCKS}
-)
-
+#

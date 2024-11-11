@@ -77,19 +77,11 @@ WinCCResponse BoardStatus::checkGbtErrors()
 
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
-    std::array<uint8_t, gbt::constants::FifoSize> fifoData;
+    std::array<uint32_t, gbt::constants::FifoSize> fifoData;
     AlfResponseParser parser(alfResponse);
     uint32_t idx = 0;
     for (auto line : parser) {
-        if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
-            continue;
-        }
-        if (idx >= gbt::constants::FifoSize)
-            break;
-        fifoData[idx++] = (line.frame.data >> 24) & 0xFF;
-        fifoData[idx++] = (line.frame.data >> 16) & 0xFF;
-        fifoData[idx++] = (line.frame.data >> 8) & 0xFF;
-        fifoData[idx++] = line.frame.data & 0xFF;
+        fifoData[idx++] = line.frame.data;
     }
 
     m_gbtError = gbt::parseFifoData(fifoData);

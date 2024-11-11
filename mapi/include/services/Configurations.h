@@ -126,8 +126,13 @@ class Configurations : public Mapigroup
         BoardCommunicationHandler m_tcm;
         string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
 
-        optional<int64_t> getDelayAElectronic() const;
-        optional<int64_t> getDelayCElectronic() const;
+        inline optional<int64_t> getDelayAElectronic() const {
+            return m_tcm.getBoard()->at("DELAY_A").getElectronicValueOptional();
+        }
+
+        inline optional<int64_t> getDelayCElectronic() const {
+            return m_tcm.getBoard()->at("DELAY_C").getElectronicValueOptional();
+        }
 
         struct DelayInfo {
             const string req;

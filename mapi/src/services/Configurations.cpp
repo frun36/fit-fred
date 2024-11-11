@@ -114,24 +114,6 @@ string Configurations::PmConfigurations::processOutputMessage(string msg)
 
 // TcmConfigurations
 
-optional<int64_t> Configurations::TcmConfigurations::getDelayAElectronic() const
-{
-    optional<double> delayNs = m_tcm.getBoard()->at("DELAY_A").getStoredValueOptional();
-    if (delayNs.has_value())
-        return m_tcm.getBoard()->calculateElectronic("DELAY_A", *delayNs);
-    else
-        return nullopt;
-}
-
-optional<int64_t> Configurations::TcmConfigurations::getDelayCElectronic() const
-{
-    optional<double> delayNs = m_tcm.getBoard()->at("DELAY_C").getStoredValueOptional();
-    if (delayNs.has_value())
-        return m_tcm.getBoard()->calculateElectronic("DELAY_C", *delayNs);
-    else
-        return nullopt;
-}
-
 optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfigurations::processDelayInput(optional<double> newDelayA, optional<double> newDelayC)
 {
     if (!newDelayA.has_value() && !newDelayC.has_value())

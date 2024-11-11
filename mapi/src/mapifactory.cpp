@@ -11,10 +11,6 @@ MapiFactory::MapiFactory(Fred* fred) : m_fred(fred)
     }
 }
 
-MapiFactory::~MapiFactory()
-{
-}
-
 void MapiFactory::generateObjects()
 {
     FitData boardsData;
@@ -40,7 +36,11 @@ void MapiFactory::generateObjects()
         m_parametersObjects.emplace_back(board);
         m_statusObjects.emplace_back(board, boardsData.getStatusList().at(section));
         m_resetObjects.emplace_back(board);
-        m_counterRatesObjects.emplace_back(board);
+        
+        if (board->type() == Board::Type::TCM)
+            m_counterRatesObjects.emplace_back(board, 15, 495);
+        else
+            m_counterRatesObjects.emplace_back(board, 24, 480);
 
         string servicePrefix = m_fred->Name() + "/" + section + "/" + boardName + "/";
 

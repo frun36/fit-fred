@@ -27,7 +27,7 @@ TEST(CounterRatesTest, FifoAlfResponse)
 TEST(CounterRatesTest, HandleCounterValues)
 {
     CounterRates cr(nullptr, 2, 8);
-    cr.m_updateRateSeconds = 2.;
+    cr.m_readInterval = 2.;
     EXPECT_EQ(cr.m_oldCounters, nullopt);
     EXPECT_EQ(cr.m_counterRates, nullopt);
 

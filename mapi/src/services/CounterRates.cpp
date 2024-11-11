@@ -2,7 +2,7 @@
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    SwtSequence seq = m_handler.processMessageFromWinCC(WinCCRequest::readRequest("CTR_FIFO_LOAD"));
+    SwtSequence seq = m_handler.processMessageFromWinCC(WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
     string alfResponse = executeAlfSequence(seq.getSequence());
     AlfResponseParser parser(alfResponse);
     if (!parser.isSuccess())
@@ -11,7 +11,7 @@ optional<uint32_t> CounterRates::getFifoLoad()
     return line.frame.data;
 }
 
-double CounterRates::mapUpdateRateCodeToSeconds(int64_t code)
+double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)
 {
     switch (code) {
         case 0:
@@ -41,19 +41,19 @@ void CounterRates::resetService()
     m_counterRates = nullopt;
 }
 
-CounterRates::UpdateRateState CounterRates::handleUpdateRate()
+CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 {
-    optional<int64_t> currUpdateRateCode = m_handler.getBoard()->at("COUNTER_UPD_RATE").getElectronicValueOptional();
-    double currUpdateRateSeconds = mapUpdateRateCodeToSeconds(*currUpdateRateCode);
+    optional<int64_t> currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+    double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
 
-    if (!currUpdateRateCode.has_value() || *currUpdateRateCode < 1 || *currUpdateRateCode > 7) {
-        return UpdateRateState::Invalid;
-    } else if (m_updateRateSeconds != currUpdateRateSeconds) {
-        m_updateRateSeconds = currUpdateRateSeconds;
+    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 1 || *currReadIntervalCode > 7) {
+        return ReadIntervalState::Invalid;
+    } else if (m_readInterval != currReadInterval) {
+        m_readInterval = currReadInterval;
         resetService();
-        return UpdateRateState::Changed;
+        return ReadIntervalState::Changed;
     } else {
-        return UpdateRateState::Ok;
+        return ReadIntervalState::Ok;
     }
 }
 
@@ -110,7 +110,7 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vect
         if (!m_counterRates.has_value())
             m_counterRates = vector<double>(m_numberOfCounters);
         for (size_t i = 0; i < m_numberOfCounters; i++)
-            m_counterRates->at(i) = (newValues[i] - oldValues[i]) / m_updateRateSeconds;
+            m_counterRates->at(i) = (newValues[i] - oldValues[i]) / m_readInterval;
         m_oldCounters = newValues;
         return FifoReadResult::Success;
     }
@@ -120,7 +120,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 {
     string request;
     for (uint32_t i = 0; i < fifoLoad; i++)
-        WinCCRequest::appendToRequest(request, WinCCRequest::readRequest("CTR_FIFO"));
+        WinCCRequest::appendToRequest(request, WinCCRequest::readRequest("COUNTERS_VALUES_READOUT"));
     SwtSequence seq = m_handler.processMessageFromWinCC(request);
     string alfResponse = executeAlfSequence(seq.getSequence());
 
@@ -138,13 +138,13 @@ void CounterRates::processExecution()
     }
 
 #ifndef FIT_UNIT_TEST
-    UpdateRateState updateRateState = handleUpdateRate();
+    ReadIntervalState readIntervalState = handleReadInterval();
 #else
-    UpdateRateState updateRateState = UpdateRateState::Ok;
+    ReadIntervalState readIntervalState = ReadIntervalState::Ok;
 #endif
 
-    if (updateRateState == UpdateRateState::Invalid) {
-        publishError("Invalid update rate");
+    if (readIntervalState == ReadIntervalState::Invalid) {
+        publishError("Invalid read interval");
         return;
     }
 
@@ -157,9 +157,9 @@ void CounterRates::processExecution()
 
     Response response;
 
-    if (updateRateState == UpdateRateState::Changed) {
+    if (readIntervalState == ReadIntervalState::Changed) {
         fifoState = FifoState::Full;
-        response.addUpdateRateChanged();
+        response.addReadIntervalChanged();
     }
 
     response.addFifoState(fifoState);
@@ -182,8 +182,8 @@ void CounterRates::processExecution()
         publishAnswer(response);
 }
 
-CounterRates::Response& CounterRates::Response::addUpdateRateChanged() {
-    m_msg += "Update rate changed\n";
+CounterRates::Response& CounterRates::Response::addReadIntervalChanged() {
+    m_msg += "Read interval changed\n";
     return *this;
 }
 

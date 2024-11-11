@@ -31,7 +31,7 @@ class CounterRates : public IndefiniteMapi
     CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
         : m_handler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
 
-    enum class UpdateRateState {
+    enum class ReadIntervalState {
         Invalid,
         Changed,
         Ok
@@ -62,7 +62,7 @@ class CounterRates : public IndefiniteMapi
        public:
         Response(string msg = "", bool isError = false) : m_msg(msg), m_isError(isError) {}
 
-        Response& addUpdateRateChanged();
+        Response& addReadIntervalChanged();
         Response& addFifoState(FifoState fifoState);
         Response& addFifoReadResult(FifoReadResult fifoReadResult);
         Response& addRatesResponse(string ratesResponse);
@@ -83,11 +83,11 @@ class CounterRates : public IndefiniteMapi
     uint32_t m_numberOfCounters;
     uint32_t m_maxFifoWords;
     optional<vector<uint32_t>> m_oldCounters;
-    double m_updateRateSeconds;
+    double m_readInterval;
     optional<vector<double>> m_counterRates;
 
-    static double mapUpdateRateCodeToSeconds(int64_t code);
-    UpdateRateState handleUpdateRate();
+    static double mapReadIntervalCodeToSeconds(int64_t code);
+    ReadIntervalState handleReadInterval();
 
     optional<uint32_t> getFifoLoad();
     FifoState evaluateFifoState(uint32_t fifoLoad) const;

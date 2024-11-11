@@ -114,7 +114,7 @@ string Configurations::PmConfigurations::processOutputMessage(string msg)
 
 // TcmConfigurations
 
-optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfigurations::processDelayInput(optional<double> newDelayA, optional<double> newDelayC)
+optional<Configurations::TcmConfigurations::DelayChange> Configurations::TcmConfigurations::processDelayInput(optional<double> newDelayA, optional<double> newDelayC)
 {
     if (!newDelayA.has_value() && !newDelayC.has_value())
         return nullopt;
@@ -138,20 +138,20 @@ optional<Configurations::TcmConfigurations::DelayInfo> Configurations::TcmConfig
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", newDelayC.value()));
     }
 
-    return make_optional<DelayInfo>(request, delayDifference);
+    return delayDifference == 0 ? nullopt : make_optional<DelayChange>(request, delayDifference);
 }
 
 bool Configurations::TcmConfigurations::handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
-    optional<DelayInfo> delayInfo = processDelayInput(configurationInfo.delayA, configurationInfo.delayC);
+    optional<DelayChange> delayChange = processDelayInput(configurationInfo.delayA, configurationInfo.delayC);
 
-    if (!delayInfo.has_value()) {
+    if (!delayChange.has_value()) {
         return true;
     }
 
-    Print::PrintVerbose("Delay difference " + to_string(delayInfo->delayDifference) + ", req:\n" + delayInfo->req);
+    Print::PrintVerbose("Delay difference " + to_string(delayChange->delayDifference) + ", req:\n" + delayChange->req);
 
-    auto parsedResponse = processSequenceThroughHandler(m_tcm, delayInfo->req);
+    auto parsedResponse = processSequenceThroughHandler(m_tcm, delayChange->req);
     string parsedResponseString = parsedResponse.getContents();
     response += parsedResponseString;
     if (parsedResponse.isError()) {
@@ -163,7 +163,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
     // Change of delays/phase is slowed down to 1 unit/ms in the TCM logic, to avoid PLL relock.
     // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set.
     // This sleep waits for the phase shift to finish, and the bit will be cleared later in the procedure
-    usleep((static_cast<useconds_t>(delayInfo->delayDifference) + 10) * 1000);
+    usleep((static_cast<useconds_t>(delayChange->delayDifference) + 10) * 1000);
     return true;
 }
 

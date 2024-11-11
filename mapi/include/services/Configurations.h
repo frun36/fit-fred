@@ -134,13 +134,13 @@ class Configurations : public Mapigroup
             return m_tcm.getBoard()->at("DELAY_C").getElectronicValueOptional();
         }
 
-        struct DelayInfo {
+        struct DelayChange {
             const string req;
             const uint32_t delayDifference;
 
-            DelayInfo(const string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
+            DelayChange(const string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
         };
-        optional<DelayInfo> processDelayInput(optional<double> delayA, optional<double> delayC);
+        optional<DelayChange> processDelayInput(optional<double> delayA, optional<double> delayC);
 
         bool handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
         bool handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);

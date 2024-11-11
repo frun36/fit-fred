@@ -58,6 +58,7 @@ class BoardCommunicationHandler
     virtual ParsedResponse processMessageFromALF(std::string);
 
     std::shared_ptr<Board> getBoard() { return m_board; }
+    std::shared_ptr<const Board> getBoard() const { return m_board; }
 
    protected:
     struct ParameterToHandle {

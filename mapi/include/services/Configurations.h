@@ -13,20 +13,14 @@
 #include "../../test/mocks/include/utility.h"
 #include "gtest/gtest.h"
 
-namespace
-{
-class ConfigurationsTest_Delays_Test;
-class ConfigurationsTest_PmPim_Test;
-class ConfigurationsTest_Tcm_Test;
-} // namespace
-
 #else
 
 #include "Parser/utility.h"
 #include "Database/databaseinterface.h"
 #include "Fred/Mapi/mapi.h"
-#include "Fred/Mapi/iterativemapi.h"
+#include "Fred/Mapi/indefinitemapi.h"
 #include "Fred/Mapi/mapigroup.h"
+#include "services/BasicFitIndefiniteMapi.h"
 
 #endif
 
@@ -72,26 +66,12 @@ then write 0x4 to 0xF
  - write chosen value to 0x50 if in range - 0: no update; 1: 0.1s; 2: 0.2s, 3: 0.5s, 4: 1s; 5: 2s; 6: 5s; 7: 10s
 If everything was successful, create log entry
 
-
-Configurations DB structure:
-CONFIGURATIONS:
-CONFIGURATION_NAME
-BOARD_NAME
-PARAMETER_ID
-PARAMETER_VALUE
-
 */
 
 class Configurations : public Mapigroup
 {
-#ifdef FIT_UNIT_TEST
-    FRIEND_TEST(::ConfigurationsTest, Delays);
-    FRIEND_TEST(::ConfigurationsTest, PmPim);
-    FRIEND_TEST(::ConfigurationsTest, Tcm);
-#endif
-
    public:
-    class BoardConfigurations : public BoardCommunicationHandler
+    class BoardConfigurations
     {
        public:
         struct ConfigurationInfo {
@@ -102,11 +82,16 @@ class Configurations : public Mapigroup
             ConfigurationInfo(const string& req, optional<double> delayA, optional<double> delayC) : req(req), delayA(delayA), delayC(delayC) {}
         };
 
-        ConfigurationInfo getConfigurationInfo(const string& name);
+        static vector<vector<MultiBase*>> fetchConfiguration(string_view configuration, string_view board);
+        static ConfigurationInfo getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
 
-        BoardConfigurations(std::shared_ptr<Board> board) : BoardCommunicationHandler(board) {}
-        static std::vector<std::vector<MultiBase*>> fetchConfiguration(std::string_view configuration, std::string_view board);
-        static std::string convertConfigToRequest(std::string_view name, std::vector<std::vector<MultiBase*>>& configuration);
+        virtual string_view getBoardName() const = 0;
+
+        inline ConfigurationInfo fetchAndGetConfigurationInfo(string_view name) const
+        {
+            auto dbData = fetchConfiguration(name, getBoardName());
+            return getConfigurationInfo(name, dbData);
+        }
 
         virtual ~BoardConfigurations() = default;
     };
@@ -114,77 +99,52 @@ class Configurations : public Mapigroup
    private:
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
-#ifdef FIT_UNIT_TEST
-        FRIEND_TEST(::ConfigurationsTest, Delays);
-        FRIEND_TEST(::ConfigurationsTest, PmPim);
-#endif
+       private:
+        BoardCommunicationHandler m_pm;
+
        public:
-        PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
+        PmConfigurations(std::shared_ptr<Board> board) : m_pm(board) {}
+
+        string_view getBoardName() const override { return m_pm.getBoard()->getName(); }
 
         string processInputMessage(string msg);
         string processOutputMessage(string msg);
     };
 
-    class TcmConfigurations : public Iterativemapi, public BoardConfigurations
+    class TcmConfigurations : public BasicFitIndefiniteMapi, public BoardConfigurations
     {
-#ifdef FIT_UNIT_TEST
-        FRIEND_TEST(::ConfigurationsTest, Delays);
-        FRIEND_TEST(::ConfigurationsTest, Tcm);
-#endif
        public:
-        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
+        TcmConfigurations(std::shared_ptr<Board> board) : m_tcm(board)
         {
             if (!board->doesExist("DELAY_A") || !board->doesExist("DELAY_C"))
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
         }
 
+        void processExecution() override;
+
        private:
-        string handleConfigurationStart(const string& msg);
+        BoardCommunicationHandler m_tcm;
+        string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
 
-        string handleConfigurationContinuation(const string& msg);
-
-        string handleDelayResponse(const string& msg);
-
-        string handleDataResponse(const string& msg);
-
-        string processInputMessage(string msg) override;
-        string processOutputMessage(string msg) override;
-
-        optional<string> m_configurationName = nullopt;
-        optional<ConfigurationInfo> m_configurationInfo = nullopt;
-        enum class State { Idle,
-                           ApplyingDelays,
-                           DelaysApplied,
-                           ApplyingData } m_state = State::Idle;
-
-        // ControlServer stores delays as i16, and waits for (MAX_DELAY_DIFFERENCE + 10) milliseconds,
-        // which is odd, since the delay range is in nanoseconds
-        double m_delayDifference = 0;
-
-        optional<double> getDelayA() const
-        {
-            return m_board->at("DELAY_A").getPhysicalValueOptional();
+        inline optional<int64_t> getDelayAElectronic() const {
+            return m_tcm.getBoard()->at("DELAY_A").getElectronicValueOptional();
         }
 
-        optional<double> getDelayC() const
-        {
-            return m_board->at("DELAY_C").getPhysicalValueOptional();
+        inline optional<int64_t> getDelayCElectronic() const {
+            return m_tcm.getBoard()->at("DELAY_C").getElectronicValueOptional();
         }
 
-        optional<string> m_delayResponse = nullopt;
+        struct DelayChange {
+            const string req;
+            const uint32_t delayDifference;
 
-        static constexpr const char* CONTINUE_MESSAGE = "_CONTINUE";
+            DelayChange(const string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
+        };
+        optional<DelayChange> processDelayInput(optional<double> delayA, optional<double> delayC);
 
-        optional<SwtSequence> processDelayInput(optional<double> delayA, optional<double> delayC);
-
-        void reset()
-        {
-            m_configurationName = nullopt;
-            m_configurationInfo = nullopt;
-            m_delayDifference = 0;
-            m_delayResponse = nullopt;
-            m_state = State::Idle;
-        }
+        bool handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
+        bool handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
+        void handleResetErrors();
     };
 
    public:

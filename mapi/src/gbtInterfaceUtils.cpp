@@ -100,7 +100,7 @@ void Unknown::saveErrorReport()
 
     file << timeStamp << "Unknown error report: ## FIFO content" << std::endl;
     for(int idx = 0; idx < data.size(); idx++){
-        spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << idx << " " << std::hex << data[idx] << std::endl;
+        spacing(file, timeStamp.length()) << std::setw(2) << std::setfill('0') << idx << " " << std::hex << std::uppercase << data[idx] << std::endl;
     }
 }
 

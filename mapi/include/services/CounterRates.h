@@ -86,7 +86,7 @@ class CounterRates : public IndefiniteMapi
     double m_updateRateSeconds;
     optional<vector<double>> m_counterRates;
 
-    static double mapUpdateRateCodeToSeconds(uint8_t code);
+    static double mapUpdateRateCodeToSeconds(int64_t code);
     UpdateRateState handleUpdateRate();
 
     optional<uint32_t> getFifoLoad();

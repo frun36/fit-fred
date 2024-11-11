@@ -11,7 +11,7 @@ optional<uint32_t> CounterRates::getFifoLoad()
     return line.frame.data;
 }
 
-double CounterRates::mapUpdateRateCodeToSeconds(uint8_t code)
+double CounterRates::mapUpdateRateCodeToSeconds(int64_t code)
 {
     switch (code) {
         case 0:
@@ -43,7 +43,7 @@ void CounterRates::resetService()
 
 CounterRates::UpdateRateState CounterRates::handleUpdateRate()
 {
-    optional<uint8_t> currUpdateRateCode = m_handler.getBoard()->at("COUNTER_UPD_RATE").getStoredValueOptional();
+    optional<int64_t> currUpdateRateCode = m_handler.getBoard()->at("COUNTER_UPD_RATE").getElectronicValueOptional();
     double currUpdateRateSeconds = mapUpdateRateCodeToSeconds(*currUpdateRateCode);
 
     if (!currUpdateRateCode.has_value() || *currUpdateRateCode < 1 || *currUpdateRateCode > 7) {

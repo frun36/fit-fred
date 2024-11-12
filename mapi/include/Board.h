@@ -141,11 +141,7 @@ class Board
 
     const std::string& getName() const { return m_name; }
 
-    void access();
-    void release();
-
-    void lock();
-    void unlock();
+    std::shared_mutex& getLock(){return m_lock;}
 
    private:
     Identity m_identity;
@@ -156,6 +152,5 @@ class Board
     std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 
-    pthread_rwlock_t m_rwLock;
-    pthread_rwlockattr_t m_rwLockAttr;
+    std::shared_mutex m_lock;
 };

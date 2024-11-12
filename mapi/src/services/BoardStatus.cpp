@@ -16,16 +16,15 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
 void BoardStatus::processExecution()
 {
     bool running = true;
-    // while(running)
-    //{
+   
     std::string fromWinCC = waitForRequest(running);
     if (running == false)
         return;
-    std::string response = executeAlfSequence(m_request.getSequence());
+    //
+    std::shared_lock<std::shared_mutex> lock(m_boardHandler.getBoard()->getLock());
+    //
 
-    //
-    m_boardHandler.getBoard()->access();
-    //
+    std::string response = executeAlfSequence(m_request.getSequence());
 
     updateTimePoint();
 
@@ -52,10 +51,6 @@ void BoardStatus::processExecution()
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
 
-    //
-    m_boardHandler.getBoard()->release();
-    //
-    
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
 }

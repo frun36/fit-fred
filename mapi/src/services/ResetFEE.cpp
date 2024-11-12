@@ -13,9 +13,10 @@ void ResetFEE::processExecution()
         return;
     }
 
-    m_TCM.getBoard()->lock();
+    std::unique_lock<std::shared_mutex> tcmLock(m_TCM.getBoard()->getLock());
+    std::list<std::unique_lock<std::shared_mutex>> pmsLock;
     for(auto& PM : m_PMs){
-        PM.getBoard()->lock();
+        pmsLock.emplace_back(PM.getBoard()->getLock());
     }
 
     if (request.find(ResetFEE::EnforceDefGbtConfig) != std::string::npos) {
@@ -63,11 +64,6 @@ void ResetFEE::processExecution()
             publishError(response.getContents());
             return;
         }
-    }
-
-    m_TCM.getBoard()->unlock();
-    for(auto& PM : m_PMs){
-        PM.getBoard()->unlock();
     }
 
     publishAnswer("SUCCESS");

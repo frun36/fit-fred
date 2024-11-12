@@ -13,6 +13,11 @@ void ResetFEE::processExecution()
         return;
     }
 
+    m_TCM.getBoard()->lock();
+    for(auto& PM : m_PMs){
+        PM.getBoard()->lock();
+    }
+
     if (request.find(ResetFEE::EnforceDefGbtConfig) != std::string::npos) {
         m_enforceDefGbtConfig = true;
     } else {
@@ -59,16 +64,17 @@ void ResetFEE::processExecution()
             return;
         }
     }
+
+    m_TCM.getBoard()->unlock();
+    for(auto& PM : m_PMs){
+        PM.getBoard()->unlock();
+    }
+
     publishAnswer("SUCCESS");
 }
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 {
-    m_TCM.getBoard()->lock();
-    for(auto& PM : m_PMs){
-        PM.getBoard()->lock();
-    }
-
     {
         auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSwitchGBTErrorReports(false));
         if (parsedResponse.errors.empty() == false) {
@@ -97,11 +103,6 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
-    }
-
-    m_TCM.getBoard()->unlock();
-    for(auto& PM : m_PMs){
-        PM.getBoard()->unlock();
     }
 
     return EmptyResponse;

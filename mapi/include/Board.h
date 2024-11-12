@@ -141,7 +141,7 @@ class Board
 
     bool isTcm() const 
     {
-        return m_boardType == Type::TCM;
+        return m_identity.type == Type::TCM;
     }
 
     std::shared_ptr<Board> getParentBoard() {
@@ -150,7 +150,6 @@ class Board
     
    private:
     Identity m_identity;
-    Type m_boardType;
     std::string m_name;
     uint32_t m_address;
     std::shared_ptr<Board> m_parentBoard;

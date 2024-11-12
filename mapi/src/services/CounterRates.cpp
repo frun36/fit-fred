@@ -26,10 +26,16 @@ void CounterRates::resetService()
 
 CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 {
-    optional<int64_t> currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
-    if (!currReadIntervalCode.has_value()) {
-        processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
-        currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+    optional<int64_t> currReadIntervalCode;
+    shared_ptr<Board> board = m_handler.getBoard();
+    if(board->isTcm()) {
+        currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        if (!currReadIntervalCode.has_value()) {
+            processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
+            currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        }
+    } else {
+        currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
     }
     
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);

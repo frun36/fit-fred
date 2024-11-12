@@ -37,7 +37,7 @@ void MapiFactory::generateObjects()
         m_statusObjects.emplace_back(board, boardsData.getStatusList().at(section));
         m_resetObjects.emplace_back(board);
         
-        if (board->type() == Board::Type::TCM)
+        if (board->isTcm())
             m_counterRatesObjects.emplace_back(board, 15, 495);
         else
             m_counterRatesObjects.emplace_back(board, 24, 480);

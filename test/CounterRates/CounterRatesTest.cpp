@@ -28,36 +28,51 @@ TEST(CounterRatesTest, HandleCounterValues)
 {
     CounterRates cr(nullptr, 2, 8);
     cr.m_readInterval = 2.;
-    EXPECT_EQ(cr.m_oldCounters, nullopt);
-    EXPECT_EQ(cr.m_counterRates, nullopt);
+    EXPECT_EQ(cr.m_counters, nullopt);
+    EXPECT_EQ(cr.m_rates, nullopt);
 
     cr.handleCounterValues({}, false);
-    EXPECT_EQ(cr.m_oldCounters, nullopt);
-    EXPECT_EQ(cr.m_counterRates, nullopt);
+    EXPECT_EQ(cr.m_counters, nullopt);
+    EXPECT_EQ(cr.m_rates, nullopt);
 
     cr.handleCounterValues({{1000, 1000}}, false);
-    EXPECT_EQ(cr.m_oldCounters, vector<uint32_t>({1000, 1000}));
-    EXPECT_EQ(cr.m_counterRates, nullopt);
+    EXPECT_EQ(cr.m_counters, vector<uint32_t>({1000, 1000}));
+    EXPECT_EQ(cr.m_rates, nullopt);
 
     cr.handleCounterValues({{3000, 2000}}, false);
-    EXPECT_EQ(cr.m_oldCounters, vector<uint32_t>({3000, 2000}));
-    EXPECT_EQ(cr.m_counterRates, vector<double>({1000., 500.}));
+    EXPECT_EQ(cr.m_counters, vector<uint32_t>({3000, 2000}));
+    EXPECT_EQ(cr.m_rates, vector<double>({1000., 500.}));
     
     cr.handleCounterValues({}, false);
-    EXPECT_EQ(cr.m_oldCounters, vector<uint32_t>({3000, 2000}));
-    EXPECT_EQ(cr.m_counterRates, vector<double>({1000., 500.}));
+    EXPECT_EQ(cr.m_counters, vector<uint32_t>({3000, 2000}));
+    EXPECT_EQ(cr.m_rates, vector<double>({1000., 500.}));
 
     cr.handleCounterValues({{4000, 3000}, {6000, 5000}}, false);
-    EXPECT_EQ(cr.m_oldCounters, vector<uint32_t>({6000, 5000}));
-    EXPECT_EQ(cr.m_counterRates, vector<double>({1000, 1000}));
+    EXPECT_EQ(cr.m_counters, vector<uint32_t>({6000, 5000}));
+    EXPECT_EQ(cr.m_rates, vector<double>({1000, 1000}));
 
     cr.handleCounterValues({{7000, 7000}, {8000, 8000}}, true);
-    EXPECT_EQ(cr.m_oldCounters, nullopt);
-    EXPECT_EQ(cr.m_counterRates, nullopt);
+    EXPECT_EQ(cr.m_counters, nullopt);
+    EXPECT_EQ(cr.m_rates, nullopt);
 
     cr.handleCounterValues({{1000, 1000}, {2000, 2000}}, false);
-    EXPECT_EQ(cr.m_oldCounters, vector<uint32_t>({2000, 2000}));
-    EXPECT_EQ(cr.m_counterRates, vector<double>({500, 500}));
+    EXPECT_EQ(cr.m_counters, vector<uint32_t>({2000, 2000}));
+    EXPECT_EQ(cr.m_rates, vector<double>({500, 500}));
+}
+
+// Just to test overall formatting - assumes correct conversion of enum types
+TEST(CounterRatesTest, Response) {
+    CounterRates cr(nullptr, 2, 8);
+
+    cr.m_counters = nullopt;
+    cr.m_rates = nullopt;
+    string responseNone = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, CounterRates::FifoReadResult::Success);
+    EXPECT_EQ(responseNone, "READ_INTERVAL,OK\nFIFO_STATE,SINGLE\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,-\nRATES,-");
+    
+    cr.m_counters = vector<uint32_t>({123, 456});
+    cr.m_rates = vector<double>({1.2, 2.1});
+    string responseSome = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, CounterRates::FifoReadResult::Success);
+    EXPECT_EQ(responseSome, "READ_INTERVAL,OK\nFIFO_STATE,SINGLE\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,123,456\nRATES,1.2,2.1");
 }
 
 } // namespace

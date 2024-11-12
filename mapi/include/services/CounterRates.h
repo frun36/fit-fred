@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include "communication-utils/AlfResponseParser.h"
 #include "BoardCommunicationHandler.h"
 
@@ -12,6 +13,7 @@ namespace
 {
 class CounterRatesTest_FifoAlfResponse_Test;
 class CounterRatesTest_HandleCounterValues_Test;
+class CounterRatesTest_Response_Test;
 } // namespace
 
 #else
@@ -25,25 +27,31 @@ class CounterRates : public IndefiniteMapi
 #ifdef FIT_UNIT_TEST
     FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);
     FRIEND_TEST(::CounterRatesTest, HandleCounterValues);
+    FRIEND_TEST(::CounterRatesTest, Response);
 #endif
 
    public:
     CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
-        : m_handler(board), IndefiniteMapi(), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
+        : IndefiniteMapi(), m_handler(board), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
 
     enum class ReadIntervalState {
+        Disabled,
         Invalid,
         Changed,
         Ok
     };
 
+    friend ostream& operator<<(ostream& os, ReadIntervalState readIntervalState);
+
     enum class FifoState {
         Empty,
         Single,
         Multiple,
-        Full,
+        Outdated,
         Unexpected
     };
+
+    friend ostream& operator<<(ostream& os, FifoState readIntervalState);
 
     enum class FifoReadResult {
         Failure,
@@ -53,38 +61,15 @@ class CounterRates : public IndefiniteMapi
         NotPerformed
     };
 
-    class Response
-    {
-       private:
-        string m_msg;
-        bool m_isError;
-
-       public:
-        Response(string msg = "", bool isError = false) : m_msg(msg), m_isError(isError) {}
-
-        Response& addReadIntervalChanged();
-        Response& addFifoState(FifoState fifoState);
-        Response& addFifoReadResult(FifoReadResult fifoReadResult);
-        Response& addRatesResponse(string ratesResponse);
-
-        bool isError() const
-        {
-            return m_isError;
-        }
-
-        operator string() const
-        {
-            return m_msg;
-        }
-    };
+    friend ostream& operator<<(ostream& os, FifoReadResult readIntervalState);
 
    private:
     BoardCommunicationHandler m_handler;
     uint32_t m_numberOfCounters;
     uint32_t m_maxFifoWords;
-    optional<vector<uint32_t>> m_oldCounters;
+    optional<vector<uint32_t>> m_counters;
     double m_readInterval;
-    optional<vector<double>> m_counterRates;
+    optional<vector<double>> m_rates;
 
     static double mapReadIntervalCodeToSeconds(int64_t code);
     ReadIntervalState handleReadInterval();
@@ -98,7 +83,7 @@ class CounterRates : public IndefiniteMapi
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     void resetService();
 
-    string generateRatesResponse() const;
+    string generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, FifoReadResult fifoReadResult) const;
 
     void processExecution() override;
 };

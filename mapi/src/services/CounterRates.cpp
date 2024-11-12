@@ -1,4 +1,5 @@
 #include "services/CounterRates.h"
+#include <unistd.h>
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -13,32 +14,14 @@ optional<uint32_t> CounterRates::getFifoLoad()
 
 double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)
 {
-    switch (code) {
-        case 0:
-            return 0.;
-        case 1:
-            return 0.1;
-        case 2:
-            return 0.2;
-        case 3:
-            return 0.5;
-        case 4:
-            return 1.0;
-        case 5:
-            return 2.0;
-        case 6:
-            return 5.0;
-        case 7:
-            return 10.0;
-        default:
-            return NAN;
-    }
+    static constexpr double readIntervalMapping[] = { 0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0 };
+    return code >= 0 && code <= 7 ? readIntervalMapping[code] : 0.;
 }
 
 void CounterRates::resetService()
 {
-    m_oldCounters = nullopt;
-    m_counterRates = nullopt;
+    m_counters = nullopt;
+    m_rates = nullopt;
 }
 
 CounterRates::ReadIntervalState CounterRates::handleReadInterval()
@@ -46,8 +29,10 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     optional<int64_t> currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
 
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 1 || *currReadIntervalCode > 7) {
+    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
+    } else if (*currReadIntervalCode == 0) {
+        return ReadIntervalState::Disabled;
     } else if (m_readInterval != currReadInterval) {
         m_readInterval = currReadInterval;
         resetService();
@@ -66,7 +51,7 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
     } else if (fifoLoad < m_maxFifoWords && fifoLoad % m_numberOfCounters == 0) {
         return FifoState::Multiple;
     } else if (fifoLoad >= m_maxFifoWords) {
-        return FifoState::Full;
+        return FifoState::Outdated;
     } else {
         return FifoState::Unexpected;
     }
@@ -100,18 +85,18 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vect
         return FifoReadResult::SuccessCleared;
     }
 
-    if (counterValues.size() == 1 && !m_oldCounters.has_value()) {
-        m_oldCounters = counterValues[0];
+    if (counterValues.size() == 1 && !m_counters.has_value()) {
+        m_counters = counterValues[0];
         return FifoReadResult::SuccessNoRates;
     } else {
         size_t counterValuesSize = counterValues.size();
         const vector<uint32_t>& newValues = counterValues.back();
-        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_oldCounters;
-        if (!m_counterRates.has_value())
-            m_counterRates = vector<double>(m_numberOfCounters);
+        const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_counters;
+        if (!m_rates.has_value())
+            m_rates = vector<double>(m_numberOfCounters);
         for (size_t i = 0; i < m_numberOfCounters; i++)
-            m_counterRates->at(i) = (newValues[i] - oldValues[i]) / m_readInterval;
-        m_oldCounters = newValues;
+            m_rates->at(i) = (newValues[i] - oldValues[i]) / m_readInterval;
+        m_counters = newValues;
         return FifoReadResult::Success;
     }
 }
@@ -130,13 +115,6 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 
 void CounterRates::processExecution()
 {
-    bool running = true;
-
-    string request = waitForRequest(running);
-    if (running == false) {
-        return;
-    }
-
 #ifndef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = handleReadInterval();
 #else
@@ -146,7 +124,14 @@ void CounterRates::processExecution()
     if (readIntervalState == ReadIntervalState::Invalid) {
         publishError("Invalid read interval");
         return;
+    } else if (readIntervalState == ReadIntervalState::Disabled) {
+        publishAnswer("COUNTER_READ_INTERVAL = 0: service disabled. Send request to re-enable");
+        bool running;
+        waitForRequest(running);
+        return;
     }
+
+    usleep(static_cast<useconds_t>(m_readInterval * 1e6));
 
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
@@ -155,96 +140,108 @@ void CounterRates::processExecution()
     }
     FifoState fifoState = evaluateFifoState(*fifoLoad);
 
-    Response response;
-
     if (readIntervalState == ReadIntervalState::Changed) {
-        fifoState = FifoState::Full;
-        response.addReadIntervalChanged();
+        fifoState = FifoState::Outdated;
     }
 
-    response.addFifoState(fifoState);
-
-    FifoReadResult readResult = FifoReadResult::NotPerformed;
+    FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
     if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
-        readResult = readFifo(*fifoLoad);
-    } else if (fifoState == FifoState::Full) {
-        readResult = clearFifo(*fifoLoad);
-    }
-    
-    response.addFifoReadResult(readResult);
-
-    if (readResult == FifoReadResult::Success)
-        response.addRatesResponse(generateRatesResponse());
-
-    if (response.isError())
-        publishError(response);
-    else
-        publishAnswer(response);
-}
-
-CounterRates::Response& CounterRates::Response::addReadIntervalChanged() {
-    m_msg += "Read interval changed\n";
-    return *this;
-}
-
-CounterRates::Response& CounterRates::Response::addFifoState(FifoState fifoState) {
-    switch (fifoState) {
-        case FifoState::Unexpected:
-            m_msg += "FIFO state: unexpected\n";
-            m_isError = true;
-            break;
-        case FifoState::Empty:
-            m_msg += "FIFO state: empty\n";
-            break;
-        case FifoState::Multiple:
-            m_msg += "FIFO state: warning - multiple counter sets in FIFO\n";
-            break;
-        case FifoState::Single:
-            m_msg += "FIFO state: ok\n";
-            break;
-        case FifoState::Full:
-            m_msg += "FIFO state: full\n";
-            break;
-    }
-    return *this;
-}
-
-CounterRates::Response& CounterRates::Response::addFifoReadResult(FifoReadResult fifoReadResult) {
-    switch (fifoReadResult) {
-        case FifoReadResult::Success:
-            m_msg += "FIFO read: successful\n";
-            break;
-        case FifoReadResult::SuccessNoRates:
-            m_msg += "FIFO read: successful, no rates\n";
-            break;
-        case FifoReadResult::SuccessCleared:
-            m_msg += "FIFO read: successful, cleared\n";
-            break;
-        case FifoReadResult::Failure:
-            m_isError = true;
-            m_msg += "FIFO read: failed\n";
-            break;
-        case FifoReadResult::NotPerformed:
-            m_msg += "FIFO read: not performed\n";
-            break;
+        fifoReadResult = readFifo(*fifoLoad);
+    } else if (fifoState == FifoState::Outdated) {
+        fifoReadResult = clearFifo(*fifoLoad);
     }
 
-    return *this;
+    if (fifoReadResult == FifoReadResult::Failure) {
+        publishError("Couldn't read FIFO");
+        return;
+    }
+
+    string response = generateResponse(readIntervalState, fifoState, fifoReadResult);
+    publishAnswer(response);
 }
 
-CounterRates::Response& CounterRates::Response::addRatesResponse(string ratesResponse) {
-    m_msg += ratesResponse;
-    return *this;
-}
-
-string CounterRates::generateRatesResponse() const
+ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalState)
 {
-    if (!m_counterRates.has_value())
-        return "Unexpected: no counter data";
+    switch (readIntervalState) {
+        case CounterRates::ReadIntervalState::Invalid:
+            os << "INVALID";
+            break;
+        case CounterRates::ReadIntervalState::Disabled:
+            os << "DISABLED";
+            break;
+        case CounterRates::ReadIntervalState::Changed:
+            os << "CHANGED";
+            break;
+        case CounterRates::ReadIntervalState::Ok:
+            os << "OK";
+            break;
+    }
 
+    return os;
+}
+
+ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
+{
+    switch (fifoState) {
+        case CounterRates::FifoState::Empty:
+            os << "EMPTY";
+            break;
+        case CounterRates::FifoState::Single:
+            os << "SINGLE";
+            break;
+        case CounterRates::FifoState::Multiple:
+            os << "MULTIPLE";
+            break;
+        case CounterRates::FifoState::Outdated:
+            os << "OUTDATED";
+            break;
+        case CounterRates::FifoState::Unexpected:
+            os << "UNEXPECTED";
+            break;
+    }
+    return os;
+}
+
+ostream& operator<<(ostream& os, CounterRates::FifoReadResult fifoReadResult)
+{
+    switch (fifoReadResult) {
+        case CounterRates::FifoReadResult::Failure:
+            os << "FAILURE";
+            break;
+        case CounterRates::FifoReadResult::SuccessNoRates:
+            os << "SUCCESS_NO_RATES";
+            break;
+        case CounterRates::FifoReadResult::SuccessCleared:
+            os << "SUCCES_CLEARED";
+            break;
+        case CounterRates::FifoReadResult::Success:
+            os << "SUCCESS";
+            break;
+        case CounterRates::FifoReadResult::NotPerformed:
+            os << "NOT_PERFORMED";
+            break;
+    }
+    return os;
+}
+
+string CounterRates::generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, FifoReadResult fifoReadResult) const
+{
     stringstream ss;
-    for (auto rate : *m_counterRates) {
-        ss << rate << '\n';
+    ss << "READ_INTERVAL," << readIntervalState << "\nFIFO_STATE," << fifoState << "\nFIFO_READ_RESULT," << fifoReadResult << "\nCOUNTERS";
+    if (m_counters.has_value()) {
+        for (auto c : *m_counters) {
+            ss << "," << c;
+        }
+    } else {
+        ss << ",-";
+    }
+    ss << "\nRATES";
+    if (m_rates.has_value()) {
+        for (auto r : *m_rates) {
+            ss << "," << r;
+        }
+    } else {
+        ss << ",-";
     }
 
     return ss.str();

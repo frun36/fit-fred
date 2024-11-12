@@ -13,7 +13,8 @@ unordered_map<string, Board::ParameterInfo> testMap = {
     { "UNSIGNED_HALF", Board::ParameterInfo("UNSIGNED_HALF", 0xf00d, 16, 16, 1, Board::ParameterInfo::ValueEncoding::Unsigned, 0, 100, Equation::Empty(), Equation::Empty(), false, false) },
     { "READONLY_FLAG", Board::ParameterInfo("READONLY_FLAG", 0xbeef, 7, 1, 1, Board::ParameterInfo::ValueEncoding::Unsigned, 0, 1, Equation::Empty(), Equation::Empty(), false, true) },
     { "DELAY_A", Board::ParameterInfo("DELAY_A", 0x0, 0, 16, 1, Board::ParameterInfo::ValueEncoding::Signed, -1e16, 1e16, Equation::Empty(), Equation::Empty(), false, false) },
-    { "DELAY_C", Board::ParameterInfo("DELAY_C", 0x1, 0, 16, 1, Board::ParameterInfo::ValueEncoding::Signed, -1e16, 1e16, Equation::Empty(), Equation::Empty(), false, false) }
+    { "DELAY_C", Board::ParameterInfo("DELAY_C", 0x1, 0, 16, 1, Board::ParameterInfo::ValueEncoding::Signed, -1e16, 1e16, Equation::Empty(), Equation::Empty(), false, false) },
+    { "BOARD_STATUS_SYSTEM_RESET", Board::ParameterInfo("BOARD_STATUS_SYSTEM_RESET", 0x2, 0, 1, 1, Board::ParameterInfo::ValueEncoding::Unsigned, 0, 1, Equation::Empty(), Equation::Empty(), false, false) }
 };
 
 TEST(ConfigurationsTest, PmPim)
@@ -40,6 +41,7 @@ TEST(ConfigurationsTest, Tcm)
     tcm->emplace(testMap.at("DELAY_C"));
     tcm->emplace(testMap.at("UNSIGNED_HALF"));
     tcm->emplace(testMap.at("SIGNED_HALF"));
+    tcm->emplace(testMap.at("BOARD_STATUS_SYSTEM_RESET"));
 
     Configurations::TcmConfigurations tcmCfg(tcm);
 
@@ -104,7 +106,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult, tcmPimIdleDelaysExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -116,7 +118,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPomApplyingDelaysResult, tcmPomApplyingDelaysExpected);
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::DelaysApplied);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -130,10 +132,14 @@ TEST(ConfigurationsTest, Tcm)
 
     // Idle - _CONTINUE
     string tcmPimIdleDelaysContinueResult = tcmCfg.processInputMessage("_CONTINUE");
-    EXPECT_EQ(tcmPimIdleDelaysContinueResult, tcmPimIdleNoDelaysExpected.getSequence());
+    auto tcmPimIdleDelaysContinueExpected = SwtSequence({ SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0x2, { 0xfffffffe, 0x1 }),
+                                                          SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, 0xf00d, { 0x0, 0x00070000 }),
+                                                          SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0x2, {}, true),
+                                                          SwtSequence::SwtOperation(SwtSequence::Operation::Read, 0xf00d, {}, true) });
+    EXPECT_EQ(tcmPimIdleDelaysContinueResult, tcmPimIdleDelaysContinueExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 5);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, -1);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -193,7 +199,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult2, tcmPimIdleDelaysExpected2.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -225,7 +231,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPimIdleDelaysResult3, tcmPimIdleDelaysExpected3.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingDelays);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -236,7 +242,7 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_EQ(tcmPomApplyingDelaysResult, tcmPomApplyingDelaysExpected);
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::DelaysApplied);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);
@@ -246,10 +252,10 @@ TEST(ConfigurationsTest, Tcm)
     EXPECT_THROW(tcmCfg.processOutputMessage("success"), runtime_error);
 
     string tcmPimIdleDelaysContinueResult3 = tcmCfg.processInputMessage("_CONTINUE");
-    EXPECT_EQ(tcmPimIdleDelaysContinueResult3, tcmPimIdleNoDelaysExpected.getSequence());
+    EXPECT_EQ(tcmPimIdleDelaysContinueResult3, tcmPimIdleDelaysContinueExpected.getSequence());
     EXPECT_EQ(tcmCfg.m_state, Configurations::TcmConfigurations::State::ApplyingData);
     EXPECT_EQ(tcmCfg.m_configurationName, "TEST");
-    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\n");
+    EXPECT_EQ(tcmCfg.m_configurationInfo->req, "UNSIGNED_HALF,WRITE,7.000000\nSIGNED_HALF,WRITE,0.000000\nBOARD_STATUS_SYSTEM_RESET,WRITE,1\n");
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayA, 0);
     EXPECT_EQ(tcmCfg.m_configurationInfo->delayC, 0);
     EXPECT_EQ(tcmCfg.m_delayDifference, 5);

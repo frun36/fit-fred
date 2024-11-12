@@ -73,7 +73,7 @@ create_test(GbtErrorReports
 # create_test(Parameters
 #     test/Parameters/ParametersRefactoredTest.cpp 
 #     mapi/src/Parameters.cpp  
-#     mapi/src/BasicRequestHandler.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
 #     mapi/src/Board.cpp 
 #     mapi/src/SwtSequence.cpp 
 #     mapi/src/AlfResponseParser.cpp 
@@ -81,9 +81,9 @@ create_test(GbtErrorReports
 #     ${MOCKS}
 # )
 
-# create_test(BasicRequestHandler
-#     test/BasicRequestHandler/BasicRequestHandlerTest.cpp 
-#     mapi/src/BasicRequestHandler.cpp 
+# create_test(BoardCommunicationHandler
+#     test/BoardCommunicationHandler/BoardCommunicationHandlerTest.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
 #     mapi/src/Board.cpp  
 #     mapi/src/SwtSequence.cpp 
 #     mapi/src/AlfResponseParser.cpp 
@@ -91,4 +91,16 @@ create_test(GbtErrorReports
 #     ${MOCKS}
 # )
 
-#
+# create_test(
+#     Configurations
+#     test/Configurations/ConfigurationsTest.cpp 
+#     mapi/src/services/Configurations.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
+#     mapi/src/Board.cpp  
+#     mapi/src/communication-utils/AlfResponseParser.cpp
+#     mapi/src/communication-utils/SwtSequence.cpp
+#     mapi/src/communication-utils/WinCCRequest.cpp
+#     mapi/src/EnvironmentVariables.cpp 
+#     ${MOCKS}
+# )
+

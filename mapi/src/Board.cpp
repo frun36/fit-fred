@@ -23,6 +23,14 @@ Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, st
         m_identity.side = (name.find("A") != std::string::npos) ? Side::A : Side::C;
         m_identity.number = name.back() - '0';
     }
+
+    pthread_rwlockattr_setkind_np(&m_rwLockAttr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+    pthread_rwlock_init(&m_rwLock, &m_rwLockAttr);
+}
+
+Board::~Board()
+{
+    pthread_rwlock_destroy(&m_rwLock);
 }
 
 Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t boardAddress) : name(base.name),
@@ -224,4 +232,24 @@ uint32_t Board::convertElectronicToRaw(const std::string& param, int64_t physcia
     }
 
     return static_cast<uint32_t>(physcial) << info.startBit;
+}
+
+void Board::access()
+{
+    pthread_rwlock_rdlock(&m_rwLock);
+}
+
+void Board::release()
+{
+    pthread_rwlock_unlock(&m_rwLock);
+}
+        
+void Board::lock()
+{
+    pthread_rwlock_wrlock(&m_rwLock);
+}
+
+void Board::unlock()
+{
+    pthread_rwlock_unlock(&m_rwLock);
 }

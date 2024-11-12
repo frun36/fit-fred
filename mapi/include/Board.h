@@ -7,6 +7,8 @@
 #include <memory>
 #include <optional>
 #include <list>
+#include<shared_mutex>
+
 #include "Equation.h"
 #include "EnvironmentVariables.h"
 
@@ -108,6 +110,7 @@ class Board
     };
 
     Board(std::string name, uint32_t address, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentVariables> settings = nullptr);
+    ~Board();
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
@@ -138,6 +141,12 @@ class Board
 
     const std::string& getName() const { return m_name; }
 
+    void access();
+    void release();
+
+    void lock();
+    void unlock();
+
    private:
     Identity m_identity;
     Type m_boardType;
@@ -146,4 +155,7 @@ class Board
     std::shared_ptr<Board> m_mainBoard;
     std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
+
+    pthread_rwlock_t m_rwLock;
+    pthread_rwlockattr_t m_rwLockAttr;
 };

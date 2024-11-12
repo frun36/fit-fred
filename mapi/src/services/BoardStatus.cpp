@@ -23,6 +23,10 @@ void BoardStatus::processExecution()
         return;
     std::string response = executeAlfSequence(m_request.getSequence());
 
+    //
+    m_boardHandler.getBoard()->access();
+    //
+
     updateTimePoint();
 
     auto parsedResponse = m_boardHandler.processMessageFromALF(response);
@@ -48,6 +52,10 @@ void BoardStatus::processExecution()
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
 
+    //
+    m_boardHandler.getBoard()->release();
+    //
+    
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
 }

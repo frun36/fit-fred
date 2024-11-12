@@ -27,6 +27,11 @@ void CounterRates::resetService()
 CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 {
     optional<int64_t> currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+    if (!currReadIntervalCode.has_value()) {
+        processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
+        currReadIntervalCode = m_handler.getBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+    }
+    
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
 
     if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {

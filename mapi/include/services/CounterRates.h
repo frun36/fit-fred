@@ -4,9 +4,10 @@
 #include "communication-utils/AlfResponseParser.h"
 #include "BoardCommunicationHandler.h"
 
+#include "services/BasicFitIndefiniteMapi.h"
+
 #ifdef FIT_UNIT_TEST
 
-#include "../../test/mocks/include/mapi.h"
 #include "gtest/gtest.h"
 
 namespace
@@ -16,13 +17,9 @@ class CounterRatesTest_HandleCounterValues_Test;
 class CounterRatesTest_Response_Test;
 } // namespace
 
-#else
-
-#include "Fred/Mapi/indefinitemapi.h"
-
 #endif
 
-class CounterRates : public IndefiniteMapi
+class CounterRates : public BasicFitIndefiniteMapi
 {
 #ifdef FIT_UNIT_TEST
     FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);
@@ -32,7 +29,7 @@ class CounterRates : public IndefiniteMapi
 
    public:
     CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
-        : IndefiniteMapi(), m_handler(board), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
+        : m_handler(board), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
 
     enum class ReadIntervalState {
         Disabled,

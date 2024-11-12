@@ -102,7 +102,6 @@ class Board
             return m_electronicValue;
         }
 
-
        private:
         std::optional<double> m_physicalValue;
         std::optional<int64_t> m_electronicValue;
@@ -138,6 +137,7 @@ class Board
     Identity getIdentity() const { return m_identity; }
 
     const std::string& getName() const { return m_name; }
+
 
     bool isTcm() const 
     {

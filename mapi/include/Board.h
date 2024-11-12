@@ -102,6 +102,7 @@ class Board
             return m_electronicValue;
         }
 
+
        private:
         std::optional<double> m_physicalValue;
         std::optional<int64_t> m_electronicValue;
@@ -138,12 +139,21 @@ class Board
 
     const std::string& getName() const { return m_name; }
 
+    bool isTcm() const 
+    {
+        return m_boardType == Type::TCM;
+    }
+
+    std::shared_ptr<Board> getParentBoard() {
+        return m_parentBoard;
+    }
+    
    private:
     Identity m_identity;
     Type m_boardType;
     std::string m_name;
     uint32_t m_address;
-    std::shared_ptr<Board> m_mainBoard;
+    std::shared_ptr<Board> m_parentBoard;
     std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
 };

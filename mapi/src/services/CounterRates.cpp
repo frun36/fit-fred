@@ -1,4 +1,5 @@
 #include "services/CounterRates.h"
+#include "FREDServer/Alfred/print.h"
 #include <unistd.h>
 
 optional<uint32_t> CounterRates::getFifoLoad()
@@ -126,10 +127,11 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 
 void CounterRates::processExecution()
 {
-#ifndef FIT_UNIT_TEST
-    ReadIntervalState readIntervalState = handleReadInterval();
-#else
+    Print::PrintVerbose("Entering CounterRates process execution");
+#ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;
+#else
+    ReadIntervalState readIntervalState = handleReadInterval();
 #endif
 
     if (readIntervalState == ReadIntervalState::Invalid) {
@@ -142,7 +144,7 @@ void CounterRates::processExecution()
         return;
     }
 
-    usleep(static_cast<useconds_t>(m_readInterval * 1e6));
+    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
 
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
@@ -167,7 +169,7 @@ void CounterRates::processExecution()
         return;
     }
 
-    string response = generateResponse(readIntervalState, fifoState, fifoReadResult);
+    string response = generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
     publishAnswer(response);
 }
 
@@ -235,10 +237,10 @@ ostream& operator<<(ostream& os, CounterRates::FifoReadResult fifoReadResult)
     return os;
 }
 
-string CounterRates::generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, FifoReadResult fifoReadResult) const
+string CounterRates::generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const
 {
     stringstream ss;
-    ss << "READ_INTERVAL," << readIntervalState << "\nFIFO_STATE," << fifoState << "\nFIFO_READ_RESULT," << fifoReadResult << "\nCOUNTERS";
+    ss << "READ_INTERVAL," << readIntervalState << ',' << m_readInterval << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad << "\nFIFO_READ_RESULT," << fifoReadResult << "\nCOUNTERS";
     if (m_counters.has_value()) {
         for (auto c : *m_counters) {
             ss << "," << c;

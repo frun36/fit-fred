@@ -63,16 +63,17 @@ TEST(CounterRatesTest, HandleCounterValues)
 // Just to test overall formatting - assumes correct conversion of enum types
 TEST(CounterRatesTest, Response) {
     CounterRates cr(nullptr, 2, 8);
+    cr.m_readInterval = 0.5;
 
     cr.m_counters = nullopt;
     cr.m_rates = nullopt;
-    string responseNone = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, CounterRates::FifoReadResult::Success);
-    EXPECT_EQ(responseNone, "READ_INTERVAL,OK\nFIFO_STATE,SINGLE\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,-\nRATES,-");
+    string responseNone = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, 12, CounterRates::FifoReadResult::Success);
+    EXPECT_EQ(responseNone, "READ_INTERVAL,OK,0.5s\nFIFO_STATE,SINGLE,12\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,-\nRATES,-");
     
     cr.m_counters = vector<uint32_t>({123, 456});
     cr.m_rates = vector<double>({1.2, 2.1});
-    string responseSome = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, CounterRates::FifoReadResult::Success);
-    EXPECT_EQ(responseSome, "READ_INTERVAL,OK\nFIFO_STATE,SINGLE\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,123,456\nRATES,1.2,2.1");
+    string responseSome = cr.generateResponse(CounterRates::ReadIntervalState::Ok, CounterRates::FifoState::Single, 21, CounterRates::FifoReadResult::Success);
+    EXPECT_EQ(responseSome, "READ_INTERVAL,OK,0.5s\nFIFO_STATE,SINGLE,21\nFIFO_READ_RESULT,SUCCESS\nCOUNTERS,123,456\nRATES,1.2,2.1");
 }
 
 } // namespace

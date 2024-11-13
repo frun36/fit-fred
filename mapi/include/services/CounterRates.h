@@ -80,7 +80,7 @@ class CounterRates : public BasicFitIndefiniteMapi
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     void resetService();
 
-    string generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, FifoReadResult fifoReadResult) const;
+    string generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const;
 
     void processExecution() override;
 };

@@ -26,7 +26,7 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 {
     optional<int64_t> currReadIntervalCode;
     shared_ptr<Board> board = m_handler.getBoard();
-    if(board->isTcm()) {
+    if (board->isTcm()) {
         currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
             processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
@@ -35,7 +35,7 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     } else {
         currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
     }
-    
+
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
 
     if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
@@ -75,6 +75,8 @@ vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse) 
     vector<vector<uint32_t>> counterValues;
     uint32_t idx = 0;
     for (auto line : parser) {
+        if (line.type == AlfResponseParser::Line::Type::ResponseToWrite)
+            continue;
         if (idx % m_numberOfCounters == 0)
             counterValues.push_back(vector<uint32_t>(m_numberOfCounters));
         counterValues[idx / m_numberOfCounters][idx % m_numberOfCounters] = line.frame.data;

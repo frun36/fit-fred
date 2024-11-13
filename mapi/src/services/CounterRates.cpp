@@ -4,13 +4,10 @@
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    SwtSequence seq = m_handler.processMessageFromWinCC(WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
-    string alfResponse = executeAlfSequence(seq.getSequence());
-    AlfResponseParser parser(alfResponse);
-    if (!parser.isSuccess())
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
+    if (parsedResponse.isError())
         return nullopt;
-    AlfResponseParser::Line line = *parser.begin();
-    return line.frame.data;
+    return m_handler.getBoard()->at("COUNTERS_FIFO_LOAD").getElectronicValueOptional();
 }
 
 double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)

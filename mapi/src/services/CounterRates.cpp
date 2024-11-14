@@ -127,6 +127,8 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
 void CounterRates::processExecution()
 {
     Print::PrintVerbose("Entering CounterRates process execution");
+    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
+
 #ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;
 #else
@@ -143,18 +145,19 @@ void CounterRates::processExecution()
         return;
     }
 
-    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
-
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
         publishError("Couldn't read FIFO state");
         return;
     }
-    FifoState fifoState = evaluateFifoState(*fifoLoad);
 
+    FifoState fifoState;
     if (readIntervalState == ReadIntervalState::Changed) {
         fifoState = FifoState::Outdated;
+    } else {
+        fifoState = evaluateFifoState(*fifoLoad);
     }
+
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
     if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
@@ -169,6 +172,7 @@ void CounterRates::processExecution()
     }
 
     string response = generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
+    Print::PrintVerbose(response);
     publishAnswer(response);
 }
 

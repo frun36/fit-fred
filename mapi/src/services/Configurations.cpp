@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <sstream>
 #include "utils.h"
-#include <Database/sql.h>
-#include <Database/DatabaseTables.h>
+#include <database/sql.h>
+#include <database/DatabaseTables.h>
 #include <Alfred/print.h>
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)

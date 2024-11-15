@@ -2,7 +2,7 @@
 #include "FitData.h"
 #include "Alfred/print.h"
 #include "utils.h"
-#include "Database/sql.h"
+#include "database/sql.h"
 #include <sstream>
 #include <iomanip>
 

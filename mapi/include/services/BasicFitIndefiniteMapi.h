@@ -21,5 +21,15 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         return handler.processMessageFromALF(executeAlfSequence(seq));
     }
 
+    std::pair<std::vector<std::vector<uint32_t>>,BoardCommunicationHandler::ErrorReport> readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead){
+        std::string seq;
+        try {
+            seq = handler.createReadFifoRequest(fifoName, wordsToRead).getSequence();
+        } catch (const std::exception& e) {
+            return { std::vector<std::vector<uint32_t>>(), {fifoName, e.what()}};
+        }
+        return {handler.parseFifo(executeAlfSequence(seq)),{}};
+    }
+
     static const BoardCommunicationHandler::ParsedResponse EmptyResponse;
 };

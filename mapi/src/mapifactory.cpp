@@ -57,4 +57,7 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM"), dynamic_cast<Mapi*>(m_resetSystem.get()));
     m_resetError = std::make_shared<ResetErrors>(tcm, pms);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), dynamic_cast<Mapi*>(m_resetError.get()));
+    m_setPhaseDelay = std::make_shared<SetPhaseDelay>(tcm);
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), dynamic_cast<Mapi*>(m_setPhaseDelay.get()));
+
 }

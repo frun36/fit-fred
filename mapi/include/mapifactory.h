@@ -9,6 +9,7 @@
 #include "services/ResetFEE.h"
 #include "services/Reset.h"
 #include "services/ResetErrors.h"
+#include "services/SetPhaseDelay.h"
 #include <exception>
 #include <stdexcept>
 #include <string>
@@ -29,6 +30,7 @@ class MapiFactory
 
     std::shared_ptr<ResetFEE> m_resetSystem;
     std::shared_ptr<ResetErrors> m_resetError;
+    std::shared_ptr<SetPhaseDelay> m_setPhaseDelay;
     void generateObjects();
 
    public:

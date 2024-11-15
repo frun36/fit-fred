@@ -25,13 +25,13 @@ void SetPhaseDelay::processExecution()
     std::this_thread::sleep_for(std::chrono::milliseconds(abs(oldValue - static_cast<int64_t>(delay.getPhysicalValue()))));
 
     {
-        auto response = processSequenceThroughHandler(m_handler,  WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1));
+        auto response = processSequenceThroughHandler(m_handler,  WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1), false);
         if (response.errors.empty() == false) {
             publishError(response.getContents());
             return;
         }
     }
-    
+
     WinCCResponse response;
     response.addParameter(delay.name, {delay.getPhysicalValue()});
     publishAnswer(response.getContents());

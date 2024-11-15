@@ -1,4 +1,6 @@
 /*
+Github repository: https://github.com/six-ddc/sql-builder
+
 MIT License
 
 Copyright (c) 2018 dongcheng.du

@@ -156,3 +156,50 @@ void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line
         }
     }
 }
+
+SwtSequence BoardCommunicationHandler::createReadFifoRequest(std::string fifoName, size_t wordsToRead)
+{
+    resetExecutionData();
+    Board::ParameterInfo& fifoInfo = m_board->at(fifoName);
+    SwtSequence request;
+    for(size_t n = 0; n < wordsToRead; n++){
+        request.addOperation(SwtSequence::Operation::Read, fifoInfo.baseAddress, nullptr);
+    }
+    m_registerTasks[fifoInfo.baseAddress].emplace_back(fifoName, std::nullopt);
+    return request;
+}
+
+std::vector<std::vector<uint32_t>> BoardCommunicationHandler::parseFifo(std::string alfResponse)
+{
+    if(m_registerTasks.size() != 1){
+        throw std::runtime_error("Forbidden action - FIFO read has been interleaved with other operation!");
+    }
+
+    auto& fifoTasks =  m_registerTasks.begin()->second;
+    if(fifoTasks.size() != 1){
+        throw std::runtime_error("Forbidden action - FIFO read has been interleaved with other operation!");
+    }
+
+    auto& fifoTask = fifoTasks.front();
+    if(fifoTask.toCompare != std::nullopt){
+        throw std::runtime_error("Tried to parsed response to write by parse FIFO method");
+    }
+
+    Board::ParameterInfo& fifoInfo = m_board->at(fifoTask.name);
+
+    std::vector<std::vector<uint32_t>> fifo(1);
+    AlfResponseParser parser(alfResponse);
+
+    for(auto line: parser){
+        if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
+            continue;
+        }
+        if(fifo.back().size() == fifoInfo.regBlockSize){
+            fifo.emplace_back(std::vector<uint32_t>());
+            fifo.back().reserve(fifoInfo.regBlockSize);
+        }
+        fifo.back().emplace_back(m_board->parseElectronic(fifoInfo.name, line.frame.data));
+    }
+
+    return fifo;
+}

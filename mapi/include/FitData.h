@@ -2,7 +2,7 @@
 #include <cmath>
 #include <memory>
 #include <unordered_map>
-#include "Database/DatabaseTables.h"
+#include "database/DatabaseTables.h"
 #include "Board.h"
 
 typedef uint8_t columnIdx;

@@ -1,6 +1,6 @@
 #include <sstream>
 #include <algorithm>
-#include "Database/DatabaseTables.h"
+#include "database/DatabaseTables.h"
 
 ///
 ///     ParameteresTable

@@ -169,7 +169,7 @@ SwtSequence BoardCommunicationHandler::createReadFifoRequest(std::string fifoNam
     return request;
 }
 
-std::vector<std::vector<uint32_t>> BoardCommunicationHandler::parseFifo(std::string alfResponse)
+BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::parseFifo(std::string alfResponse)
 {
     if(m_registerTasks.size() != 1){
         throw std::runtime_error("Forbidden action - FIFO read has been interleaved with other operation!");
@@ -190,6 +190,10 @@ std::vector<std::vector<uint32_t>> BoardCommunicationHandler::parseFifo(std::str
     std::vector<std::vector<uint32_t>> fifo(1);
     AlfResponseParser parser(alfResponse);
 
+    if (!parser.isSuccess()) {
+            return { {}, ErrorReport{"SEQUENCE", "ALF COMMUNICATION FAILED"} };
+    }
+
     for(auto line: parser){
         if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
             continue;
@@ -201,5 +205,5 @@ std::vector<std::vector<uint32_t>> BoardCommunicationHandler::parseFifo(std::str
         fifo.back().emplace_back(m_board->parseElectronic(fifoInfo.name, line.frame.data));
     }
 
-    return fifo;
+    return {fifo,{}};
 }

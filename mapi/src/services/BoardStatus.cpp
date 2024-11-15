@@ -76,14 +76,14 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
     }
 
     auto fifoResponse = readFifo(m_boardHandler, fifo.name, fifo.regBlockSize);
-    if(fifoResponse.second != std::nullopt){
-        return {WinCCResponse(), {fifoResponse.second.value()}};
+    if(fifoResponse.errorReport != std::nullopt){
+        return {WinCCResponse(), {fifoResponse.errorReport.value()}};
     }
 
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
     std::array<uint32_t, gbt::constants::FifoSize> fifoData;
-    std::copy(fifoResponse.first.front().begin(), fifoResponse.first.front().end(), fifoData.begin());
+    std::copy(fifoResponse.fifoContent.front().begin(), fifoResponse.fifoContent.front().end(), fifoData.begin());
 
     std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
 

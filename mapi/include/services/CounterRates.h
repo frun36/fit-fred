@@ -41,6 +41,7 @@ class CounterRates : public BasicFitIndefiniteMapi
     friend ostream& operator<<(ostream& os, ReadIntervalState readIntervalState);
 
     enum class FifoState {
+        BoardError,
         Empty,
         Single,
         Multiple,

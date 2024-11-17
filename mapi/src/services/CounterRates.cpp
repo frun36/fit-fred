@@ -53,7 +53,9 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 
 CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
 {
-    if (fifoLoad == 0) {
+    if (fifoLoad == 0xFFFFFFFF) {
+        return FifoState::BoardError;
+    } else if (fifoLoad == 0) {
         return FifoState::Empty;
     } else if (fifoLoad == m_numberOfCounters) {
         return FifoState::Single;
@@ -97,7 +99,7 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
     SwtSequence request = m_handler.createReadFifoRequest("COUNTERS_VALUES_READOUT", fifoLoad);
     string alfResponse = executeAlfSequence(request.getSequence());
     BoardCommunicationHandler::FifoResponse response = m_handler.parseFifo(alfResponse);
-    if(response.isError())
+    if (response.isError())
         return {};
 
     return handleCounterValues(move(response.fifoContent), clearOnly);
@@ -136,12 +138,17 @@ void CounterRates::processExecution()
     } else {
         fifoState = evaluateFifoState(*fifoLoad);
     }
-
+    if (fifoState == FifoState::BoardError) {
+        publishError("A board error occurred on FIFO_LOAD readout");
+        return;
+    } else if (fifoState == FifoState::Unexpected) {
+        publishError("Unexpected FIFO_LOAD state - clearing fifo");
+    }
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
     if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
         fifoReadResult = readFifo(*fifoLoad);
-    } else if (fifoState == FifoState::Outdated) {
+    } else if (fifoState == FifoState::Outdated || fifoState == FifoState::Unexpected) {
         fifoReadResult = clearFifo(*fifoLoad);
     }
 
@@ -178,6 +185,9 @@ ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalSta
 ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
 {
     switch (fifoState) {
+        case CounterRates::FifoState::BoardError:
+            os << "BOARD_ERROR";
+            break;
         case CounterRates::FifoState::Empty:
             os << "EMPTY";
             break;

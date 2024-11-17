@@ -105,31 +105,19 @@ CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clea
     return handleCounterValues(move(response.fifoContent), clearOnly);
 }
 
-void CounterRates::processExecution()
+optional<string> CounterRates::handleDirectReadout() {
+    publishError("Direct counter readout mode unsupported. Send request to wake this service up");
+    bool running;
+    waitForRequest(running);
+    return nullopt;
+}
+
+optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalState)
 {
-    Print::PrintVerbose("Entering CounterRates process execution");
-    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
-
-#ifdef FIT_UNIT_TEST
-    ReadIntervalState readIntervalState = ReadIntervalState::Ok;
-#else
-    ReadIntervalState readIntervalState = handleReadInterval();
-#endif
-
-    if (readIntervalState == ReadIntervalState::Invalid) {
-        publishError("Invalid read interval");
-        return;
-    } else if (readIntervalState == ReadIntervalState::Disabled) {
-        publishAnswer("COUNTER_READ_INTERVAL = 0: service disabled. Send request to re-enable");
-        bool running;
-        waitForRequest(running);
-        return;
-    }
-
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
         publishError("Couldn't read FIFO state");
-        return;
+        return nullopt;
     }
 
     FifoState fifoState;
@@ -140,7 +128,7 @@ void CounterRates::processExecution()
     }
     if (fifoState == FifoState::BoardError) {
         publishError("A board error occurred on FIFO_LOAD readout");
-        return;
+        return nullopt;
     } else if (fifoState == FifoState::Unexpected) {
         publishError("Unexpected FIFO_LOAD state - clearing fifo");
     }
@@ -154,12 +142,36 @@ void CounterRates::processExecution()
 
     if (fifoReadResult == FifoReadResult::Failure) {
         publishError("Couldn't read FIFO");
-        return;
+        return nullopt;
     }
 
-    string response = generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
-    Print::PrintVerbose(response);
-    publishAnswer(response);
+    return generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
+}
+
+void CounterRates::processExecution()
+{
+    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
+
+#ifdef FIT_UNIT_TEST
+    ReadIntervalState readIntervalState = ReadIntervalState::Ok;
+#else
+    ReadIntervalState readIntervalState = handleReadInterval();
+#endif
+
+    optional<string> response;
+    if (readIntervalState == ReadIntervalState::Invalid) {
+        publishError("Invalid read interval");
+        return;
+    } else if (readIntervalState == ReadIntervalState::Disabled) {
+        response = handleDirectReadout();
+    } else {
+        response = handleFifoReadout(readIntervalState);
+    }
+
+    if(response.has_value()) {
+        Print::PrintVerbose(*response);
+        publishAnswer(*response);
+    }
 }
 
 ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalState)

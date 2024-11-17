@@ -82,5 +82,8 @@ class CounterRates : public BasicFitIndefiniteMapi
 
     string generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const;
 
+    optional<string> handleDirectReadout();
+    optional<string> handleFifoReadout(ReadIntervalState readIntervalState);
+
     void processExecution() override;
 };

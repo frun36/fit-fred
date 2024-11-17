@@ -54,10 +54,11 @@ class BoardCommunicationHandler
         }
     };
 
-    struct FifoResponse
-    {
+    struct FifoResponse {
         std::vector<std::vector<uint32_t>> fifoContent;
         std::optional<ErrorReport> errorReport;
+
+        bool isError() const { return errorReport.has_value(); }
     };
 
     SwtSequence processMessageFromWinCC(std::string, bool = true);
@@ -71,8 +72,8 @@ class BoardCommunicationHandler
 
    protected:
     struct ParameterToHandle {
-        ParameterToHandle(const std::string& name_, const std::optional<double>& toCompare_) : name(name_), toCompare(toCompare_) {}
-        ParameterToHandle(const std::string& name_, std::optional<double>&& toCompare_) : name(name_), toCompare(toCompare_) {}
+        ParameterToHandle(const std::string& name_, const std::optional<uint32_t>& toCompare_) : name(name_), toCompare(toCompare_) {}
+        ParameterToHandle(const std::string& name_, std::optional<uint32_t>&& toCompare_) : name(name_), toCompare(toCompare_) {}
         std::string name;
         std::optional<uint32_t> toCompare;
     };

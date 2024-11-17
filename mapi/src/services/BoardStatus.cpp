@@ -44,7 +44,7 @@ void BoardStatus::processExecution()
     }
 
     auto gbtErrors = checkGbtErrors();
-    if(gbtErrors.isError()){
+    if (gbtErrors.isError()) {
         publishError(gbtErrors.getContents());
     }
 
@@ -59,14 +59,14 @@ void BoardStatus::processExecution()
 void BoardStatus::updateEnvironment()
 {
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
-                            (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
+                                              (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
 }
 
 BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 {
     if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getPhysicalValue() == gbt::constants::FifoEmpty) {
-        return {WinCCResponse(),{}};
+        return { WinCCResponse(), {} };
     }
 
     Board::ParameterInfo& fifo = m_boardHandler.getBoard()->at(gbt::parameters::Fifo);
@@ -76,8 +76,8 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
     }
 
     auto fifoResponse = readFifo(m_boardHandler, fifo.name, fifo.regBlockSize);
-    if(fifoResponse.errorReport != std::nullopt){
-        return {WinCCResponse(), {fifoResponse.errorReport.value()}};
+    if (fifoResponse.isError()) {
+        return { WinCCResponse(), { fifoResponse.errorReport.value() } };
     }
 
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
@@ -87,5 +87,5 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 
     std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
 
-    return {error->createWinCCResponse(),{}};
+    return { error->createWinCCResponse(), {} };
 }

@@ -66,27 +66,7 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
     }
 }
 
-vector<vector<uint32_t>> CounterRates::parseFifoAlfResponse(string alfResponse) const
-{
-    AlfResponseParser parser(alfResponse);
-    if (!parser.isSuccess())
-        return {};
-
-    vector<vector<uint32_t>> counterValues;
-    uint32_t idx = 0;
-    for (auto line : parser) {
-        if (line.type == AlfResponseParser::Line::Type::ResponseToWrite)
-            continue;
-        if (idx % m_numberOfCounters == 0)
-            counterValues.push_back(vector<uint32_t>(m_numberOfCounters));
-        counterValues[idx / m_numberOfCounters][idx % m_numberOfCounters] = line.frame.data;
-        idx++;
-    }
-
-    return counterValues;
-}
-
-CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vector<uint32_t>>& counterValues, bool clearOnly)
+CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vector<uint32_t>>&& counterValues, bool clearOnly)
 {
     if (counterValues.empty())
         return FifoReadResult::Failure;
@@ -114,14 +94,13 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vect
 
 CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clearOnly)
 {
-    string request;
-    for (uint32_t i = 0; i < fifoLoad; i++)
-        WinCCRequest::appendToRequest(request, WinCCRequest::readRequest("COUNTERS_VALUES_READOUT"));
-    SwtSequence seq = m_handler.processMessageFromWinCC(request);
-    string alfResponse = executeAlfSequence(seq.getSequence());
+    SwtSequence request = m_handler.createReadFifoRequest("COUNTERS_VALUES_READOUT", fifoLoad);
+    string alfResponse = executeAlfSequence(request.getSequence());
+    BoardCommunicationHandler::FifoResponse response = m_handler.parseFifo(alfResponse);
+    if(response.isError())
+        return {};
 
-    vector<vector<uint32_t>> counterValues = parseFifoAlfResponse(alfResponse);
-    return handleCounterValues(counterValues, clearOnly);
+    return handleCounterValues(move(response.fifoContent), clearOnly);
 }
 
 void CounterRates::processExecution()

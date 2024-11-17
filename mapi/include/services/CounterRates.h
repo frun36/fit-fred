@@ -74,8 +74,7 @@ class CounterRates : public BasicFitIndefiniteMapi
     optional<uint32_t> getFifoLoad();
     FifoState evaluateFifoState(uint32_t fifoLoad) const;
 
-    vector<vector<uint32_t>> parseFifoAlfResponse(string alfResponse) const;
-    FifoReadResult handleCounterValues(const vector<vector<uint32_t>>& counterValues, bool clearOnly);
+    FifoReadResult handleCounterValues(const vector<vector<uint32_t>>&& counterValues, bool clearOnly);
     FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false);
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     void resetService();

@@ -28,8 +28,8 @@ class CounterRates : public BasicFitIndefiniteMapi
 #endif
 
    public:
-    CounterRates(shared_ptr<Board> board, uint32_t numberOfCounters, uint32_t maxFifoWords)
-        : m_handler(board), m_numberOfCounters(numberOfCounters), m_maxFifoWords(maxFifoWords) {}
+    CounterRates(shared_ptr<Board> board)
+        : m_handler(board), m_numberOfCounters(board->isTcm() ? 15 : 24), m_maxFifoWords(board->isTcm() ? 495 : 480) {}
 
     enum class ReadIntervalState {
         Disabled,
@@ -62,8 +62,8 @@ class CounterRates : public BasicFitIndefiniteMapi
 
    private:
     BoardCommunicationHandler m_handler;
-    uint32_t m_numberOfCounters;
-    uint32_t m_maxFifoWords;
+    const uint32_t m_numberOfCounters;
+    const uint32_t m_maxFifoWords;
     optional<vector<uint32_t>> m_counters;
     double m_readInterval;
     optional<vector<double>> m_rates;

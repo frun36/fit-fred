@@ -36,11 +36,7 @@ void MapiFactory::generateObjects()
         m_parametersObjects.emplace_back(board);
         m_statusObjects.emplace_back(board, boardsData.getStatusList().at(section));
         m_resetObjects.emplace_back(board);
-        
-        if (board->isTcm())
-            m_counterRatesObjects.emplace_back(board, 15, 495);
-        else
-            m_counterRatesObjects.emplace_back(board, 24, 480);
+        m_counterRatesObjects.emplace_back(board);
 
         string servicePrefix = m_fred->Name() + "/" + section + "/" + boardName + "/";
 
@@ -53,11 +49,11 @@ void MapiFactory::generateObjects()
         Print::PrintVerbose(boardName + " registered");
     }
 
-    m_resetSystem = std::make_shared<ResetFEE>(tcm, pms);
-    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM"), dynamic_cast<Mapi*>(m_resetSystem.get()));
-    m_resetError = std::make_shared<ResetErrors>(tcm, pms);
-    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), dynamic_cast<Mapi*>(m_resetError.get()));
-    m_setPhaseDelay = std::make_shared<SetPhaseDelay>(tcm);
-    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), dynamic_cast<Mapi*>(m_setPhaseDelay.get()));
+    m_resetSystem = std::make_unique<ResetFEE>(tcm, pms);
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM"), m_resetSystem.get());
+    m_resetError = std::make_unique<ResetErrors>(tcm, pms);
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), m_resetError.get());
+    m_setPhaseDelay = std::make_unique<SetPhaseDelay>(tcm);
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
 
 }

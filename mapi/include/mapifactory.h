@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 class MapiFactory
 {
@@ -28,9 +29,9 @@ class MapiFactory
     std::list<CounterRates> m_counterRatesObjects;
     Configurations m_configurationsObject;
 
-    std::shared_ptr<ResetFEE> m_resetSystem;
-    std::shared_ptr<ResetErrors> m_resetError;
-    std::shared_ptr<SetPhaseDelay> m_setPhaseDelay;
+    std::unique_ptr<ResetFEE> m_resetSystem;
+    std::unique_ptr<ResetErrors> m_resetError;
+    std::unique_ptr<SetPhaseDelay> m_setPhaseDelay;
     void generateObjects();
 
    public:

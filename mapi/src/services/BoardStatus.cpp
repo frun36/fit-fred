@@ -43,7 +43,11 @@ void BoardStatus::processExecution()
         updateEnvironment();
     }
 
-    WinCCResponse gbtErrors = checkGbtErrors();
+    auto gbtErrors = checkGbtErrors();
+    if (gbtErrors.isError()) {
+        publishError(gbtErrors.getContents());
+    }
+
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
@@ -55,14 +59,14 @@ void BoardStatus::processExecution()
 void BoardStatus::updateEnvironment()
 {
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
-                            (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
+                                              (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
 }
 
-WinCCResponse BoardStatus::checkGbtErrors()
+BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 {
     if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getPhysicalValue() == gbt::constants::FifoEmpty) {
-        return WinCCResponse();
+        return { WinCCResponse(), {} };
     }
 
     Board::ParameterInfo& fifo = m_boardHandler.getBoard()->at(gbt::parameters::Fifo);
@@ -71,18 +75,17 @@ WinCCResponse BoardStatus::checkGbtErrors()
         gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
     }
 
+    auto fifoResponse = readFifo(m_boardHandler, fifo.name, fifo.regBlockSize);
+    if (fifoResponse.isError()) {
+        return { WinCCResponse(), { fifoResponse.errorReport.value() } };
+    }
+
     std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
     std::array<uint32_t, gbt::constants::FifoSize> fifoData;
-    AlfResponseParser parser(alfResponse);
-    uint32_t idx = 0;
-    for (auto line : parser) {
-        if (idx >= gbt::constants::FifoSize)
-            break;
-        fifoData[idx++] = line.frame.data;
-    }
+    std::copy(fifoResponse.fifoContent.front().begin(), fifoResponse.fifoContent.front().end(), fifoData.begin());
 
     std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
 
-    return error->createWinCCResponse();
+    return { error->createWinCCResponse(), {} };
 }

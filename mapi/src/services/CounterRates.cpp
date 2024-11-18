@@ -68,15 +68,17 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
     }
 }
 
-CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vector<uint32_t>>&& counterValues, bool clearOnly)
+CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommunicationHandler::FifoResponse&& fifoResult, bool clearOnly)
 {
-    if (counterValues.empty())
+    if (fifoResult.isError())
         return FifoReadResult::Failure;
 
     if (clearOnly) {
         resetService();
         return FifoReadResult::SuccessCleared;
     }
+
+    const vector<vector<uint32_t>>& counterValues = fifoResult.fifoContent;
 
     if (counterValues.size() == 1 && !m_counters.has_value()) {
         m_counters = counterValues[0];
@@ -94,18 +96,8 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const vector<vect
     }
 }
 
-CounterRates::FifoReadResult CounterRates::readFifo(uint32_t fifoLoad, bool clearOnly)
+optional<string> CounterRates::handleDirectReadout()
 {
-    SwtSequence request = m_handler.createReadFifoRequest("COUNTERS_VALUES_READOUT", fifoLoad);
-    string alfResponse = executeAlfSequence(request.getSequence());
-    BoardCommunicationHandler::FifoResponse response = m_handler.parseFifo(alfResponse);
-    if (response.isError())
-        return {};
-
-    return handleCounterValues(move(response.fifoContent), clearOnly);
-}
-
-optional<string> CounterRates::handleDirectReadout() {
     publishError("Direct counter readout mode unsupported. Send request to wake this service up");
     bool running;
     waitForRequest(running);
@@ -168,7 +160,7 @@ void CounterRates::processExecution()
         response = handleFifoReadout(readIntervalState);
     }
 
-    if(response.has_value()) {
+    if (response.has_value()) {
         Print::PrintVerbose(*response);
         publishAnswer(*response);
     }

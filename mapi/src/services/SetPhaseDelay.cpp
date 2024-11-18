@@ -9,8 +9,14 @@ void SetPhaseDelay::processExecution()
     if (running == false) {
         return;
     }
+    
+    bool sideA = request.find(tcm_parameters::DelayA) != std::string::npos;
+    bool sideB = request.find(tcm_parameters::DelayC) != std::string::npos;
 
-    bool sideA = (request.find("A") != std::string::npos);
+    if(sideA == sideB){
+        publishError("Invalid request: " + request);
+    }
+
     Board::ParameterInfo& delay = sideA ? m_handler.getBoard()->at(tcm_parameters::DelayA) : m_handler.getBoard()->at(tcm_parameters::DelayC);
     int64_t oldValue = (delay.getPhysicalValueOptional() != std::nullopt) ? static_cast<int64_t>(delay.getPhysicalValue()): 0;
 

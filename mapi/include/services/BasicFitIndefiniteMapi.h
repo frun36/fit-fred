@@ -1,7 +1,17 @@
 #pragma once
 
 #include "../BoardCommunicationHandler.h"
+
+#ifdef FIT_UNIT_TEST
+
+#include "../../../test/mocks/include/mapi.h"
+
+#else
+
 #include "Fred/Mapi/indefinitemapi.h"
+
+#endif
+
 #include "../utils.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi

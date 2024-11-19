@@ -20,9 +20,10 @@
 #include "Fred/Mapi/mapi.h"
 #include "Fred/Mapi/indefinitemapi.h"
 #include "Fred/Mapi/mapigroup.h"
-#include "services/BasicFitIndefiniteMapi.h"
 
 #endif
+
+#include "services/BasicFitIndefiniteMapi.h"
 
 /*
 Control Server - void fileRead() from FITelectronics.h
@@ -125,22 +126,6 @@ class Configurations : public Mapigroup
        private:
         BoardCommunicationHandler m_tcm;
         string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
-
-        inline optional<int64_t> getDelayAElectronic() const {
-            return m_tcm.getBoard()->at("DELAY_A").getElectronicValueOptional();
-        }
-
-        inline optional<int64_t> getDelayCElectronic() const {
-            return m_tcm.getBoard()->at("DELAY_C").getElectronicValueOptional();
-        }
-
-        struct DelayChange {
-            const string req;
-            const uint32_t delayDifference;
-
-            DelayChange(const string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
-        };
-        optional<DelayChange> processDelayInput(optional<double> delayA, optional<double> delayC);
 
         bool handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
         bool handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);

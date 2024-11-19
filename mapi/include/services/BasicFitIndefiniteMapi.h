@@ -13,13 +13,13 @@
 #endif
 
 #include "../utils.h"
+#include "DelayChange.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
 {
    public:
     BasicFitIndefiniteMapi() {}
 
-   protected:
     BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite = true)
     {
         std::string seq;

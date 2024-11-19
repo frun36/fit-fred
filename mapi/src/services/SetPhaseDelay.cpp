@@ -1,5 +1,8 @@
-#include"services/SetPhaseDelay.h"
-#include"TCM.h"
+#include "services/SetPhaseDelay.h"
+#include "TCM.h"
+#include "DelayChange.h"
+#include "Alfred/print.h"
+
 
 void SetPhaseDelay::processExecution()
 {
@@ -9,36 +12,19 @@ void SetPhaseDelay::processExecution()
     if (running == false) {
         return;
     }
+
+    optional<DelayChange> delayChange = DelayChange::processWinCCRequest(m_handler, request);
     
-    bool sideA = request.find(tcm_parameters::DelayA) != std::string::npos;
-    bool sideB = request.find(tcm_parameters::DelayC) != std::string::npos;
-
-    if(sideA == sideB){
-        publishError("Invalid request: " + request);
+    if (!delayChange.has_value()) {
+        Print::PrintWarning("No delay change");
+        return;
     }
 
-    Board::ParameterInfo& delay = sideA ? m_handler.getBoard()->at(tcm_parameters::DelayA) : m_handler.getBoard()->at(tcm_parameters::DelayC);
-    int64_t oldValue = (delay.getPhysicalValueOptional() != std::nullopt) ? static_cast<int64_t>(delay.getPhysicalValue()): 0;
+    BoardCommunicationHandler::ParsedResponse parsedResponse = delayChange->applyDelays(*this, m_handler);
 
-    {
-        auto response = processSequenceThroughHandler(m_handler, request);
-        if (response.errors.empty() == false) {
-            publishError(response.getContents());
-            return;
-        }
+    if(parsedResponse.isError()) {
+        publishError(parsedResponse.getContents());
+    } else {
+        publishAnswer(parsedResponse.getContents());
     }
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(abs(oldValue - static_cast<int64_t>(delay.getPhysicalValue()))));
-
-    {
-        auto response = processSequenceThroughHandler(m_handler,  WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1), false);
-        if (response.errors.empty() == false) {
-            publishError(response.getContents());
-            return;
-        }
-    }
-
-    WinCCResponse response;
-    response.addParameter(delay.name, {delay.getPhysicalValue()});
-    publishAnswer(response.getContents());
 }

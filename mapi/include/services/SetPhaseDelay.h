@@ -1,13 +1,13 @@
 #include "BasicFitIndefiniteMapi.h"
 
-class SetPhaseDelay: public BasicFitIndefiniteMapi
+class SetPhaseDelay : public BasicFitIndefiniteMapi
 {
-    public:
-    SetPhaseDelay(std::shared_ptr<Board> board): m_handler(board) {
+   public:
+    SetPhaseDelay(std::shared_ptr<Board> board) : m_handler(board)
+    {
     }
     void processExecution() override;
 
-    private:
+   private:
     BoardCommunicationHandler m_handler;
-
 };

@@ -13,14 +13,14 @@ void SetPhaseDelay::processExecution()
         return;
     }
 
-    optional<DelayChange> delayChange = DelayChange::processWinCCRequest(m_handler, request);
+    optional<DelayChange> delayChange = DelayChange::fromWinCCRequest(m_handler, request);
     
     if (!delayChange.has_value()) {
         Print::PrintWarning("No delay change");
         return;
     }
 
-    BoardCommunicationHandler::ParsedResponse parsedResponse = delayChange->applyDelays(*this, m_handler);
+    BoardCommunicationHandler::ParsedResponse parsedResponse = delayChange->apply(*this, m_handler);
 
     if(parsedResponse.isError()) {
         publishError(parsedResponse.getContents());

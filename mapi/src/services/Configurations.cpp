@@ -117,7 +117,7 @@ string Configurations::PmConfigurations::processOutputMessage(string msg)
 
 bool Configurations::TcmConfigurations::handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
 {
-    optional<DelayChange> delayChange = DelayChange::processDelayInput(m_tcm, configurationInfo.delayA, configurationInfo.delayC);
+    optional<DelayChange> delayChange = DelayChange::fromValues(m_tcm, configurationInfo.delayA, configurationInfo.delayC);
 
     if (!delayChange.has_value()) {
         return true;
@@ -125,7 +125,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
 
     Print::PrintVerbose("Delay difference " + to_string(delayChange->delayDifference) + ", req:\n" + delayChange->req);
 
-    auto parsedResponse = delayChange->applyDelays(*this, m_tcm);
+    auto parsedResponse = delayChange->apply(*this, m_tcm);
     response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         response.insert(0, "TCM configuration " + configurationName + " was not applied: delay change failed\n");
@@ -140,8 +140,7 @@ bool Configurations::TcmConfigurations::handleData(const string& configurationNa
 {
     Print::PrintVerbose("Applying data, req:\n" + configurationInfo.req);
     auto parsedResponse = processSequenceThroughHandler(m_tcm, configurationInfo.req);
-    string parsedResponseString = parsedResponse.getContents();
-    response += parsedResponseString;
+    response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         response.insert(0, "TCM configuration " + configurationName + (response.empty() ? " was not applied\n" : " was applied partially\n"));
         publishError(response);
@@ -149,17 +148,17 @@ bool Configurations::TcmConfigurations::handleData(const string& configurationNa
     }
 
     // Control Server sleeps 10 ms if CH_MASK_A or CH_MASK_C was changed
+    // This waits for PM initialization (done automatically by TCM) to finish
     usleep(10000);
     return true;
 }
 
 void Configurations::TcmConfigurations::handleResetErrors()
 {
-    // Control Server performs entire reset errors - to be tested
+    // Control Server performs entire reset errors - shouldn't be needed
     string resetReq;
     WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
-    SwtSequence resetSequence = m_tcm.processMessageFromWinCC(resetReq, false);
-    executeAlfSequence(resetSequence.getSequence());
+    processSequenceThroughHandler(m_tcm, resetReq, false);
     return;
 }
 
@@ -180,6 +179,6 @@ void Configurations::TcmConfigurations::processExecution()
         return;
     if (!handleData(configurationName, configurationInfo, response))
         return;
-    handleResetErrors();
+    handleResetErrors(); // Not sure if it's needed after CH_MASK_A/C - done already in DelayChange
     publishAnswer(response);
 }

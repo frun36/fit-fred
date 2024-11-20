@@ -2,7 +2,7 @@
 #include "Alfred/print.h"
 #include <sstream>
 
-BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board)
+BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtFifoHandler(board)
 {
     std::stringstream requestStream;
     for (auto& paramName : toRefresh) {
@@ -75,12 +75,10 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
         gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
     }
 
-    auto fifoResponse = readFifo(m_boardHandler, fifo.name, fifo.regBlockSize);
+    auto fifoResponse = readFifo(m_gbtFifoHandler, fifo.name, fifo.regBlockSize);
     if (fifoResponse.isError()) {
         return { WinCCResponse(), { fifoResponse.errorReport.value() } };
     }
-
-    std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
 
     std::array<uint32_t, gbt::constants::FifoSize> fifoData;
     std::copy(fifoResponse.fifoContent.front().begin(), fifoResponse.fifoContent.front().end(), fifoData.begin());

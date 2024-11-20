@@ -5,7 +5,8 @@
 #include "BoardCommunicationHandler.h"
 
 #include "services/BasicFitIndefiniteMapi.h"
-
+#include"TCM.h"
+#include"PM.h"
 #ifdef FIT_UNIT_TEST
 
 #include "gtest/gtest.h"
@@ -32,23 +33,8 @@ class CounterRates : public BasicFitIndefiniteMapi
         : m_handler(board),
           m_numberOfCounters(board->isTcm() ? 15 : 24),
           m_maxFifoWords(board->isTcm() ? 495 : 480),
-          m_names(board->isTcm() ? vector<string>{
-                                       "TRIGGER_5_COUNTER",
-                                       "TRIGGER_4_COUNTER",
-                                       "TRIGGER_2_COUNTER",
-                                       "TRIGGER_1_COUNTER",
-                                       "TRIGGER_3_COUNTER",
-                                       "BACKGROUND_0_COUNTER",
-                                       "BACKGROUND_1_COUNTER",
-                                       "BACKGROUND_2_COUNTER",
-                                       "BACKGROUND_3_COUNTER",
-                                       "BACKGROUND_4_COUNTER",
-                                       "BACKGROUND_5_COUNTER",
-                                       "BACKGROUND_6_COUNTER",
-                                       "BACKGROUND_7_COUNTER",
-                                       "BACKGROUND_8_COUNTER",
-                                       "BACKGROUND_9_COUNTER" }
-                                 : vector<string>{ "CH01_CTR_CFD", "CH01_CTR_TRG", "CH02_CTR_CFD", "CH02_CTR_TRG", "CH03_CTR_CFD", "CH03_CTR_TRG", "CH04_CTR_CFD", "CH04_CTR_TRG", "CH05_CTR_CFD", "CH05_CTR_TRG", "CH06_CTR_CFD", "CH06_CTR_TRG", "CH07_CTR_CFD", "CH07_CTR_TRG", "CH08_CTR_CFD", "CH08_CTR_TRG", "CH09_CTR_CFD", "CH09_CTR_TRG", "CH10_CTR_CFD", "CH10_CTR_TRG", "CH11_CTR_CFD", "CH11_CTR_TRG", "CH12_CTR_CFD", "CH12_CTR_TRG" })
+          m_names(board->isTcm() ? tcm_parameters::getAllCounters() 
+                                 : pm_parameters::getAllCounters())
     {
     }
 

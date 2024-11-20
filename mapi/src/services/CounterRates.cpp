@@ -140,8 +140,55 @@ optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalS
     return generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
 }
 
+vector<uint32_t> CounterRates::readDirectly()
+{
+    string request;
+    for (const auto& name : m_names)
+        WinCCRequest::appendToRequest(request, WinCCRequest::readRequest(name));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, request);
+    if (parsedResponse.isError())
+        return {};
+
+    vector<uint32_t> result;
+    result.reserve(m_numberOfCounters);
+    for (const auto& name : m_names)
+        result.push_back(m_handler.getBoard()->at(name).getElectronicValue());
+    return result;
+}
+
+bool CounterRates::resetCounters()
+{
+    string flagName = m_handler.getBoard()->isTcm() ? "BOARD_STATUS_RESET_COUNTERS" : "RESET_COUNTERS_AND_HISTOGRAMS";
+    // additional read from FIFO (like in CS) shouldn't be required:
+    // reset request is handled directly after last read from FIFO
+
+    vector<uint32_t> directCounters = readDirectly();
+    if (directCounters.empty())
+        return false;
+
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1));
+    if (parsedResponse.isError())
+        return false;
+
+    if (m_counters.has_value())
+        for (size_t i = 0; i < m_counters->size(); i++)
+            // m_counters->at(i) = 0;
+            m_counters->at(i) -= directCounters[i]; // magic line from ControlServer
+
+    return true;
+}
+
 void CounterRates::processExecution()
 {
+    bool running;
+    if (isRequestAvailable(running)) {
+        string request = getRequest();
+        if (request == "RESET")
+            resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
+        else
+            throw runtime_error("Unexpected request: " + request);
+    }
+
     usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
 
 #ifdef FIT_UNIT_TEST

@@ -76,6 +76,15 @@ class CounterRates : public BasicFitIndefiniteMapi
     optional<vector<uint32_t>> m_counters;
     double m_readInterval;
     optional<vector<double>> m_rates;
+    useconds_t m_elapsed = 0;
+
+    useconds_t getSleepDuration() const {
+        useconds_t baseSleep = static_cast<useconds_t>(m_readInterval * 0.5 * 1e6);
+        if (m_elapsed >= baseSleep)
+            return 0;
+        else
+            return baseSleep - m_elapsed;
+    }
 
     static double mapReadIntervalCodeToSeconds(int64_t code);
     ReadIntervalState handleReadInterval();

@@ -1,6 +1,7 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
 #include <unistd.h>
+#include <chrono>
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -182,6 +183,8 @@ void CounterRates::processExecution()
 {
     bool running;
     if (isRequestAvailable(running)) {
+        if(!running)
+            return;
         string request = getRequest();
         if (request == "RESET")
             resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
@@ -189,7 +192,9 @@ void CounterRates::processExecution()
             throw runtime_error("Unexpected request: " + request);
     }
 
-    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
+    usleep(getSleepDuration());
+
+    auto start = std::chrono::high_resolution_clock::now();
 
 #ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;
@@ -211,6 +216,10 @@ void CounterRates::processExecution()
         Print::PrintVerbose(*response);
         publishAnswer(*response);
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    m_elapsed = duration.count();
 }
 
 ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalState)

@@ -197,7 +197,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
     }
 
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
-    request << seqSetSystemId();
+    if(boardHandler.getBoard()->isTcm()){
+        request << seqSetSystemId();
+    }
 
     return processSequenceThroughHandler(boardHandler, request.str());
 }

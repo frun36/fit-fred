@@ -212,14 +212,15 @@ void CounterRates::processExecution()
         response = handleFifoReadout(readIntervalState);
     }
 
-    if (response.has_value()) {
-        Print::PrintVerbose(*response);
-        publishAnswer(*response);
-    }
-
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     m_elapsed = duration.count();
+
+    if (response.has_value()) {
+        *response += "\nElapsed: " + to_string(m_elapsed);
+        publishAnswer(*response);
+        Print::PrintVerbose(*response);
+    }
 }
 
 ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalState)

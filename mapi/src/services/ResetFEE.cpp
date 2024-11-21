@@ -125,9 +125,13 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
-    auto isBoardIdCorrect = [this](std::shared_ptr<Board> board) {
+    auto isTCMIdCorrect = [this](std::shared_ptr<Board> board) {
         return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getPhysicalValue()) != this->getEnvBoardId(board)) ||
                 (board->at(gbt::parameters::SystemId).getPhysicalValue() != m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data())));
+    };
+
+    auto isPMIdCorrect = [this](std::shared_ptr<Board> board) {
+        return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getPhysicalValue()) != this->getEnvBoardId(board)));
     };
     std::string readFEEId = WinCCRequest::readRequest(gbt::parameters::BoardId) + "\n" + WinCCRequest::readRequest(gbt::parameters::SystemId);
 
@@ -139,7 +143,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
         }
     }
 
-    if (isBoardIdCorrect(m_TCM.getBoard()) || m_enforceDefGbtConfig) {
+    if (isTCMIdCorrect(m_TCM.getBoard()) || m_enforceDefGbtConfig) {
         auto parsedResponse = applyGbtConfigurationToBoard(m_TCM);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
@@ -163,7 +167,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
             }
         }
         // Comparing ID readed from board to ID calculated from the environment variables
-        if (isBoardIdCorrect(pm.getBoard()) || m_enforceDefGbtConfig) {
+        if (isPMIdCorrect(pm.getBoard()) || m_enforceDefGbtConfig) {
             auto parsedResponse = applyGbtConfigurationToBoard(pm);
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;

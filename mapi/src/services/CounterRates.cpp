@@ -183,17 +183,6 @@ bool CounterRates::resetCounters()
 
 void CounterRates::processExecution()
 {
-    bool running;
-    if (isRequestAvailable(running)) {
-        if(!running)
-            return;
-        string request = getRequest();
-        if (request == "RESET")
-            resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
-        else
-            throw runtime_error("Unexpected request: " + request);
-    }
-
     usleep(getSleepDuration());
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -212,6 +201,21 @@ void CounterRates::processExecution()
         readoutResult = handleDirectReadout();
     } else {
         readoutResult = handleFifoReadout(readIntervalState);
+    }
+
+    if (!readoutResult.has_value())
+        return;
+
+    bool running;
+    // Perform reset only if counter FIFO has recently been cleared (minimises chance of incorrect rate calculation afterwards)
+    if (readoutResult->fifoReadResult != FifoReadResult::NotPerformed && isRequestAvailable(running)) {
+        if(!running)
+            return;
+        string request = getRequest();
+        if (request == "RESET")
+            resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
+        else
+            throw runtime_error("Unexpected request: " + request);
     }
 
     auto end = std::chrono::high_resolution_clock::now();

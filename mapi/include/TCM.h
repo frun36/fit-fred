@@ -39,7 +39,7 @@ constexpr std::string_view Background9{"BACKGROUND_9_COUNTER"};
 
 inline std::vector<std::string> getAllCounters()
 {
-    return {Trigger1.data(), Trigger2.data(), Trigger3.data(), Trigger4.data(), Trigger5.data(),
+    return {Trigger5.data(), Trigger4.data(), Trigger2.data(), Trigger1.data(), Trigger3.data(),
      Background0.data(), Background1.data(), Background2.data(), Background3.data(), Background4.data(), Background5.data(),
      Background6.data(), Background7.data(), Background8.data(), Background9.data()};
 }

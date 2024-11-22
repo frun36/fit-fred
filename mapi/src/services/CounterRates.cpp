@@ -97,7 +97,7 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
     }
 }
 
-optional<string> CounterRates::handleDirectReadout()
+optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
     publishError("Direct counter readout mode unsupported. Send request to wake this service up");
     bool running;
@@ -105,7 +105,7 @@ optional<string> CounterRates::handleDirectReadout()
     return nullopt;
 }
 
-optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalState)
+optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadIntervalState readIntervalState)
 {
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
@@ -138,7 +138,7 @@ optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalS
         return nullopt;
     }
 
-    return generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
+    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates);
 }
 
 vector<uint32_t> CounterRates::readDirectly()
@@ -173,8 +173,10 @@ bool CounterRates::resetCounters()
 
     if (m_counters.has_value())
         for (size_t i = 0; i < m_counters->size(); i++)
-            // m_counters->at(i) = 0;
-            m_counters->at(i) -= directCounters[i]; // magic line from ControlServer
+            // underflow generated on purpose - works like a negative number for subtraction in rates calculation
+            // required to compensate for the fact that zeroing of counters can occur anywhere between FIFO loads
+            m_counters->at(i) -= directCounters[i];
+    // m_counters->at(i) = 0;
 
     return true;
 }
@@ -202,24 +204,24 @@ void CounterRates::processExecution()
     ReadIntervalState readIntervalState = handleReadInterval();
 #endif
 
-    optional<string> response;
+    optional<ReadoutResult> readoutResult;
     if (readIntervalState == ReadIntervalState::Invalid) {
         publishError("Invalid read interval");
         return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
-        response = handleDirectReadout();
+        readoutResult = handleDirectReadout();
     } else {
-        response = handleFifoReadout(readIntervalState);
+        readoutResult = handleFifoReadout(readIntervalState);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     m_elapsed = duration.count();
 
-    if (response.has_value()) {
-        *response += "\nElapsed: " + to_string(m_elapsed);
-        publishAnswer(*response);
-        Print::PrintVerbose(*response);
+    if (readoutResult.has_value()) {
+        string response = readoutResult->getString() + "\nElapsed: " + to_string(m_elapsed);
+        Print::PrintVerbose(response);
+        publishAnswer(response);
     }
 }
 
@@ -290,20 +292,26 @@ ostream& operator<<(ostream& os, CounterRates::FifoReadResult fifoReadResult)
     return os;
 }
 
-string CounterRates::generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const
+string CounterRates::ReadoutResult::getString() const
 {
     stringstream ss;
-    ss << "READ_INTERVAL," << readIntervalState << ',' << m_readInterval << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad << "\nFIFO_READ_RESULT," << fifoReadResult << "\nCOUNTERS";
-    if (m_counters.has_value()) {
-        for (auto c : *m_counters) {
+    ss
+        << "READ_INTERVAL," << readIntervalState << ',' << readInterval
+        << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad
+        << "\nFIFO_READ_RESULT," << fifoReadResult;
+    
+    ss << "\nCOUNTERS";
+    if (counters.has_value()) {
+        for (auto c : *counters) {
             ss << "," << c;
         }
     } else {
         ss << ",-";
     }
+
     ss << "\nRATES";
-    if (m_rates.has_value()) {
-        for (auto r : *m_rates) {
+    if (rates.has_value()) {
+        for (auto r : *rates) {
             ss << "," << r;
         }
     } else {

@@ -68,6 +68,34 @@ class CounterRates : public BasicFitIndefiniteMapi
 
     friend ostream& operator<<(ostream& os, FifoReadResult readIntervalState);
 
+    struct ReadoutResult {
+        ReadIntervalState readIntervalState;
+        double readInterval;
+        FifoState fifoState;
+        uint32_t fifoLoad;
+        FifoReadResult fifoReadResult;
+
+        optional<vector<uint32_t>> counters;
+        optional<vector<double>> rates;
+
+        ReadoutResult(
+            ReadIntervalState readIntervalState,
+            double readInterval,
+            FifoState fifoState,
+            uint32_t fifoLoad,
+            FifoReadResult fifoReadResult,
+            const optional<vector<uint32_t>>& counters,
+            const optional<vector<double>>& rates) : readIntervalState(readIntervalState),
+                                                     readInterval(readInterval),
+                                                     fifoState(fifoState),
+                                                     fifoLoad(fifoLoad),
+                                                     fifoReadResult(fifoReadResult),
+                                                     counters(counters),
+                                                     rates(rates) {}
+
+        string getString() const;
+    };
+
    private:
     BoardCommunicationHandler m_handler;
     const uint32_t m_numberOfCounters;
@@ -99,10 +127,8 @@ class CounterRates : public BasicFitIndefiniteMapi
     void resetService();
     bool resetCounters();
 
-    string generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const;
-
-    optional<string> handleDirectReadout();
-    optional<string> handleFifoReadout(ReadIntervalState readIntervalState);
+    optional<ReadoutResult> handleDirectReadout();
+    optional<ReadoutResult> handleFifoReadout(ReadIntervalState readIntervalState);
 
     void processExecution() override;
 };

@@ -35,6 +35,11 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         }
     } else {
         currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        if (!currReadIntervalCode.has_value()) {
+            // Wait until TCM reads the value
+            usleep(100'000);
+            currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        }
     }
 
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
@@ -167,7 +172,7 @@ bool CounterRates::resetCounters()
     if (directCounters.empty())
         return false;
 
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1), false);
     if (parsedResponse.isError())
         return false;
 
@@ -209,7 +214,7 @@ void CounterRates::processExecution()
     bool running;
     // Perform reset only if counter FIFO has recently been cleared (minimises chance of incorrect rate calculation afterwards)
     if (readoutResult->fifoReadResult != FifoReadResult::NotPerformed && isRequestAvailable(running)) {
-        if(!running)
+        if (!running)
             return;
         string request = getRequest();
         if (request == "RESET")
@@ -303,7 +308,7 @@ string CounterRates::ReadoutResult::getString() const
         << "READ_INTERVAL," << readIntervalState << ',' << readInterval
         << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad
         << "\nFIFO_READ_RESULT," << fifoReadResult;
-    
+
     ss << "\nCOUNTERS";
     if (counters.has_value()) {
         for (auto c : *counters) {

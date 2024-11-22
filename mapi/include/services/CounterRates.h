@@ -5,8 +5,8 @@
 #include "BoardCommunicationHandler.h"
 
 #include "services/BasicFitIndefiniteMapi.h"
-#include"TCM.h"
-#include"PM.h"
+#include "TCM.h"
+#include "PM.h"
 #ifdef FIT_UNIT_TEST
 
 #include "gtest/gtest.h"
@@ -33,7 +33,7 @@ class CounterRates : public BasicFitIndefiniteMapi
         : m_handler(board),
           m_numberOfCounters(board->isTcm() ? 15 : 24),
           m_maxFifoWords(board->isTcm() ? 495 : 480),
-          m_names(board->isTcm() ? tcm_parameters::getAllCounters() 
+          m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                                  : pm_parameters::getAllCounters())
     {
     }
@@ -106,7 +106,8 @@ class CounterRates : public BasicFitIndefiniteMapi
     optional<vector<double>> m_rates;
     useconds_t m_elapsed = 0;
 
-    useconds_t getSleepDuration() const {
+    useconds_t getSleepDuration() const
+    {
         useconds_t baseSleep = static_cast<useconds_t>(m_readInterval * 0.5 * 1e6);
         if (m_elapsed >= baseSleep)
             return 0;

@@ -104,9 +104,8 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
 
 optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
-    publishError("Direct counter readout mode unsupported. Send request to wake this service up");
-    bool running;
-    waitForRequest(running);
+    publishError("Direct counter readout mode unsupported");
+    usleep(1'000'000);
     return nullopt;
 }
 
@@ -188,9 +187,15 @@ bool CounterRates::resetCounters()
 
 void CounterRates::processExecution()
 {
+    bool running;
     usleep(getSleepDuration());
 
     auto start = std::chrono::high_resolution_clock::now();
+    
+    // Fixes segfault after SIGINT termination
+    isRequestAvailable(running);
+    if(!running)
+        return;
 
 #ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;
@@ -211,7 +216,6 @@ void CounterRates::processExecution()
     if (!readoutResult.has_value())
         return;
 
-    bool running;
     // Perform reset only if counter FIFO has recently been cleared (minimises chance of incorrect rate calculation afterwards)
     if (readoutResult->fifoReadResult != FifoReadResult::NotPerformed && isRequestAvailable(running)) {
         if (!running)

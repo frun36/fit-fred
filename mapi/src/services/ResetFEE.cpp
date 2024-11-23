@@ -125,13 +125,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 {
-    auto isTCMIdCorrect = [this](std::shared_ptr<Board> board) {
+    auto isBoardIdIncorrect = [this](std::shared_ptr<Board> board) {
         return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getPhysicalValue()) != this->getEnvBoardId(board)) ||
                 (board->at(gbt::parameters::SystemId).getPhysicalValue() != m_TCM.getBoard()->getEnvironment(environment::parameters::SystemId.data())));
-    };
-
-    auto isPMIdCorrect = [this](std::shared_ptr<Board> board) {
-        return ((static_cast<uint32_t>(board->at(gbt::parameters::BoardId.data()).getPhysicalValue()) != this->getEnvBoardId(board)));
     };
     std::string readFEEId = WinCCRequest::readRequest(gbt::parameters::BoardId) + "\n" + WinCCRequest::readRequest(gbt::parameters::SystemId);
 
@@ -143,7 +139,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
         }
     }
 
-    if (isTCMIdCorrect(m_TCM.getBoard()) || m_enforceDefGbtConfig) {
+    if (isBoardIdIncorrect(m_TCM.getBoard()) || m_enforceDefGbtConfig) {
         auto parsedResponse = applyGbtConfigurationToBoard(m_TCM);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
@@ -167,7 +163,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
             }
         }
         // Comparing ID readed from board to ID calculated from the environment variables
-        if (isPMIdCorrect(pm.getBoard()) || m_enforceDefGbtConfig) {
+        if (isBoardIdIncorrect(pm.getBoard()) || m_enforceDefGbtConfig) {
             auto parsedResponse = applyGbtConfigurationToBoard(pm);
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
@@ -180,7 +176,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler)
 {
-    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, gbt::GbtConfigurationBoardName);
+    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, boardHandler.getBoard()->getName());
     if (configuration.empty()) {
         return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }
@@ -197,9 +193,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
     }
 
     request << seqSetBoardId(boardHandler.getBoard()) << "\n";
-    if(boardHandler.getBoard()->isTcm()){
-        request << seqSetSystemId();
-    }
+    request << seqSetSystemId();
 
     return processSequenceThroughHandler(boardHandler, request.str());
 }

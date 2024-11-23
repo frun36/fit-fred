@@ -34,16 +34,23 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         }
     } else {
         currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        if (!currReadIntervalCode.has_value()) {
+            // Wait until TCM reads the value
+            usleep(100'000);
+            currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        }
     }
 
-    double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
-
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
+    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7)
         return ReadIntervalState::Invalid;
-    } else if (*currReadIntervalCode == 0) {
+
+    double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
+    bool readIntervalChanged = (currReadInterval != m_readInterval);
+    m_readInterval = currReadInterval;
+
+    if (currReadInterval == 0) {
         return ReadIntervalState::Disabled;
-    } else if (m_readInterval != currReadInterval) {
-        m_readInterval = currReadInterval;
+    } else if (readIntervalChanged) {
         resetService();
         return ReadIntervalState::Changed;
     } else {
@@ -96,15 +103,14 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
     }
 }
 
-optional<string> CounterRates::handleDirectReadout()
+optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
-    publishError("Direct counter readout mode unsupported. Send request to wake this service up");
-    bool running;
-    waitForRequest(running);
+    publishError("Direct counter readout mode unsupported");
+    usleep(1'000'000);
     return nullopt;
 }
 
-optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalState)
+optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadIntervalState readIntervalState)
 {
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
@@ -137,12 +143,75 @@ optional<string> CounterRates::handleFifoReadout(ReadIntervalState readIntervalS
         return nullopt;
     }
 
-    return generateResponse(readIntervalState, fifoState, *fifoLoad, fifoReadResult);
+    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates);
+}
+
+vector<uint32_t> CounterRates::readDirectly()
+{
+    string request;
+    for (const auto& name : m_names)
+        WinCCRequest::appendToRequest(request, WinCCRequest::readRequest(name));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, request);
+    if (parsedResponse.isError())
+        return {};
+
+    vector<uint32_t> result;
+    result.reserve(m_numberOfCounters);
+    for (const auto& name : m_names)
+        result.push_back(m_handler.getBoard()->at(name).getElectronicValue());
+    return result;
+}
+
+bool CounterRates::resetCounters()
+{
+    string flagName = m_handler.getBoard()->isTcm() ? "BOARD_STATUS_RESET_COUNTERS" : "RESET_COUNTERS_AND_HISTOGRAMS";
+    // additional read from FIFO (like in CS) shouldn't be required:
+    // reset request is handled directly after last read from FIFO
+
+    vector<uint32_t> directCounters = readDirectly();
+    if (directCounters.empty())
+        return false;
+
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1), false);
+    if (parsedResponse.isError())
+        return false;
+
+    if (m_counters.has_value())
+        for (size_t i = 0; i < m_counters->size(); i++)
+            // underflow generated on purpose - works like a negative number for subtraction in rates calculation
+            // required to compensate for the fact that zeroing of counters can occur anywhere between FIFO loads
+            m_counters->at(i) -= directCounters[i];
+    // m_counters->at(i) = 0;
+
+    return true;
+}
+
+void CounterRates::pollResetCounters() {
+    bool running;
+    if (!isRequestAvailable(running))
+        return;
+    
+    if(!running)
+        return;
+    
+    string request = getRequest();
+    if (request == "RESET")
+        resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
+    else
+        throw runtime_error("Unexpected request: " + request);
 }
 
 void CounterRates::processExecution()
 {
-    usleep(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6));
+    bool running;
+    usleep(getSleepDuration());
+
+    startTimeMeasurement();
+
+    // Fixes segfault after SIGINT termination
+    isRequestAvailable(running);
+    if (!running)
+        return;
 
 #ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;
@@ -150,19 +219,28 @@ void CounterRates::processExecution()
     ReadIntervalState readIntervalState = handleReadInterval();
 #endif
 
-    optional<string> response;
+    optional<ReadoutResult> readoutResult;
     if (readIntervalState == ReadIntervalState::Invalid) {
         publishError("Invalid read interval");
         return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
-        response = handleDirectReadout();
+        readoutResult = handleDirectReadout();
     } else {
-        response = handleFifoReadout(readIntervalState);
+        readoutResult = handleFifoReadout(readIntervalState);
     }
 
-    if (response.has_value()) {
-        Print::PrintVerbose(*response);
-        publishAnswer(*response);
+    // Allow reset only if counter FIFO has recently been cleared or readout is disabled
+    // (minimises chance of incorrect rate calculation afterwards)
+    if ((readIntervalState == ReadIntervalState::Disabled || (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed))) {
+        pollResetCounters();
+    }
+
+    stopTimeMeasurement();
+
+    if (readoutResult.has_value()) {
+        string response = readoutResult->getString() + "\nElapsed: " + to_string(m_elapsed);
+        Print::PrintVerbose(response);
+        publishAnswer(response);
     }
 }
 
@@ -181,6 +259,8 @@ ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalSta
         case CounterRates::ReadIntervalState::Ok:
             os << "OK";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
 
     return os;
@@ -207,6 +287,8 @@ ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
         case CounterRates::FifoState::Unexpected:
             os << "UNEXPECTED";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
     return os;
 }
@@ -229,24 +311,32 @@ ostream& operator<<(ostream& os, CounterRates::FifoReadResult fifoReadResult)
         case CounterRates::FifoReadResult::NotPerformed:
             os << "NOT_PERFORMED";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
     return os;
 }
 
-string CounterRates::generateResponse(ReadIntervalState readIntervalState, FifoState fifoState, uint32_t fifoLoad, FifoReadResult fifoReadResult) const
+string CounterRates::ReadoutResult::getString() const
 {
     stringstream ss;
-    ss << "READ_INTERVAL," << readIntervalState << ',' << m_readInterval << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad << "\nFIFO_READ_RESULT," << fifoReadResult << "\nCOUNTERS";
-    if (m_counters.has_value()) {
-        for (auto c : *m_counters) {
+    ss
+        << "READ_INTERVAL," << readIntervalState << ',' << readInterval
+        << "s\nFIFO_STATE," << fifoState << ',' << fifoLoad
+        << "\nFIFO_READ_RESULT," << fifoReadResult;
+
+    ss << "\nCOUNTERS";
+    if (counters.has_value()) {
+        for (auto c : *counters) {
             ss << "," << c;
         }
     } else {
         ss << ",-";
     }
+
     ss << "\nRATES";
-    if (m_rates.has_value()) {
-        for (auto r : *m_rates) {
+    if (rates.has_value()) {
+        for (auto r : *rates) {
             ss << "," << r;
         }
     } else {

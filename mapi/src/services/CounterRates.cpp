@@ -45,13 +45,12 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         return ReadIntervalState::Invalid;
 
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
-    bool readIntervalChanged = (currReadInterval == m_readInterval);
+    bool readIntervalChanged = (currReadInterval != m_readInterval);
     m_readInterval = currReadInterval;
 
     if (currReadInterval == 0) {
         return ReadIntervalState::Disabled;
     } else if (readIntervalChanged) {
-        m_readInterval = currReadInterval;
         resetService();
         return ReadIntervalState::Changed;
     } else {
@@ -260,6 +259,8 @@ ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalSta
         case CounterRates::ReadIntervalState::Ok:
             os << "OK";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
 
     return os;
@@ -286,6 +287,8 @@ ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
         case CounterRates::FifoState::Unexpected:
             os << "UNEXPECTED";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
     return os;
 }
@@ -308,6 +311,8 @@ ostream& operator<<(ostream& os, CounterRates::FifoReadResult fifoReadResult)
         case CounterRates::FifoReadResult::NotPerformed:
             os << "NOT_PERFORMED";
             break;
+        default:
+            os << "_INTERNAL_ERROR";
     }
     return os;
 }

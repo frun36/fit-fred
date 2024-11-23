@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <chrono>
 #include "communication-utils/AlfResponseParser.h"
 #include "BoardCommunicationHandler.h"
 
@@ -38,6 +39,7 @@ class CounterRates : public BasicFitIndefiniteMapi
     {
     }
 
+   private:
     enum class ReadIntervalState {
         Disabled,
         Invalid,
@@ -96,7 +98,6 @@ class CounterRates : public BasicFitIndefiniteMapi
         string getString() const;
     };
 
-   private:
     BoardCommunicationHandler m_handler;
     const uint32_t m_numberOfCounters;
     const uint32_t m_maxFifoWords;
@@ -104,7 +105,19 @@ class CounterRates : public BasicFitIndefiniteMapi
     optional<vector<uint32_t>> m_counters;
     double m_readInterval;
     optional<vector<double>> m_rates;
+
+    chrono::system_clock::time_point m_startTime;
     useconds_t m_elapsed = 0;
+
+    void startTimeMeasurement() {
+        m_startTime = std::chrono::high_resolution_clock::now();
+    }
+
+    void stopTimeMeasurement() {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<std::chrono::microseconds>(end - m_startTime);
+        m_elapsed = duration.count();
+    }
 
     useconds_t getSleepDuration() const
     {
@@ -130,6 +143,7 @@ class CounterRates : public BasicFitIndefiniteMapi
 
     optional<ReadoutResult> handleDirectReadout();
     optional<ReadoutResult> handleFifoReadout(ReadIntervalState readIntervalState);
+    void pollResetCounters();
 
     void processExecution() override;
 };

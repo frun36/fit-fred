@@ -1,7 +1,6 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
 #include <unistd.h>
-#include <chrono>
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
@@ -42,13 +41,16 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         }
     }
 
-    double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
-
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
+    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7)
         return ReadIntervalState::Invalid;
-    } else if (*currReadIntervalCode == 0) {
+
+    double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
+    bool readIntervalChanged = (currReadInterval == m_readInterval);
+    m_readInterval = currReadInterval;
+
+    if (currReadInterval == 0) {
         return ReadIntervalState::Disabled;
-    } else if (m_readInterval != currReadInterval) {
+    } else if (readIntervalChanged) {
         m_readInterval = currReadInterval;
         resetService();
         return ReadIntervalState::Changed;
@@ -185,16 +187,31 @@ bool CounterRates::resetCounters()
     return true;
 }
 
+void CounterRates::pollResetCounters() {
+    bool running;
+    if (!isRequestAvailable(running))
+        return;
+    
+    if(!running)
+        return;
+    
+    string request = getRequest();
+    if (request == "RESET")
+        resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
+    else
+        throw runtime_error("Unexpected request: " + request);
+}
+
 void CounterRates::processExecution()
 {
     bool running;
     usleep(getSleepDuration());
 
-    auto start = std::chrono::high_resolution_clock::now();
-    
+    startTimeMeasurement();
+
     // Fixes segfault after SIGINT termination
     isRequestAvailable(running);
-    if(!running)
+    if (!running)
         return;
 
 #ifdef FIT_UNIT_TEST
@@ -213,23 +230,13 @@ void CounterRates::processExecution()
         readoutResult = handleFifoReadout(readIntervalState);
     }
 
-    if (!readoutResult.has_value())
-        return;
-
-    // Perform reset only if counter FIFO has recently been cleared (minimises chance of incorrect rate calculation afterwards)
-    if (readoutResult->fifoReadResult != FifoReadResult::NotPerformed && isRequestAvailable(running)) {
-        if (!running)
-            return;
-        string request = getRequest();
-        if (request == "RESET")
-            resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
-        else
-            throw runtime_error("Unexpected request: " + request);
+    // Allow reset only if counter FIFO has recently been cleared or readout is disabled
+    // (minimises chance of incorrect rate calculation afterwards)
+    if ((readIntervalState == ReadIntervalState::Disabled || (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed))) {
+        pollResetCounters();
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    m_elapsed = duration.count();
+    stopTimeMeasurement();
 
     if (readoutResult.has_value()) {
         string response = readoutResult->getString() + "\nElapsed: " + to_string(m_elapsed);

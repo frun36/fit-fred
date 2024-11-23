@@ -100,8 +100,10 @@ AlfResponseParser::iterator AlfResponseParser::begin()
 {
     if (isSuccess())
         return iterator(m_sequence.data() + strlen("success\n"));
-    else
+    else if(m_sequence != "success\n")
         return iterator(m_sequence.data() + strlen("failure\n"));
+    else 
+        return iterator(m_sequence.data() + m_sequence.size() - 1);
 }
 
 AlfResponseParser::iterator AlfResponseParser::end()

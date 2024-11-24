@@ -238,7 +238,7 @@ void CounterRates::processExecution()
     stopTimeMeasurement();
 
     if (readoutResult.has_value()) {
-        string response = readoutResult->getString() + "\nElapsed: " + to_string(m_elapsed);
+        string response = readoutResult->getString();// + "\nElapsed: " + to_string(m_elapsed);
         Print::PrintVerbose(response);
         publishAnswer(response);
     }

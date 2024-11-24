@@ -52,6 +52,8 @@ class BoardCommunicationHandler
             ss << response.getContents();
             return ss.str();
         }
+
+        static const ParsedResponse EmptyResponse;
     };
 
     struct FifoResponse {
@@ -59,6 +61,8 @@ class BoardCommunicationHandler
         std::optional<ErrorReport> errorReport;
 
         bool isError() const { return errorReport.has_value(); }
+
+        static const FifoResponse EmptyFifoResponse;
     };
 
     SwtSequence processMessageFromWinCC(std::string, bool = true);

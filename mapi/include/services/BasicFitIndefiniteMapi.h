@@ -34,7 +34,7 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
     BoardCommunicationHandler::FifoResponse readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead)
     {
         if (wordsToRead == 0)
-            return EmptyFifoResponse;
+            return BoardCommunicationHandler::FifoResponse::EmptyFifoResponse;
 
         std::string seq;
         try {
@@ -44,7 +44,4 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         }
         return handler.parseFifo(executeAlfSequence(seq));
     }
-
-    static const BoardCommunicationHandler::ParsedResponse EmptyResponse;
-    static const BoardCommunicationHandler::FifoResponse EmptyFifoResponse;
 };

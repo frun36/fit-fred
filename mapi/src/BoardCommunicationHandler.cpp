@@ -3,6 +3,9 @@
 #include "utils.h"
 #include "Alfred/print.h"
 
+const BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::ParsedResponse::EmptyResponse({ WinCCResponse(), {} });
+const BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::FifoResponse::EmptyFifoResponse{ {}, nullopt };
+
 void BoardCommunicationHandler::resetExecutionData()
 {
     m_registerTasks.clear();

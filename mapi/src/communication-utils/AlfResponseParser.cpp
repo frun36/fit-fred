@@ -98,6 +98,9 @@ bool AlfResponseParser::iterator::operator!=(const iterator& itr)
 
 AlfResponseParser::iterator AlfResponseParser::begin()
 {
+    if(m_sequence == "success\n" || m_sequence == "failure\n"){
+        return end();
+    }
     if (isSuccess())
         return iterator(m_sequence.data() + strlen("success\n"));
     else

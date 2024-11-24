@@ -94,7 +94,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
         }
     }
 
-    return EmptyResponse;
+    return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
@@ -120,7 +120,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
         }
     }
 
-    return EmptyResponse;
+    return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
@@ -171,7 +171,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
         }
     }
 
-    return EmptyResponse;
+    return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler)

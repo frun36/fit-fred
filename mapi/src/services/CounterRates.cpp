@@ -194,11 +194,19 @@ void CounterRates::pollResetCounters() {
     if(!running)
         return;
     
-    string request = getRequest();
-    if (request == "RESET")
+    bool isResetPending = false;
+    while (isRequestAvailable(running)) {
+        if(!running)
+            return;
+        string request = getRequest();
+        if (request == "RESET") 
+            isResetPending = true;
+        else
+            Print::PrintWarning("Unexpected request: " + request);
+    }
+
+    if (isResetPending)
         resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
-    else
-        throw runtime_error("Unexpected request: " + request);
 }
 
 void CounterRates::processExecution()

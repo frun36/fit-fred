@@ -34,7 +34,8 @@ std::optional<DelayChange> DelayChange::fromWinCCRequest(BoardCommunicationHandl
 {
     optional<double> newDelayA = nullopt;
     optional<double> newDelayC = nullopt;
-    for (auto& cmd : WinCCRequest(request).getCommands()) {
+    WinCCRequest parsedReq(request);
+    for (const auto& cmd : parsedReq.getCommands()) {
         if (cmd.operation != WinCCRequest::Operation::Write)
             throw runtime_error("Unexpected read operation");
 

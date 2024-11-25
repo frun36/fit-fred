@@ -89,5 +89,5 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 
     m_gbtError = gbt::parseFifoData(fifoData);
 
-    return m_gbtError->createWinCCResponse();
+    return {m_gbtError->createWinCCResponse(),{}};
 }

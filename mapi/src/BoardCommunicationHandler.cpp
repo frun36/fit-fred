@@ -3,6 +3,9 @@
 #include "utils.h"
 #include "Alfred/print.h"
 
+const BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::ParsedResponse::EmptyResponse({ WinCCResponse(), {} });
+const BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::FifoResponse::EmptyFifoResponse{ {}, nullopt };
+
 void BoardCommunicationHandler::resetExecutionData()
 {
     m_registerTasks.clear();
@@ -22,7 +25,7 @@ SwtSequence BoardCommunicationHandler::processMessageFromWinCC(std::string mess,
             SwtSequence::SwtOperation operation = createSwtOperation(cmd);
             Board::ParameterInfo& info = m_board->at(cmd.name);
 
-            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value != std::nullopt) ? ((operation.type == SwtSequence::Operation::Write)?  operation.data[0]: operation.data[1] >> info.startBit): cmd.value);
+            m_registerTasks[info.baseAddress].emplace_back(info.name, (cmd.value.has_value()) ? ((operation.type == SwtSequence::Operation::Write) ? operation.data[0] : operation.data[1] >> info.startBit) : cmd.value);
 
             if (m_operations.find(info.baseAddress) != m_operations.end()) {
                 mergeOperation(m_operations.at(info.baseAddress), operation);
@@ -87,7 +90,7 @@ SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const Wi
     }
 
     int64_t electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
-    if(electronicValue > parameter.maxValue || electronicValue < parameter.minValue){
+    if (electronicValue > parameter.maxValue || electronicValue < parameter.minValue) {
         throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range - value: " + std::to_string(electronicValue));
     }
 
@@ -155,4 +158,55 @@ void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line
             report.emplace_back(parameterToHandle.name, e.what());
         }
     }
+}
+
+SwtSequence BoardCommunicationHandler::createReadFifoRequest(std::string fifoName, size_t wordsToRead)
+{
+    resetExecutionData();
+    Board::ParameterInfo& fifoInfo = m_board->at(fifoName);
+    SwtSequence request;
+    for (size_t n = 0; n < wordsToRead; n++) {
+        request.addOperation(SwtSequence::Operation::Read, fifoInfo.baseAddress, nullptr);
+    }
+    m_registerTasks[fifoInfo.baseAddress].emplace_back(fifoName, std::nullopt);
+    return request;
+}
+
+BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::parseFifo(std::string alfResponse)
+{
+    if (m_registerTasks.size() != 1) {
+        throw std::runtime_error("Forbidden action - FIFO read has been interleaved with other operation!");
+    }
+
+    auto& fifoTasks = m_registerTasks.begin()->second;
+    if (fifoTasks.size() != 1) {
+        throw std::runtime_error("Forbidden action - FIFO read has been interleaved with other operation!");
+    }
+
+    auto& fifoTask = fifoTasks.front();
+    if (fifoTask.toCompare.has_value()) {
+        throw std::runtime_error("Tried to parsed response to write by parse FIFO method");
+    }
+
+    Board::ParameterInfo& fifoInfo = m_board->at(fifoTask.name);
+
+    std::vector<std::vector<uint32_t>> fifo(1);
+    AlfResponseParser parser(alfResponse);
+
+    if (!parser.isSuccess()) {
+        return { {}, ErrorReport{ "SEQUENCE", "ALF COMMUNICATION FAILED" } };
+    }
+
+    for (auto line : parser) {
+        if (line.type == AlfResponseParser::Line::Type::ResponseToWrite) {
+            continue;
+        }
+        if (fifo.back().size() == fifoInfo.regBlockSize) {
+            fifo.emplace_back(std::vector<uint32_t>());
+            fifo.back().reserve(fifoInfo.regBlockSize);
+        }
+        fifo.back().emplace_back(m_board->parseElectronic(fifoInfo.name, line.frame.data));
+    }
+
+    return { fifo, {} };
 }

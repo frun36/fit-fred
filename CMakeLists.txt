@@ -29,6 +29,7 @@ file(GLOB MOCKS
     "test/mocks/src/databaseinterface.cpp" 
     "test/mocks/src/mapi.cpp"
     "test/mocks/src/utility.cpp"
+    "core/src/Alfred/print.cpp"
 )
 
 macro(create_test TEST_NAME)
@@ -64,6 +65,19 @@ create_test(GbtErrorReports
     mapi/src/gbtInterfaceUtils.cpp
 )
 
+create_test(CounterRates
+    test/CounterRates/CounterRatesTest.cpp
+    mapi/src/services/CounterRates.cpp
+    mapi/src/BoardCommunicationHandler.cpp 
+    mapi/src/Equation.cpp
+    mapi/src/Board.cpp  
+    mapi/src/communication-utils/SwtSequence.cpp 
+    mapi/src/communication-utils/AlfResponseParser.cpp 
+    mapi/src/communication-utils/WinCCRequest.cpp 
+    mapi/src/EnvironmentVariables.cpp 
+    ${MOCKS}
+)
+
 # create_test(Board
 #     test/Board/BoardTest.cpp
 #     mapi/src/Board.cpp 
@@ -74,6 +88,7 @@ create_test(GbtErrorReports
 #     test/Parameters/ParametersRefactoredTest.cpp 
 #     mapi/src/Parameters.cpp  
 #     mapi/src/BoardCommunicationHandler.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
 #     mapi/src/Board.cpp 
 #     mapi/src/SwtSequence.cpp 
 #     mapi/src/AlfResponseParser.cpp 
@@ -81,6 +96,9 @@ create_test(GbtErrorReports
 #     ${MOCKS}
 # )
 
+# create_test(BoardCommunicationHandler
+#     test/BoardCommunicationHandler/BoardCommunicationHandlerTest.cpp 
+#     mapi/src/BoardCommunicationHandler.cpp 
 # create_test(BoardCommunicationHandler
 #     test/BoardCommunicationHandler/BoardCommunicationHandlerTest.cpp 
 #     mapi/src/BoardCommunicationHandler.cpp 

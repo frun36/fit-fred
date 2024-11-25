@@ -1,5 +1,10 @@
+#ifndef TCM_PARAMETERS
+#define TCM_PARAMETERS
+
 #include <string_view>
 #include <cstdint>
+#include<vector>
+#include<string>
 
 namespace tcm_parameters
 {
@@ -13,4 +18,31 @@ constexpr std::string_view Trigger2Signature{ "TRIGGER_2_SIGNATURE" };
 constexpr std::string_view Trigger3Signature{ "TRIGGER_3_SIGNATURE" };
 constexpr std::string_view Trigger4Signature{ "TRIGGER_4_SIGNATURE" };
 constexpr std::string_view Trigger5Signature{ "TRIGGER_5_SIGNATURE" };
+constexpr std::string_view DelayA{"DELAY_A"};
+constexpr std::string_view DelayC{"DELAY_C"};
+
+constexpr std::string_view Trigger5{"TRIGGER_5_COUNTER"};
+constexpr std::string_view Trigger4{"TRIGGER_4_COUNTER"};
+constexpr std::string_view Trigger3{"TRIGGER_3_COUNTER"};
+constexpr std::string_view Trigger2{"TRIGGER_2_COUNTER"};
+constexpr std::string_view Trigger1{"TRIGGER_1_COUNTER"};
+constexpr std::string_view Background0{"BACKGROUND_0_COUNTER"};
+constexpr std::string_view Background1{"BACKGROUND_1_COUNTER"};
+constexpr std::string_view Background2{"BACKGROUND_2_COUNTER"};
+constexpr std::string_view Background3{"BACKGROUND_3_COUNTER"};
+constexpr std::string_view Background4{"BACKGROUND_4_COUNTER"};
+constexpr std::string_view Background5{"BACKGROUND_5_COUNTER"};
+constexpr std::string_view Background6{"BACKGROUND_6_COUNTER"};
+constexpr std::string_view Background7{"BACKGROUND_7_COUNTER"};
+constexpr std::string_view Background8{"BACKGROUND_8_COUNTER"};
+constexpr std::string_view Background9{"BACKGROUND_9_COUNTER"};
+
+inline std::vector<std::string> getAllCounters()
+{
+    return {Trigger5.data(), Trigger4.data(), Trigger2.data(), Trigger1.data(), Trigger3.data(),
+     Background0.data(), Background1.data(), Background2.data(), Background3.data(), Background4.data(), Background5.data(),
+     Background6.data(), Background7.data(), Background8.data(), Background9.data()};
+}
+
 } // namespace tcm_parameters
+#endif

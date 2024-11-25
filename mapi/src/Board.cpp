@@ -12,7 +12,7 @@
 
 #endif
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_mainBoard(main), m_environmentalVariables(settings)
+Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_parentBoard(main), m_environmentalVariables(settings)
 {
     if (name.find("TCM") != std::string::npos) {
         m_identity.type = Type::TCM;
@@ -163,8 +163,8 @@ double Board::calculatePhysical(const std::string& param, int64_t electronic) co
             values.emplace_back(electronic);
         } else if (m_parameters.find(var) != m_parameters.end()) {
             values.emplace_back(m_parameters.at(var).getPhysicalValue());
-        } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
-            values.emplace_back(m_mainBoard->at(var).getPhysicalValue());
+        } else if (m_parentBoard != nullptr && m_parentBoard->doesExist(var)) {
+            values.emplace_back(m_parentBoard->at(var).getPhysicalValue());
         } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
             values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {
@@ -197,8 +197,8 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
             continue;
         } else if (m_parameters.find(var) != m_parameters.end()) {
             values.emplace_back(m_parameters.at(var).getPhysicalValue());
-        } else if (m_mainBoard != nullptr && m_mainBoard->doesExist(var)) {
-            values.emplace_back(m_mainBoard->at(var).getPhysicalValue());
+        } else if (m_parentBoard != nullptr && m_parentBoard->doesExist(var)) {
+            values.emplace_back(m_parentBoard->at(var).getPhysicalValue());
         } else if (m_environmentalVariables != nullptr && m_environmentalVariables->doesExist(var)) {
             values.emplace_back(m_environmentalVariables->getVariable(var));
         } else {

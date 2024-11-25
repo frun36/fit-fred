@@ -1,7 +1,17 @@
 #pragma once
 
 #include "../BoardCommunicationHandler.h"
+
+#ifdef FIT_UNIT_TEST
+
+#include "../../../test/mocks/include/mapi.h"
+
+#else
+
 #include "Fred/Mapi/indefinitemapi.h"
+
+#endif
+
 #include "../utils.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
@@ -21,5 +31,17 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         return handler.processMessageFromALF(executeAlfSequence(seq));
     }
 
-    static const BoardCommunicationHandler::ParsedResponse EmptyResponse;
+    BoardCommunicationHandler::FifoResponse readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead)
+    {
+        if (wordsToRead == 0)
+            return BoardCommunicationHandler::FifoResponse::EmptyFifoResponse;
+
+        std::string seq;
+        try {
+            seq = handler.createReadFifoRequest(fifoName, wordsToRead).getSequence();
+        } catch (const std::exception& e) {
+            return { std::vector<std::vector<uint32_t>>(), BoardCommunicationHandler::ErrorReport{ fifoName, e.what() } };
+        }
+        return handler.parseFifo(executeAlfSequence(seq));
+    }
 };

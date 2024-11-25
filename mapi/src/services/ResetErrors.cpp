@@ -92,5 +92,5 @@ BoardCommunicationHandler::ParsedResponse ResetErrors::applyResetBoard(BoardComm
         }
     }
 
-    return EmptyResponse;
+    return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }

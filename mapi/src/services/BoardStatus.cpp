@@ -2,7 +2,7 @@
 #include "Alfred/print.h"
 #include <sstream>
 
-BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtError(nullptr)
+BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtFifoHandler(board)
 {
     std::stringstream requestStream;
     for (auto& paramName : toRefresh) {
@@ -42,7 +42,11 @@ void BoardStatus::processExecution()
         updateEnvironment();
     }
 
-    WinCCResponse gbtErrors = checkGbtErrors();
+    auto gbtErrors = checkGbtErrors();
+    if (gbtErrors.isError()) {
+        publishError(gbtErrors.getContents());
+    }
+
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
@@ -59,14 +63,14 @@ void BoardStatus::processExecution()
 void BoardStatus::updateEnvironment()
 {
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
-                            (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
+                                              (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
 }
 
-WinCCResponse BoardStatus::checkGbtErrors()
+BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 {
     if (m_boardHandler.getBoard()->at(gbt::parameters::FifoEmpty).getPhysicalValue() == gbt::constants::FifoEmpty) {
-        return WinCCResponse();
+        return { WinCCResponse(), {} };
     }
 
     Board::ParameterInfo& fifo = m_boardHandler.getBoard()->at(gbt::parameters::Fifo);
@@ -75,14 +79,13 @@ WinCCResponse BoardStatus::checkGbtErrors()
         gbtErrorFifoRead.addOperation(SwtSequence::Operation::Read, fifo.baseAddress, nullptr);
     }
 
-    std::string alfResponse = executeAlfSequence(gbtErrorFifoRead.getSequence());
+    auto fifoResponse = readFifo(m_gbtFifoHandler, fifo.name, fifo.regBlockSize);
+    if (fifoResponse.isError()) {
+        return { WinCCResponse(), { fifoResponse.errorReport.value() } };
+    }
 
     std::array<uint32_t, gbt::constants::FifoSize> fifoData;
-    AlfResponseParser parser(alfResponse);
-    uint32_t idx = 0;
-    for (auto line : parser) {
-        fifoData[idx++] = line.frame.data;
-    }
+    std::copy(fifoResponse.fifoContent.front().begin(), fifoResponse.fifoContent.front().end(), fifoData.begin());
 
     m_gbtError = gbt::parseFifoData(fifoData);
 

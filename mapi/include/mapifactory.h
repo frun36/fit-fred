@@ -9,29 +9,32 @@
 #include "services/ResetFEE.h"
 #include "services/Reset.h"
 #include "services/ResetErrors.h"
+#include "services/SetPhaseDelay.h"
+#include "services/CounterRates.h"
 #include <exception>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 class MapiFactory
 {
    private:
     Fred* m_fred;
 
-    vector<Mapi*> m_mapiObjects;
-
     std::list<Parameters> m_parametersObjects;
     std::list<BoardStatus> m_statusObjects;
     std::list<Reset> m_resetObjects;
+    std::list<CounterRates> m_counterRatesObjects;
     Configurations m_configurationsObject;
 
-    std::shared_ptr<ResetFEE> m_resetSystem;
-    std::shared_ptr<ResetErrors> m_resetError;
+    std::unique_ptr<ResetFEE> m_resetSystem;
+    std::unique_ptr<ResetErrors> m_resetError;
+    std::unique_ptr<SetPhaseDelay> m_setPhaseDelay;
     void generateObjects();
 
    public:
     MapiFactory(Fred* fred);
-    virtual ~MapiFactory();
+    virtual ~MapiFactory() {}
 };

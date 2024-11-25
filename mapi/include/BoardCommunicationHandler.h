@@ -52,18 +52,32 @@ class BoardCommunicationHandler
             ss << response.getContents();
             return ss.str();
         }
+
+        static const ParsedResponse EmptyResponse;
+    };
+
+    struct FifoResponse {
+        std::vector<std::vector<uint32_t>> fifoContent;
+        std::optional<ErrorReport> errorReport;
+
+        bool isError() const { return errorReport.has_value(); }
+
+        static const FifoResponse EmptyFifoResponse;
     };
 
     SwtSequence processMessageFromWinCC(std::string, bool = true);
     virtual ParsedResponse processMessageFromALF(std::string);
+
+    SwtSequence createReadFifoRequest(std::string fifoName, size_t wordsToRead);
+    FifoResponse parseFifo(std::string alfResponse);
 
     std::shared_ptr<Board> getBoard() { return m_board; }
     std::shared_ptr<const Board> getBoard() const { return m_board; }
 
    protected:
     struct ParameterToHandle {
-        ParameterToHandle(const std::string& name_, const std::optional<double>& toCompare_) : name(name_), toCompare(toCompare_) {}
-        ParameterToHandle(const std::string& name_, std::optional<double>&& toCompare_) : name(name_), toCompare(toCompare_) {}
+        ParameterToHandle(const std::string& name_, const std::optional<uint32_t>& toCompare_) : name(name_), toCompare(toCompare_) {}
+        ParameterToHandle(const std::string& name_, std::optional<uint32_t>&& toCompare_) : name(name_), toCompare(toCompare_) {}
         std::string name;
         std::optional<uint32_t> toCompare;
     };

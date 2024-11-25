@@ -61,20 +61,18 @@ namespace gbt
 
 [[nodiscard]] std::shared_ptr<GbtErrorType> parseFifoData(const std::array<uint32_t, constants::FifoSize>& fifoData)
 {
-    switch (fifoData[0]) {
-        if(fifoData[0] == BCSyncLost::getErrorCode()){
-            return std::make_shared<BCSyncLost>(fifoData);
-        }
-
-        if(fifoData[0] == FifoOverload::getErrorCode()){
-            return std::make_shared<FifoOverload>(fifoData);
-        }
-
-        if(fifoData[0] == PmEarlyHeader::getErrorCode()){
-            return std::make_shared<PmEarlyHeader>(fifoData);
-        }
-        return std::make_shared<Unknown>(fifoData);
+    if(fifoData[0] == BCSyncLost::getErrorCode()){
+        return std::make_shared<BCSyncLost>(fifoData);
     }
+
+    if(fifoData[0] == FifoOverload::getErrorCode()){
+        return std::make_shared<FifoOverload>(fifoData);
+    }
+
+    if(fifoData[0] == PmEarlyHeader::getErrorCode()){
+        return std::make_shared<PmEarlyHeader>(fifoData);
+    }
+    return std::make_shared<Unknown>(fifoData);
 }
 
 

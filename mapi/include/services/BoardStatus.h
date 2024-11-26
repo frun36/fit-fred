@@ -25,4 +25,6 @@ class BoardStatus : public BasicFitIndefiniteMapi, gbt::GbtRateMonitor
     BoardCommunicationHandler m_boardHandler;
     BoardCommunicationHandler m_gbtFifoHandler;
     SwtSequence m_request;
+
+    std::shared_ptr<gbt::GbtErrorType> m_gbtError;
 };

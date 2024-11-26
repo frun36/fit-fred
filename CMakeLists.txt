@@ -60,6 +60,11 @@ create_test(WinCCMessage
     ${MOCKS}
 )
 
+create_test(GbtErrorReports
+    test/GbtErrorReport/GbtErrors.cpp
+    mapi/src/gbtInterfaceUtils.cpp
+)
+
 create_test(CounterRates
     test/CounterRates/CounterRatesTest.cpp
     mapi/src/services/CounterRates.cpp

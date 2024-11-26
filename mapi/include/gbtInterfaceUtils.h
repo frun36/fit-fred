@@ -4,11 +4,14 @@
 #include <string_view>
 #include <chrono>
 #include <memory>
+#include<array>
+#include<iostream>
 #include "communication-utils/WinCCResponse.h"
 
 struct GbtWord {
     static constexpr uint32_t WordSize = 5;
     uint16_t buffer[WordSize];
+    
 };
 
 namespace gbt
@@ -45,26 +48,29 @@ constexpr std::string_view EventsCount{ "GBT_EVENTS_COUNT" };
 
 namespace constants
 {
-constexpr uint32_t FifoSize = 36;
+constexpr size_t FifoSize = 36;
 constexpr double FifoEmpty = 1;
 } // namespace constants
 
 struct GbtErrorType {
     virtual ~GbtErrorType() = default;
     virtual WinCCResponse createWinCCResponse() = 0;
+    virtual void saveErrorReport() = 0;
+    static constexpr std::string_view ErrorFile{"GbtErrorsRaport"};
 };
 
 struct BCSyncLost : public GbtErrorType {
     BCSyncLost(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse() final;
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE000A; }
 
     struct Data {
         uint32_t errorCode;
         struct {
             GbtWord data;
-            uint16_t counter : 12,
-                isData : 4;
+            uint16_t counter:12,
+                    isData:4;
         } words[10];
         uint16_t BCCRU;
         uint16_t BCBoard;
@@ -77,12 +83,16 @@ struct BCSyncLost : public GbtErrorType {
 struct Unknown : public GbtErrorType {
     Unknown(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0x00000000; }
+
+    std::array<uint32_t, constants::FifoSize> data;
 };
 
 struct PmEarlyHeader : public GbtErrorType {
     PmEarlyHeader(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE0009; }
 
     struct Data {
@@ -94,10 +104,12 @@ struct PmEarlyHeader : public GbtErrorType {
 struct FifoOverload : public GbtErrorType {
     FifoOverload(const std::array<uint32_t, constants::FifoSize>& fifoData);
     [[nodiscard]] WinCCResponse createWinCCResponse();
+    void saveErrorReport() final;
     static constexpr uint32_t getErrorCode() { return 0xEEEE0008; }
 
     struct Data {
-        GbtWord w[13];
+        uint32_t errorCode;
+        GbtWord words[13];
         uint16_t reservedSpace0;
         uint16_t rdRate;
         uint16_t wrRate;

@@ -16,8 +16,7 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
 void BoardStatus::processExecution()
 {
     bool running = true;
-    // while(running)
-    //{
+    
     std::string fromWinCC = waitForRequest(running);
     if (running == false)
         return;
@@ -54,6 +53,11 @@ void BoardStatus::processExecution()
 
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
+    
+    if(m_gbtError.get() != nullptr){
+        m_gbtError->saveErrorReport();
+        m_gbtError.reset();
+    }
 }
 
 void BoardStatus::updateEnvironment()
@@ -83,7 +87,7 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
     std::array<uint32_t, gbt::constants::FifoSize> fifoData;
     std::copy(fifoResponse.fifoContent.front().begin(), fifoResponse.fifoContent.front().end(), fifoData.begin());
 
-    std::shared_ptr<gbt::GbtErrorType> error = gbt::parseFifoData(fifoData);
+    m_gbtError = gbt::parseFifoData(fifoData);
 
-    return { error->createWinCCResponse(), {} };
+    return {m_gbtError->createWinCCResponse(),{}};
 }

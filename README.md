@@ -12,3 +12,11 @@ make
 cd ..
 bin/FREDServer
 ```
+
+## General concept
+
+The FIT FRED implementation utilizes a board-based command layout and emphasizes the role of an electronic board as the fundamental unit of the system. Each board is represented by an object that holds its register map and the most recent values. All read and write operations are performed through the board object, which provides essential information about the register layout and validates requests to ensure they meet value constraints. All information about the boards is fetched from the database, which provides high flexibility.
+
+![](docs/imgs/FIT-FRED-Schema.jpg)
+
+

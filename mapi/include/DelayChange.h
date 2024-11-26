@@ -8,8 +8,6 @@
 #include "TCM.h"
 #include "unistd.h"
 
-class BasicFitIndefiniteMapi;
-
 struct DelayChange {
     const std::string req;
     const uint32_t delayDifference;

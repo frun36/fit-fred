@@ -13,7 +13,6 @@
 #endif
 
 #include "../utils.h"
-#include "DelayChange.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
 {
@@ -22,6 +21,9 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
 
     BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite = true)
     {
+        if(request.size() == 0){
+            return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
+        }
         std::string seq;
         try {
             seq = handler.processMessageFromWinCC(request, readAfterWrite).getSequence();

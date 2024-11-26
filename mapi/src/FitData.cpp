@@ -105,9 +105,9 @@ bool FitData::fetchConnectedDevices()
 
     std::shared_ptr<Board> TCM{ nullptr };
 
-     for (auto& deviceRow : connectedDevices) {
+    for (auto& deviceRow : connectedDevices) {
         DeviceInfo device(deviceRow);
-        if(device.type != DeviceInfo::BoardType::TCM){
+        if (device.type != DeviceInfo::BoardType::TCM) {
             continue;
         }
         Print::PrintInfo("Registering " + device.name);
@@ -116,14 +116,14 @@ bool FitData::fetchConnectedDevices()
 
     for (auto& deviceRow : connectedDevices) {
         DeviceInfo device(deviceRow);
-        if(device.type == DeviceInfo::BoardType::TCM){
+        if (device.type == DeviceInfo::BoardType::TCM) {
             continue;
         }
         Print::PrintInfo("Registering " + device.name);
 
         if (TCM.get() == nullptr) {
-                    Print::PrintVerbose("Missing TCM!");
-                    return false;
+            Print::PrintVerbose("Missing TCM!");
+            return false;
         }
 
         switch (device.side) {
@@ -194,9 +194,9 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     }
 
     if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
-        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1ull << bitLength) - 1): (1ull << (bitLength - 1));
+        max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1ull << bitLength) - 1) : (1ull << (bitLength - 1));
     } else {
-        max =  static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
+        max = static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
     }
 
     return {

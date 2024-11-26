@@ -2,11 +2,11 @@
 
 #include <string>
 #include <vector>
-#include<cstdint>
+#include <cstdint>
 
 using namespace std;
 
-#include<map>
+#include <map>
 #include <cmath>
 
 #include <cstdio>

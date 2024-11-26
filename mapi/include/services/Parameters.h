@@ -13,6 +13,6 @@ class Parameters : public Mapi
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override;
 
-    private:
+   private:
     BoardCommunicationHandler m_boardHandler;
 };

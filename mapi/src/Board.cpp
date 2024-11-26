@@ -100,7 +100,8 @@ Board::ParameterInfo& Board::at(std::string_view param)
     }
 }
 
-const Board::ParameterInfo& Board::at(std::string_view param) const {
+const Board::ParameterInfo& Board::at(std::string_view param) const
+{
     try {
         const Board::ParameterInfo& ref = m_parameters.at(param.data());
         return ref;
@@ -153,7 +154,7 @@ double Board::calculatePhysical(const std::string& param, int64_t electronic) co
         throw std::runtime_error(param + " does not exist!");
     }
     const ParameterInfo& info = m_parameters.at(param);
-    if(info.electronicToPhysic.equation == ""){
+    if (info.electronicToPhysic.equation == "") {
         return electronic;
     }
 

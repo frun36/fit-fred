@@ -21,7 +21,7 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
 
     BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite = true)
     {
-        if(request.size() == 0){
+        if (request.size() == 0) {
             return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
         }
         std::string seq;

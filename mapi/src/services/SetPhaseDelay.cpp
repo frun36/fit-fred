@@ -3,7 +3,6 @@
 #include "DelayChange.h"
 #include "Alfred/print.h"
 
-
 void SetPhaseDelay::processExecution()
 {
     bool running = true;
@@ -14,7 +13,7 @@ void SetPhaseDelay::processExecution()
     }
 
     optional<DelayChange> delayChange = DelayChange::fromWinCCRequest(m_handler, request);
-    
+
     if (!delayChange.has_value()) {
         Print::PrintWarning("No delay change");
         return;
@@ -22,7 +21,7 @@ void SetPhaseDelay::processExecution()
 
     BoardCommunicationHandler::ParsedResponse parsedResponse = delayChange->apply(*this, m_handler);
 
-    if(parsedResponse.isError()) {
+    if (parsedResponse.isError()) {
         publishError(parsedResponse.getContents());
     } else {
         publishAnswer(parsedResponse.getContents());

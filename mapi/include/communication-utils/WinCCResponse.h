@@ -17,11 +17,10 @@ class WinCCResponse
         std::stringstream ss;
         ss << name;
 
-        for (const auto& val : data){
-            if(trunc(val) == val){
+        for (const auto& val : data) {
+            if (trunc(val) == val) {
                 ss << "," << static_cast<int64_t>(val);
-            }
-            else{
+            } else {
                 ss << "," << std::fixed << std::setprecision(3) << val;
             }
         }

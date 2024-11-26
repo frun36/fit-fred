@@ -72,8 +72,8 @@ class Board
 
         void storeValue(std::optional<double> physical, std::optional<int64_t> electronic)
         {
-           m_physicalValue = physical;
-           m_electronicValue = electronic;
+            m_physicalValue = physical;
+            m_electronicValue = electronic;
         }
 
         double getPhysicalValue() const
@@ -91,7 +91,7 @@ class Board
 
         int64_t getElectronicValue() const
         {
-            if(!m_electronicValue.has_value()){
+            if (!m_electronicValue.has_value()) {
                 throw std::runtime_error(name + ": tried to access non-existing stored value");
             }
             return *m_electronicValue;
@@ -138,16 +138,16 @@ class Board
 
     const std::string& getName() const { return m_name; }
 
-
-    bool isTcm() const 
+    bool isTcm() const
     {
         return m_identity.type == Type::TCM;
     }
 
-    std::shared_ptr<Board> getParentBoard() {
+    std::shared_ptr<Board> getParentBoard()
+    {
         return m_parentBoard;
     }
-    
+
    private:
     Identity m_identity;
     std::string m_name;

@@ -186,20 +186,21 @@ bool CounterRates::resetCounters()
     return true;
 }
 
-void CounterRates::pollResetCounters() {
+void CounterRates::pollResetCounters()
+{
     bool running;
     if (!isRequestAvailable(running))
         return;
-    
-    if(!running)
+
+    if (!running)
         return;
-    
+
     bool isResetPending = false;
     while (isRequestAvailable(running)) {
-        if(!running)
+        if (!running)
             return;
         string request = getRequest();
-        if (request == "RESET") 
+        if (request == "RESET")
             isResetPending = true;
         else
             Print::PrintWarning("Unexpected request: " + request);
@@ -246,7 +247,7 @@ void CounterRates::processExecution()
     stopTimeMeasurement();
 
     if (readoutResult.has_value()) {
-        string response = readoutResult->getString();// + "\nElapsed: " + to_string(m_elapsed);
+        string response = readoutResult->getString(); // + "\nElapsed: " + to_string(m_elapsed);
         Print::PrintVerbose(response);
         publishAnswer(response);
     }

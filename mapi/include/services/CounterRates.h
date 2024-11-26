@@ -109,11 +109,13 @@ class CounterRates : public BasicFitIndefiniteMapi
     chrono::system_clock::time_point m_startTime;
     useconds_t m_elapsed = 0;
 
-    void startTimeMeasurement() {
+    void startTimeMeasurement()
+    {
         m_startTime = std::chrono::high_resolution_clock::now();
     }
 
-    void stopTimeMeasurement() {
+    void stopTimeMeasurement()
+    {
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<std::chrono::microseconds>(end - m_startTime);
         m_elapsed = duration.count();

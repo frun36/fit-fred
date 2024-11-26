@@ -1,8 +1,6 @@
-#include"Equation.h"
+#include "Equation.h"
 #include "Parser/calculator.h"
 #include "Alfred/print.h"
-
-
 
 double Equation::calculate(std::string equation, const std::vector<std::string>& variables, const std::vector<double>& values)
 {

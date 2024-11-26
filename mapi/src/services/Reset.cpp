@@ -49,7 +49,7 @@ void Reset::processExecution()
     }
 
     {
-        auto parsedResponse = processSequenceThroughHandler(m_boardHandler,m_reqClearResetBits);
+        auto parsedResponse = processSequenceThroughHandler(m_boardHandler, m_reqClearResetBits);
         if (parsedResponse.isError()) {
             publishError(parsedResponse.getContents());
         }

@@ -24,7 +24,7 @@ class SwtSequence
         bool expectResponse;
     };
 
-    SwtSequence() : m_buffer("sc_reset") {}
+    SwtSequence() : m_buffer(_SEQUENCE_PREFIX_) {}
     SwtSequence(const std::vector<SwtOperation>& operations);
 
     /*

@@ -25,7 +25,7 @@ class BoardStatus : public BasicFitIndefiniteMapi, gbt::GbtRateMonitor
         m_startTime = std::chrono::high_resolution_clock::now();
     }
     void execEndTimePoint(){
-        m_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_startTime);
+        m_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime);
     }
 
     BoardCommunicationHandler::ParsedResponse checkGbtErrors();
@@ -35,7 +35,7 @@ class BoardStatus : public BasicFitIndefiniteMapi, gbt::GbtRateMonitor
     SwtSequence m_request;
 
     std::chrono::system_clock::time_point m_startTime;
-    std::chrono::milliseconds m_duration;
+    std::chrono::microseconds m_duration;
 
     std::shared_ptr<gbt::GbtErrorType> m_gbtError;
 };

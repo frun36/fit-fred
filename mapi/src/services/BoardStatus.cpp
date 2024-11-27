@@ -21,8 +21,8 @@ void BoardStatus::processExecution()
     bool running = true;
 
     execEndTimePoint();
-    if(m_duration.count() < 1000){
-        usleep(1000u - m_duration.count());
+    if(m_duration.count() < 1e6){
+        usleep(1e6 - m_duration.count());
     }
     execStartTimePoint();
 

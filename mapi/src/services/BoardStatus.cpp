@@ -1,6 +1,7 @@
 #include "services/BoardStatus.h"
 #include "Alfred/print.h"
 #include <sstream>
+#include<unistd.h>
 
 BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtFifoHandler(board)
 {
@@ -11,15 +12,24 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
     std::string request = requestStream.str();
     request.pop_back();
     m_request = m_boardHandler.processMessageFromWinCC(request);
+
+    execStartTimePoint(); // Initialize execution time
 }
 
 void BoardStatus::processExecution()
 {
     bool running = true;
-    
-    std::string fromWinCC = waitForRequest(running);
+
+    execEndTimePoint();
+    if(m_duration.count() < 1000){
+        usleep(1000u - m_duration.count());
+    }
+    execStartTimePoint();
+
+    isRequestAvailable(running);
     if (running == false)
         return;
+
     std::string response = executeAlfSequence(m_request.getSequence());
 
     updateTimePoint();

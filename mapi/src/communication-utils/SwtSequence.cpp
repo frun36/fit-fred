@@ -6,7 +6,7 @@ SwtSequence::SwtOperation::SwtOperation(Operation type, uint32_t addr, std::arra
     this->data = data;
 }
 
-SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operations) : m_buffer("reset\n")
+SwtSequence::SwtSequence(const std::vector<SwtSequence::SwtOperation>& operations) : m_buffer("sc_reset\n")
 {
     for (auto& op : operations) {
         addOperation(op);

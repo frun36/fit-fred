@@ -183,7 +183,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
 
     std::stringstream request;
 
-    request << Configurations::BoardConfigurations::getConfigurationInfo(gbt::GbtConfigurationName, configuration).req;
+    request << Configurations::BoardConfigurations::parseConfigurationInfo(gbt::GbtConfigurationName, configuration).req;
     if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getPhysicalValueOptional() == std::nullopt) {
         request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay,
                                               static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))

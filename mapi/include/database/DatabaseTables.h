@@ -14,8 +14,8 @@ namespace db_tables
 struct Column {
     Column(uint8_t _idx, std::string _name) : idx(_idx), name(_name) {}
 
-    uint8_t idx;
-    std::string name;
+    const uint8_t idx;
+    const std::string name;
 };
 
 namespace boolean
@@ -104,7 +104,7 @@ class ConfigurationParameters
     static const Column BoardName;
     static const Column BoardType;
     static const Column ParameterName;
-    static const Column Value;
+    static const Column ParameterValue;
 };
 
 } // namespace db_tables

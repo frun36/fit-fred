@@ -128,7 +128,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
         publishError("A board error occurred on FIFO_LOAD readout");
         return nullopt;
     } else if (fifoState == FifoState::Unexpected) {
-        publishError("Unexpected FIFO_LOAD state - clearing fifo");
+        publishError("Unexpected FIFO_LOAD state (" + to_string(*fifoLoad) + ")  - clearing fifo");
     }
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;

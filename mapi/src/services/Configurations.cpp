@@ -125,7 +125,7 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
 
     Print::PrintVerbose("Delay difference " + to_string(delayChange->delayDifference) + ", req:\n" + delayChange->req);
 
-    auto parsedResponse = delayChange->apply(*this, m_tcm);
+    auto parsedResponse = delayChange->apply(*this, m_tcm, false); // Readiness changed bits will be cleared afterwards
     response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         response.insert(0, "TCM configuration " + configurationName + " was not applied: delay change failed\n");
@@ -179,6 +179,9 @@ void Configurations::TcmConfigurations::processExecution()
         return;
     if (!handleData(configurationName, configurationInfo, response))
         return;
-    handleResetErrors(); // Not sure if it's needed after CH_MASK_A/C - done already in DelayChange
+    // Required after change of delays and SIDE_[A/C]_CHANNEL_MASK
+    // Performed always for simplicity
+    // Clearing readiness changed bits should be enough - tests will show
+    handleResetErrors(); 
     publishAnswer(response);
 }

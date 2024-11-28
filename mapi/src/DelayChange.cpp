@@ -50,7 +50,7 @@ std::optional<DelayChange> DelayChange::fromWinCCRequest(BoardCommunicationHandl
     return DelayChange::fromValues(tcm, newDelayA, newDelayC);
 }
 
-BoardCommunicationHandler::ParsedResponse DelayChange::apply(BasicFitIndefiniteMapi& service, BoardCommunicationHandler& tcm)
+BoardCommunicationHandler::ParsedResponse DelayChange::apply(BasicFitIndefiniteMapi& service, BoardCommunicationHandler& tcm, bool clearReadinessChangedBits)
 {
     auto parsedResponse = service.processSequenceThroughHandler(tcm, this->req);
 
@@ -59,9 +59,11 @@ BoardCommunicationHandler::ParsedResponse DelayChange::apply(BasicFitIndefiniteM
         // For larger changes however, the relock will occur nonetheless, causing the BOARD_STATUS_SYSTEM_RESTARTED bit to be set.
         // This sleep waits for the phase shift to finish, and clears the bit
         usleep((static_cast<useconds_t>(this->delayDifference) + 10) * 1000);
-        string resetReq;
-        WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
-        service.processSequenceThroughHandler(tcm, resetReq, false);
+        if (clearReadinessChangedBits) {
+            string resetReq;
+            WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
+            service.processSequenceThroughHandler(tcm, resetReq, false);
+        }
     }
 
     return parsedResponse;

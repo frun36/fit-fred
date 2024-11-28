@@ -89,7 +89,7 @@ class Configurations : public Mapigroup
         static vector<vector<MultiBase*>> fetchConfiguration(string_view configurationName, string_view boardName);
         static ConfigurationInfo parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
 
-        inline ConfigurationInfo getConfigurationInfo(string_view configurationName)
+        inline ConfigurationInfo getConfigurationInfo(string_view configurationName) const
         {
             auto dbData = fetchConfiguration(configurationName, m_boardName);
             return parseConfigurationInfo(configurationName, dbData);

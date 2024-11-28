@@ -22,3 +22,7 @@ After a successful operation, `PARAMETERS` sends the list of parameter values in
 - In case of failure in WinCC request parsing, the error is published immeadiately.
 
 - In case of failure in ALF response parsing, the error message is published along with the part of data that was successfuly retrieved from message.
+
+## Code organisation
+
+`Parameters` class inherits from the Mapi class. Translation of WinCC requests to ALF requests and parsing ALF response is performed using `BoardCommunicationHandler`, holding pointer to board to which service belongs.

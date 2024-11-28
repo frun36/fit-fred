@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <cstring>
 #include <memory>
+#include "services/BasicFitIndefiniteMapi.h"
+#include "TCM.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -23,7 +25,6 @@
 
 #endif
 
-#include "services/BasicFitIndefiniteMapi.h"
 
 /*
 Control Server - void fileRead() from FITelectronics.h
@@ -76,38 +77,37 @@ class Configurations : public Mapigroup
     {
        public:
         struct ConfigurationInfo {
-            const string req;
-            const optional<double> delayA;
-            const optional<double> delayC;
+            string name;
+            string req;
+            optional<double> delayA;
+            optional<double> delayC;
 
-            ConfigurationInfo(const string& req, optional<double> delayA, optional<double> delayC) : req(req), delayA(delayA), delayC(delayC) {}
+            ConfigurationInfo() = default;
+            ConfigurationInfo(const string& name, const string& req, optional<double> delayA, optional<double> delayC) : name(name), req(req), delayA(delayA), delayC(delayC) {}
         };
 
-        static vector<vector<MultiBase*>> fetchConfiguration(string_view configuration, string_view board);
-        static ConfigurationInfo getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
+        static vector<vector<MultiBase*>> fetchConfiguration(string_view configurationName, string_view boardName);
+        static ConfigurationInfo parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
 
-        virtual string_view getBoardName() const = 0;
-
-        inline ConfigurationInfo fetchAndGetConfigurationInfo(string_view name) const
+        inline ConfigurationInfo getConfigurationInfo(string_view configurationName) const
         {
-            auto dbData = fetchConfiguration(name, getBoardName());
-            return getConfigurationInfo(name, dbData);
+            auto dbData = fetchConfiguration(configurationName, m_boardName);
+            return parseConfigurationInfo(configurationName, dbData);
         }
 
         virtual ~BoardConfigurations() = default;
+       protected:
+        BoardCommunicationHandler m_handler;
+        ConfigurationInfo m_configurationInfo;
+        const string& m_boardName;
+
+        BoardConfigurations(std::shared_ptr<Board> board) : m_handler(board), m_boardName(board->getName()) {}
     };
 
-   private:
     class PmConfigurations : public Mapi, public BoardConfigurations
     {
-       private:
-        BoardCommunicationHandler m_pm;
-
        public:
-        PmConfigurations(std::shared_ptr<Board> board) : m_pm(board) {}
-
-        string_view getBoardName() const override { return m_pm.getBoard()->getName(); }
-
+        PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
         string processInputMessage(string msg);
         string processOutputMessage(string msg);
     };
@@ -115,20 +115,19 @@ class Configurations : public Mapigroup
     class TcmConfigurations : public BasicFitIndefiniteMapi, public BoardConfigurations
     {
        public:
-        TcmConfigurations(std::shared_ptr<Board> board) : m_tcm(board)
+        TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
         {
-            if (!board->doesExist("DELAY_A") || !board->doesExist("DELAY_C"))
+            if (!board->doesExist(string(tcm_parameters::DelayA)) || !board->doesExist(string(tcm_parameters::DelayC)))
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
         }
 
         void processExecution() override;
 
        private:
-        BoardCommunicationHandler m_tcm;
-        string_view getBoardName() const override { return m_tcm.getBoard()->getName(); }
+        string m_response;
 
-        bool handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
-        bool handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response);
+        bool handleDelays();
+        bool handleData();
         void handleResetErrors();
     };
 

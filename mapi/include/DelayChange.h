@@ -18,5 +18,5 @@ struct DelayChange {
 
     static std::optional<DelayChange> fromWinCCRequest(BoardCommunicationHandler& tcm, const string& request);
 
-    BoardCommunicationHandler::ParsedResponse apply(BasicFitIndefiniteMapi& service, BoardCommunicationHandler& tcm);
+    BoardCommunicationHandler::ParsedResponse apply(BasicFitIndefiniteMapi& service, BoardCommunicationHandler& tcm, bool clearReadinessChangedBits = true);
 };

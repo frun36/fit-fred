@@ -68,13 +68,13 @@ std::vector<std::vector<MultiBase*>> Configurations::BoardConfigurations::fetchC
 {
     sql::SelectModel query;
     query
-        .select(db_tables::ConfigurationParameters::ParameterName.name, db_tables::ConfigurationParameters::Value.name)
+        .select(db_tables::ConfigurationParameters::ParameterName.name, db_tables::ConfigurationParameters::ParameterValue.name)
         .from(db_tables::ConfigurationParameters::TableName)
         .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == string(configurationName) && sql::column(db_tables::ConfigurationParameters::BoardName.name) == string(boardName));
     return DatabaseInterface::executeQuery(query.str());
 }
 
-Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::getConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
+Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConfigurations::parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
 {
     optional<double> delayA = nullopt;
     optional<double> delayC = nullopt;
@@ -85,39 +85,43 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();
-        if (parameterName == "DELAY_A")
+        if (parameterName == tcm_parameters::DelayA)
             delayA = parameterValue;
-        else if (parameterName == "DELAY_C")
+        else if (parameterName == tcm_parameters::DelayC)
             delayC = parameterValue;
         else
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
     }
 
-    return ConfigurationInfo(request, delayA, delayC);
+    return ConfigurationInfo(string(configurationName), request, delayA, delayC);
 }
 
 // PmConfigurations
 
-string Configurations::PmConfigurations::processInputMessage(string name)
+string Configurations::PmConfigurations::processInputMessage(string request)
 {
-    const string& req = fetchAndGetConfigurationInfo(name).req;
-    Print::PrintVerbose("Configuration '" + name + "' for " + string(getBoardName()) + ":\n" + req);
-    return m_pm.processMessageFromWinCC(req).getSequence();
+    const string& configurationName = request;
+    m_configurationInfo = getConfigurationInfo(configurationName);
+    const string& req = m_configurationInfo.req;
+    Print::PrintVerbose("Configuration '" + name + "' for " + m_boardName + ":\n" + req);
+    return m_handler.processMessageFromWinCC(req).getSequence();
 }
 
 string Configurations::PmConfigurations::processOutputMessage(string msg)
 {
-    auto parsedResponse = m_pm.processMessageFromALF(msg);
+    auto parsedResponse = m_handler.processMessageFromALF(msg);
     if (parsedResponse.isError())
         returnError = true;
+    else
+        Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
     return parsedResponse.getContents();
 }
 
 // TcmConfigurations
 
-bool Configurations::TcmConfigurations::handleDelays(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
+bool Configurations::TcmConfigurations::handleDelays()
 {
-    optional<DelayChange> delayChange = DelayChange::fromValues(m_tcm, configurationInfo.delayA, configurationInfo.delayC);
+    optional<DelayChange> delayChange = DelayChange::fromValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
 
     if (!delayChange.has_value()) {
         return true;
@@ -125,25 +129,25 @@ bool Configurations::TcmConfigurations::handleDelays(const string& configuration
 
     Print::PrintVerbose("Delay difference " + to_string(delayChange->delayDifference) + ", req:\n" + delayChange->req);
 
-    auto parsedResponse = delayChange->apply(*this, m_tcm);
-    response += parsedResponse.getContents();
+    auto parsedResponse = delayChange->apply(*this, m_handler, false); // Readiness changed bits will be cleared afterwards
+    m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
-        response.insert(0, "TCM configuration " + configurationName + " was not applied: delay change failed\n");
-        publishError(response);
+        m_response.insert(0, "TCM configuration " + m_configurationInfo.name + " was not applied: delay change failed\n");
+        publishError(m_response);
         return false;
     }
 
     return true;
 }
 
-bool Configurations::TcmConfigurations::handleData(const string& configurationName, const ConfigurationInfo& configurationInfo, string& response)
+bool Configurations::TcmConfigurations::handleData()
 {
-    Print::PrintVerbose("Applying data, req:\n" + configurationInfo.req);
-    auto parsedResponse = processSequenceThroughHandler(m_tcm, configurationInfo.req);
-    response += parsedResponse.getContents();
+    Print::PrintVerbose("Applying data, req:\n" + m_configurationInfo.req);
+    auto parsedResponse = processSequenceThroughHandler(m_handler, m_configurationInfo.req);
+    m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
-        response.insert(0, "TCM configuration " + configurationName + (response.empty() ? " was not applied\n" : " was applied partially\n"));
-        publishError(response);
+        m_response.insert(0, "TCM configuration " + m_configurationInfo.name + (m_response.empty() ? " was not applied\n" : " was applied partially\n"));
+        publishError(m_response);
         return false;
     }
 
@@ -158,12 +162,14 @@ void Configurations::TcmConfigurations::handleResetErrors()
     // Control Server performs entire reset errors - shouldn't be needed
     string resetReq;
     WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
-    processSequenceThroughHandler(m_tcm, resetReq, false);
+    processSequenceThroughHandler(m_handler, resetReq, false);
     return;
 }
 
 void Configurations::TcmConfigurations::processExecution()
 {
+    m_response.clear();
+
     bool running = true;
     string request = waitForRequest(running);
     if (running == false) {
@@ -171,14 +177,17 @@ void Configurations::TcmConfigurations::processExecution()
     }
 
     const string& configurationName = request;
-    ConfigurationInfo configurationInfo = fetchAndGetConfigurationInfo(configurationName);
-    Print::PrintVerbose("Configuration '" + configurationName + "' for " + string(getBoardName()));
+    m_configurationInfo = getConfigurationInfo(configurationName);
+    Print::PrintVerbose("Configuration '" + configurationName + "' for " + m_boardName);
 
-    string response;
-    if (!handleDelays(configurationName, configurationInfo, response))
+    if (!handleDelays())
         return;
-    if (!handleData(configurationName, configurationInfo, response))
+    if (!handleData())
         return;
-    handleResetErrors(); // Not sure if it's needed after CH_MASK_A/C - done already in DelayChange
-    publishAnswer(response);
+    // Required after change of delays and SIDE_[A/C]_CHANNEL_MASK
+    // Performed always for simplicity
+    // Clearing readiness changed bits should be enough - tests will show
+    handleResetErrors(); 
+    Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
+    publishAnswer(m_response);
 }

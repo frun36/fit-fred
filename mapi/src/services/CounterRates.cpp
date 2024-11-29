@@ -2,6 +2,16 @@
 #include "FREDServer/Alfred/print.h"
 #include <unistd.h>
 
+CounterRates::CounterRates(shared_ptr<Board> board)
+    : m_handler(board),
+      m_numberOfCounters(board->isTcm() ? 15 : 24),
+      m_maxFifoWords(board->isTcm() ? 495 : 480),
+      m_names(board->isTcm() ? tcm_parameters::getAllCounters()
+                             : pm_parameters::getAllCounters())
+{
+    addHandler("RESET", [this]() { return resetCounters(); });
+}
+
 optional<uint32_t> CounterRates::getFifoLoad()
 {
     auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
@@ -238,17 +248,25 @@ void CounterRates::processExecution()
         readoutResult = handleFifoReadout(readIntervalState);
     }
 
+    string response = readoutResult->getString();
+
     // Allow reset only if counter FIFO has recently been cleared or readout is disabled
     // (minimises chance of incorrect rate calculation afterwards)
     if ((readIntervalState == ReadIntervalState::Disabled || (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed))) {
-        pollResetCounters();
+        RequestExecutionResult result = executeQueuedRequests(running);
+
+        if (result.isError) {
+            publishError(result);
+        } else {
+            response += '\n';
+            response += result;
+        }
     }
 
     stopTimeMeasurement();
 
     if (readoutResult.has_value()) {
-        string response = readoutResult->getString(); // + "\nElapsed: " + to_string(m_elapsed);
-        Print::PrintVerbose(response);
+        Print::PrintVerbose(response + "\nElapsed: " + to_string(m_elapsed));
         publishAnswer(response);
     }
 }

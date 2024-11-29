@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <sstream>
 
 using RequestHandler = std::function<bool(void)>;
 
@@ -39,15 +40,30 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         const std::list<std::string> executed;
         const std::list<std::string> skipped;
         const std::string errorMsg;
+        const bool isError;
 
         RequestExecutionResult(const std::list<std::string>& requests,
                                std::list<std::string>::const_iterator executedEnd,
+                               bool isError = false,
                                std::string errorMsg = "")
-            : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), errorMsg(errorMsg) {};
+            : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), isError(isError), errorMsg(errorMsg) {};
 
-        bool isError() const
+        operator std::string() const
         {
-            return !errorMsg.empty();
+            std::ostringstream oss;
+
+            oss << "Executed: ";
+            for (const auto& req : executed)
+                oss << req << '; ';
+            if (!isError)
+                return oss.str();
+
+            oss << '\n';
+            oss << "Skipped: ";
+            for (const auto& req : skipped)
+                oss << req << '; ';
+            oss << "\nError: " << errorMsg;
+            return oss.str();
         }
     };
 

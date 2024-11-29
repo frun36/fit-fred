@@ -30,14 +30,7 @@ class CounterRates : public BasicFitIndefiniteMapi
 #endif
 
    public:
-    CounterRates(shared_ptr<Board> board)
-        : m_handler(board),
-          m_numberOfCounters(board->isTcm() ? 15 : 24),
-          m_maxFifoWords(board->isTcm() ? 495 : 480),
-          m_names(board->isTcm() ? tcm_parameters::getAllCounters()
-                                 : pm_parameters::getAllCounters())
-    {
-    }
+    CounterRates(shared_ptr<Board> board);
 
    private:
     enum class ReadIntervalState {

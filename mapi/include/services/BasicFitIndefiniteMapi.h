@@ -13,37 +13,43 @@
 #endif
 
 #include "../utils.h"
+#include <list>
+#include <string>
+#include <unordered_map>
+#include <functional>
+
+using RequestHandler = std::function<bool(void)>;
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
 {
+   protected:
+    bool m_stopped = false;
+    std::unordered_map<std::string, RequestHandler> m_requestHandlers;
+
    public:
-    BasicFitIndefiniteMapi() {}
+    BasicFitIndefiniteMapi();
 
-    BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite = true)
-    {
-        if (request.size() == 0) {
-            return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
-        }
-        std::string seq;
-        try {
-            seq = handler.processMessageFromWinCC(request, readAfterWrite).getSequence();
-        } catch (const std::exception& e) {
-            return { WinCCResponse(), { { handler.getBoard()->getName(), e.what() } } };
-        }
-        return handler.processMessageFromALF(executeAlfSequence(seq));
-    }
+    BoardCommunicationHandler::ParsedResponse processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite = true);
 
-    BoardCommunicationHandler::FifoResponse readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead)
-    {
-        if (wordsToRead == 0)
-            return BoardCommunicationHandler::FifoResponse::EmptyFifoResponse;
+    BoardCommunicationHandler::FifoResponse readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead);
 
-        std::string seq;
-        try {
-            seq = handler.createReadFifoRequest(fifoName, wordsToRead).getSequence();
-        } catch (const std::exception& e) {
-            return { std::vector<std::vector<uint32_t>>(), BoardCommunicationHandler::ErrorReport{ fifoName, e.what() } };
+    bool addHandler(const std::string& request, RequestHandler handler);
+
+    struct RequestExecutionResult {
+        const std::list<std::string> executed;
+        const std::list<std::string> skipped;
+        const std::string errorMsg;
+
+        RequestExecutionResult(const std::list<std::string>& requests,
+                               std::list<std::string>::const_iterator executedEnd,
+                               std::string errorMsg = "")
+            : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), errorMsg(errorMsg) {};
+
+        bool isError() const
+        {
+            return !errorMsg.empty();
         }
-        return handler.parseFifo(executeAlfSequence(seq));
-    }
+    };
+
+    RequestExecutionResult executeQueuedRequests(bool& running);
 };

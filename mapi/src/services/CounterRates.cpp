@@ -196,34 +196,10 @@ bool CounterRates::resetCounters()
     return true;
 }
 
-void CounterRates::pollResetCounters()
-{
-    bool running;
-    if (!isRequestAvailable(running))
-        return;
-
-    if (!running)
-        return;
-
-    bool isResetPending = false;
-    while (isRequestAvailable(running)) {
-        if (!running)
-            return;
-        string request = getRequest();
-        if (request == "RESET")
-            isResetPending = true;
-        else
-            Print::PrintWarning("Unexpected request: " + request);
-    }
-
-    if (isResetPending)
-        resetCounters() ? Print::PrintInfo("Succesfully reset counters") : throw runtime_error("Counter reset failed");
-}
-
 void CounterRates::processExecution()
 {
     bool running;
-    usleep(getSleepDuration());
+    handleSleepAndWake(getSleepDuration(), running);
 
     startTimeMeasurement();
 

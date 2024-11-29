@@ -1,12 +1,13 @@
 #include "BasicFitIndefiniteMapi.h"
 
-
-BasicFitIndefiniteMapi::BasicFitIndefiniteMapi() {
+BasicFitIndefiniteMapi::BasicFitIndefiniteMapi()
+{
     addHandler("START", [this]() { m_stopped = false; return true; });
     addHandler("STOP", [this]() { m_stopped = true; return true; });
 }
 
-BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite) {
+BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite)
+{
     if (request.size() == 0) {
         return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
     }
@@ -19,7 +20,8 @@ BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenc
     return handler.processMessageFromALF(executeAlfSequence(seq));
 }
 
-BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead) {
+BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead)
+{
     if (wordsToRead == 0)
         return BoardCommunicationHandler::FifoResponse::EmptyFifoResponse;
 
@@ -32,15 +34,17 @@ BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCo
     return handler.parseFifo(executeAlfSequence(seq));
 }
 
-bool BasicFitIndefiniteMapi::addHandler(const std::string& request, RequestHandler handler) {
-    return m_requestHandlers.insert({request, handler}).second;
-}  
+bool BasicFitIndefiniteMapi::addHandler(const std::string& request, RequestHandler handler)
+{
+    return m_requestHandlers.insert({ request, handler }).second;
+}
 
-BasicFitIndefiniteMapi::RequestExecutionResult BasicFitIndefiniteMapi::executeQueuedRequests(bool& running) {
+BasicFitIndefiniteMapi::RequestExecutionResult BasicFitIndefiniteMapi::executeQueuedRequests(bool& running)
+{
     std::list<std::string> requests;
     while (isRequestAvailable(running))
         requests.push_back(getRequest());
-    
+
     for (auto it = requests.begin(); it != requests.end(); it++) {
         auto handlerPairIt = m_requestHandlers.find(*it);
         if (handlerPairIt == m_requestHandlers.end())

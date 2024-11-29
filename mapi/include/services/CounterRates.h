@@ -138,7 +138,6 @@ class CounterRates : public BasicFitIndefiniteMapi
 
     optional<ReadoutResult> handleDirectReadout();
     optional<ReadoutResult> handleFifoReadout(ReadIntervalState readIntervalState);
-    void pollResetCounters();
 
     void processExecution() override;
 };

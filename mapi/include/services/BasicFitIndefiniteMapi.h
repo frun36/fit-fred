@@ -67,5 +67,21 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         }
     };
 
+    void handleSleepAndWake(useconds_t sleepUs, bool& running)
+    {
+        while (m_stopped) {
+            std::string request = waitForRequest(running);
+            if (!running)
+                return;
+
+            if (request == "START") {
+                Print::PrintWarning("Unexpected request received while stopped: '" + request + "'");
+                break;
+            }
+        }
+
+        usleep(sleepUs);
+    }
+
     RequestExecutionResult executeQueuedRequests(bool& running);
 };

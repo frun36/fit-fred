@@ -12,22 +12,14 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
     std::string request = requestStream.str();
     request.pop_back();
     m_request = m_boardHandler.processMessageFromWinCC(request);
-
-    execStartTimePoint(); // Initialize execution time
 }
 
 void BoardStatus::processExecution()
 {
     bool running = true;
-
-    execEndTimePoint();
-    if(m_duration.count() < 1e6){
-        usleep(1e6 - m_duration.count());
-    }
-    execStartTimePoint();
-
-    isRequestAvailable(running);
-    if (running == false)
+    executeQueuedRequests(running);
+    handleSleepAndWake(1'000'000, running);
+    if (!running)
         return;
 
     std::string response = executeAlfSequence(m_request.getSequence());

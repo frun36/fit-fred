@@ -44,8 +44,11 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
 LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::executeQueuedRequests(bool& running)
 {
     std::list<std::string> requests;
-    while (isRequestAvailable(running))
+    while (isRequestAvailable(running)) {
+        if (!running)
+            return RequestExecutionResult(requests, requests.begin(), "Error getting available requests: not running");
         requests.push_back(getRequest());
+    }
 
     for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
         auto handlerPairIt = m_requestHandlers.find(*it);

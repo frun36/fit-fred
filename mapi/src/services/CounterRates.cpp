@@ -198,7 +198,7 @@ bool CounterRates::resetCounters()
 
 void CounterRates::processExecution()
 {
-    bool running;
+    bool running = true;
     handleSleepAndWake(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6), running);
 
     // Fixes segfault after SIGINT termination

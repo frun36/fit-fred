@@ -1,4 +1,4 @@
-#include "BasicFitIndefiniteMapi.h"
+#include "services/BasicFitIndefiniteMapi.h"
 
 BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite)
 {

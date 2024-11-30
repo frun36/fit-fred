@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <chrono>
 #include <Alfred/print.h>
-#include "LoopingFitIndefiniteMapi.h"
 
 LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi()
 {
@@ -46,18 +45,18 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
     std::list<std::string> requests;
     while (isRequestAvailable(running)) {
         if (!running)
-            return RequestExecutionResult(requests, requests.begin(), "Error getting available requests: not running");
+            return RequestExecutionResult(requests, requests.begin(), true, "Error getting available requests: not running");
         requests.push_back(getRequest());
     }
 
     for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
         auto handlerPairIt = m_requestHandlers.find(*it);
         if (handlerPairIt == m_requestHandlers.end())
-            return RequestExecutionResult(requests, it, "Request '" + *it + "' is unexpected");
+            return RequestExecutionResult(requests, it, true, "Request '" + *it + "' is unexpected");
 
         auto handler = handlerPairIt->second;
         if (!handler())
-            return RequestExecutionResult(requests, it, "Execution of '" + *it + "' failed");
+            return RequestExecutionResult(requests, it, true, "Execution of '" + *it + "' failed");
     }
 
     return RequestExecutionResult(requests, requests.end());
@@ -69,14 +68,14 @@ LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
 
     oss << "Executed: ";
     for (const auto& req : executed)
-        oss << req << '; ';
+        oss << req << "; ";
     if (!isError)
         return oss.str();
 
     oss << '\n';
     oss << "Skipped: ";
     for (const auto& req : skipped)
-        oss << req << '; ';
+        oss << req << "; ";
     oss << "\nError: " << errorMsg;
     return oss.str();
 }

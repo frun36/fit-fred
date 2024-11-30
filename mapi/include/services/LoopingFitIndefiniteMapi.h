@@ -36,5 +36,5 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     RequestExecutionResult executeQueuedRequests(bool& running);
 
    public:
-    LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi();
+    LoopingFitIndefiniteMapi();
 };

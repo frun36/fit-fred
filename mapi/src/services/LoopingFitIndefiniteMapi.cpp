@@ -1,17 +1,31 @@
 #include "services/LoopingFitIndefiniteMapi.h"
 #include <unistd.h>
+#include <chrono>
+#include <Alfred/print.h>
+#include "LoopingFitIndefiniteMapi.h"
 
-#include <unistd.h>
+LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi()
+{
+    addHandler("START", [this]() { m_stopped = false; return true; });
+    addHandler("STOP", [this]() { m_stopped = true; return true; });
+
+    m_startTime = std::chrono::high_resolution_clock::now();
+}
 
 bool LoopingFitIndefiniteMapi::addHandler(const std::string& request, RequestHandler handler)
 {
     return m_requestHandlers.insert({ request, handler }).second;
 }
 
-void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t sleepUs, bool& running)
+void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& running)
 {
-    if (!m_stopped)
-        usleep(sleepUs);
+    if(!m_stopped) {
+        m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
+        if (m_elapsed >= interval)
+            Print::PrintWarning("Service overloaded: elapsed " + std::to_string(m_elapsed) + ", interval " + std::to_string(interval));
+        else
+            usleep(interval - m_elapsed);
+    }
 
     while (m_stopped) {
         std::string request = waitForRequest(running);
@@ -23,6 +37,8 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t sleepUs, bool& runn
         else
             publishError("Unexpected request received while stopped: '" + request + "'");
     }
+
+    m_startTime = std::chrono::high_resolution_clock::now();
 }
 
 LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::executeQueuedRequests(bool& running)

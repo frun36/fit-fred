@@ -100,30 +100,6 @@ class CounterRates : public LoopingFitIndefiniteMapi
     double m_readInterval;
     optional<vector<double>> m_rates;
 
-    chrono::system_clock::time_point m_startTime;
-    useconds_t m_elapsed = 0;
-
-    void startTimeMeasurement()
-    {
-        m_startTime = std::chrono::high_resolution_clock::now();
-    }
-
-    void stopTimeMeasurement()
-    {
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<std::chrono::microseconds>(end - m_startTime);
-        m_elapsed = duration.count();
-    }
-
-    useconds_t getSleepDuration() const
-    {
-        useconds_t baseSleep = static_cast<useconds_t>(m_readInterval * 0.5 * 1e6);
-        if (m_elapsed >= baseSleep)
-            return 0;
-        else
-            return baseSleep - m_elapsed;
-    }
-
     static double mapReadIntervalCodeToSeconds(int64_t code);
     ReadIntervalState handleReadInterval();
 

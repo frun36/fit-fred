@@ -199,9 +199,7 @@ bool CounterRates::resetCounters()
 void CounterRates::processExecution()
 {
     bool running;
-    handleSleepAndWake(getSleepDuration(), running);
-
-    startTimeMeasurement();
+    handleSleepAndWake(static_cast<useconds_t>(m_readInterval * 0.5 * 1e6), running);
 
     // Fixes segfault after SIGINT termination
     isRequestAvailable(running);
@@ -226,7 +224,7 @@ void CounterRates::processExecution()
 
     string response = readoutResult->getString();
 
-    // Allow reset only if counter FIFO has recently been cleared or readout is disabled
+    // Allow RESET only if counter FIFO has recently been cleared or readout is disabled
     // (minimises chance of incorrect rate calculation afterwards)
     if ((readIntervalState == ReadIntervalState::Disabled || (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed))) {
         RequestExecutionResult result = executeQueuedRequests(running);
@@ -239,10 +237,8 @@ void CounterRates::processExecution()
         }
     }
 
-    stopTimeMeasurement();
-
     if (readoutResult.has_value()) {
-        Print::PrintVerbose(response + "\nElapsed: " + to_string(m_elapsed));
+        Print::PrintVerbose(response);
         publishAnswer(response);
     }
 }

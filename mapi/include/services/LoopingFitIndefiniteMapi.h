@@ -9,10 +9,14 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
    private:
     bool m_stopped = false;
     std::unordered_map<std::string, RequestHandler> m_requestHandlers;
+    chrono::system_clock::time_point m_startTime;
+    useconds_t m_elapsed = 0;
 
    protected:
-    bool addHandler(const std::string& request, RequestHandler handler);
-
+    useconds_t getElapsed() const { return m_elapsed; }
+    void handleSleepAndWake(useconds_t interval, bool& running);
+    
+    // Handling potential incoming requests
     struct RequestExecutionResult {
         const std::list<std::string> executed;
         const std::list<std::string> skipped;
@@ -28,14 +32,9 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
         operator std::string() const;
     };
 
-    void handleSleepAndWake(useconds_t sleepUs, bool& running);
-
+    bool addHandler(const std::string& request, RequestHandler handler);
     RequestExecutionResult executeQueuedRequests(bool& running);
 
    public:
-    LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi()
-    {
-        addHandler("START", [this]() { m_stopped = false; return true; });
-        addHandler("STOP", [this]() { m_stopped = true; return true; });
-    }
+    LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi();
 };

@@ -48,40 +48,10 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
                                std::string errorMsg = "")
             : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), isError(isError), errorMsg(errorMsg) {};
 
-        operator std::string() const
-        {
-            std::ostringstream oss;
-
-            oss << "Executed: ";
-            for (const auto& req : executed)
-                oss << req << '; ';
-            if (!isError)
-                return oss.str();
-
-            oss << '\n';
-            oss << "Skipped: ";
-            for (const auto& req : skipped)
-                oss << req << '; ';
-            oss << "\nError: " << errorMsg;
-            return oss.str();
-        }
+        operator std::string() const;
     };
 
-    void handleSleepAndWake(useconds_t sleepUs, bool& running)
-    {
-        while (m_stopped) {
-            std::string request = waitForRequest(running);
-            if (!running)
-                return;
-
-            if (request == "START") {
-                Print::PrintWarning("Unexpected request received while stopped: '" + request + "'");
-                break;
-            }
-        }
-
-        usleep(sleepUs);
-    }
+    void handleSleepAndWake(useconds_t sleepUs, bool& running);
 
     RequestExecutionResult executeQueuedRequests(bool& running);
 };

@@ -1,4 +1,5 @@
 #include "BasicFitIndefiniteMapi.h"
+#include <unistd.h>
 
 BasicFitIndefiniteMapi::BasicFitIndefiniteMapi()
 {
@@ -39,13 +40,30 @@ bool BasicFitIndefiniteMapi::addHandler(const std::string& request, RequestHandl
     return m_requestHandlers.insert({ request, handler }).second;
 }
 
+void BasicFitIndefiniteMapi::handleSleepAndWake(useconds_t sleepUs, bool& running)
+{
+    if (!m_stopped)
+        usleep(sleepUs);
+
+    while (m_stopped) {
+        std::string request = waitForRequest(running);
+        if (!running)
+            return;
+
+        if (request == "START")
+            m_stopped = false;
+        else
+            publishError("Unexpected request received while stopped: '" + request + "'");
+    }
+}
+
 BasicFitIndefiniteMapi::RequestExecutionResult BasicFitIndefiniteMapi::executeQueuedRequests(bool& running)
 {
     std::list<std::string> requests;
     while (isRequestAvailable(running))
         requests.push_back(getRequest());
 
-    for (auto it = requests.begin(); it != requests.end(); it++) {
+    for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
         auto handlerPairIt = m_requestHandlers.find(*it);
         if (handlerPairIt == m_requestHandlers.end())
             return RequestExecutionResult(requests, it, "Request '" + *it + "' is unexpected");
@@ -56,4 +74,22 @@ BasicFitIndefiniteMapi::RequestExecutionResult BasicFitIndefiniteMapi::executeQu
     }
 
     return RequestExecutionResult(requests, requests.end());
+}
+
+BasicFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
+{
+    std::ostringstream oss;
+
+    oss << "Executed: ";
+    for (const auto& req : executed)
+        oss << req << '; ';
+    if (!isError)
+        return oss.str();
+
+    oss << '\n';
+    oss << "Skipped: ";
+    for (const auto& req : skipped)
+        oss << req << '; ';
+    oss << "\nError: " << errorMsg;
+    return oss.str();
 }

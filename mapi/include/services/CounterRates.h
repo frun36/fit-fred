@@ -5,9 +5,10 @@
 #include "communication-utils/AlfResponseParser.h"
 #include "BoardCommunicationHandler.h"
 
-#include "services/BasicFitIndefiniteMapi.h"
+#include "services/LoopingFitIndefiniteMapi.h"
 #include "TCM.h"
 #include "PM.h"
+
 #ifdef FIT_UNIT_TEST
 
 #include "gtest/gtest.h"
@@ -21,7 +22,7 @@ class CounterRatesTest_Response_Test;
 
 #endif
 
-class CounterRates : public BasicFitIndefiniteMapi
+class CounterRates : public LoopingFitIndefiniteMapi
 {
 #ifdef FIT_UNIT_TEST
     FRIEND_TEST(::CounterRatesTest, FifoAlfResponse);

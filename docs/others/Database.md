@@ -12,7 +12,7 @@
 
  - **FEE_SETTINGS** - stores definition of variables required to configure FRED for the subdetector (discussed in further sections)
 
- ![](imgs/DB.png)
+ ![](../imgs/DB.png)
 
 
 ## Parameters

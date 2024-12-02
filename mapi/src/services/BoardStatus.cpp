@@ -17,7 +17,11 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
 void BoardStatus::processExecution()
 {
     bool running = true;
-    executeQueuedRequests(running);
+    RequestExecutionResult result = executeQueuedRequests(running);
+    if (result.isError) {
+        Print::PrintWarning(name, "Bad request from WinCC\n" + static_cast<string>(result));
+        // don't return; - the service's operation isn't disturbed by unexpected requests; START/STOP are always successful
+    }
     handleSleepAndWake(1'000'000, running);
     if (!running) {
         return;

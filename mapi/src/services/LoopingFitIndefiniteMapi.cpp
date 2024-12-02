@@ -17,12 +17,6 @@ LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_st
         return true;
     });
 
-    if (m_stopped) {
-        Print::PrintInfo(name, "Service stopped by default");
-    } else {
-        Print::PrintInfo(name, "Service started by default");
-    }
-
     m_startTime = std::chrono::high_resolution_clock::now();
 }
 
@@ -35,6 +29,11 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
 {
     if (!m_stopped) {
         m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
+        
+        if (interval == 0) {
+            return;
+        }
+
         if (m_elapsed >= interval) {
             Print::PrintWarning(name, "Service overloaded: elapsed " + std::to_string(m_elapsed * 0.001) + " ms, interval " + std::to_string(interval * 0.001) + " ms");
         } else {

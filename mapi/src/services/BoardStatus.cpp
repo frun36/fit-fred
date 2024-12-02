@@ -1,7 +1,7 @@
 #include "services/BoardStatus.h"
 #include "Alfred/print.h"
 #include <sstream>
-#include<unistd.h>
+#include <unistd.h>
 
 BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtFifoHandler(board)
 {
@@ -19,8 +19,9 @@ void BoardStatus::processExecution()
     bool running = true;
     executeQueuedRequests(running);
     handleSleepAndWake(1'000'000, running);
-    if (!running)
+    if (!running) {
         return;
+    }
 
     std::string response = executeAlfSequence(m_request.getSequence());
 
@@ -55,8 +56,8 @@ void BoardStatus::processExecution()
 
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
-    
-    if(m_gbtError.get() != nullptr){
+
+    if (m_gbtError.get() != nullptr) {
         m_gbtError->saveErrorReport();
         m_gbtError.reset();
     }
@@ -91,5 +92,5 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 
     m_gbtError = gbt::parseFifoData(fifoData);
 
-    return {m_gbtError->createWinCCResponse(),{}};
+    return { m_gbtError->createWinCCResponse(), {} };
 }

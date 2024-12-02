@@ -15,7 +15,7 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
    protected:
     useconds_t getElapsed() const { return m_elapsed; }
     void handleSleepAndWake(useconds_t interval, bool& running);
-    
+
     // Handling potential incoming requests
     struct RequestExecutionResult {
         const std::list<std::string> executed;

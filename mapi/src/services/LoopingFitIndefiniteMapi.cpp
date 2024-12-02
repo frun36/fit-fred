@@ -5,22 +5,23 @@
 
 LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_stopped(isDefaultStopped)
 {
-    addHandler("START", [this]() { 
+    addHandler("START", [this]() {
         Print::PrintInfo(name, "Service started");
-        m_stopped = false; 
-        return true; 
-    });
-    
-    addHandler("STOP", [this]() {
-        Print::PrintInfo(name, "Service stopped");
-        m_stopped = true; 
-        return true; 
+        m_stopped = false;
+        return true;
     });
 
-    if(m_stopped)
+    addHandler("STOP", [this]() {
+        Print::PrintInfo(name, "Service stopped");
+        m_stopped = true;
+        return true;
+    });
+
+    if (m_stopped) {
         Print::PrintInfo(name, "Service stopped by default");
-    else
+    } else {
         Print::PrintInfo(name, "Service started by default");
+    }
 
     m_startTime = std::chrono::high_resolution_clock::now();
 }
@@ -34,21 +35,24 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
 {
     if (!m_stopped) {
         m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
-        if (m_elapsed >= interval)
+        if (m_elapsed >= interval) {
             Print::PrintWarning(name, "Service overloaded: elapsed " + std::to_string(m_elapsed * 0.001) + " ms, interval " + std::to_string(interval * 0.001) + " ms");
-        else
+        } else {
             usleep(interval - m_elapsed);
+        }
     }
 
     while (m_stopped) {
         std::string request = waitForRequest(running);
-        if (!running)
+        if (!running) {
             return;
+        }
 
-        if (request == "START")
+        if (request == "START") {
             m_requestHandlers["START"]();
-        else
+        } else {
             publishError("Unexpected request received while stopped: '" + request + "'");
+        }
     }
 
     m_startTime = std::chrono::high_resolution_clock::now();
@@ -58,19 +62,22 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
 {
     std::list<std::string> requests;
     while (isRequestAvailable(running)) {
-        if (!running)
+        if (!running) {
             return RequestExecutionResult(requests, requests.begin(), true, "Error getting available requests: not running");
+        }
         requests.push_back(getRequest());
     }
 
     for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
         auto handlerPairIt = m_requestHandlers.find(*it);
-        if (handlerPairIt == m_requestHandlers.end())
+        if (handlerPairIt == m_requestHandlers.end()) {
             return RequestExecutionResult(requests, it, true, "Request '" + *it + "' is unexpected");
+        }
 
         auto handler = handlerPairIt->second;
-        if (!handler())
+        if (!handler()) {
             return RequestExecutionResult(requests, it, true, "Execution of '" + *it + "' failed");
+        }
     }
 
     return RequestExecutionResult(requests, requests.end());
@@ -81,15 +88,18 @@ LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
     std::ostringstream oss;
 
     oss << "Executed: ";
-    for (const auto& req : executed)
+    for (const auto& req : executed) {
         oss << req << "; ";
-    if (!isError)
+    }
+    if (!isError) {
         return oss.str();
+    }
 
     oss << '\n';
     oss << "Skipped: ";
-    for (const auto& req : skipped)
+    for (const auto& req : skipped) {
         oss << req << "; ";
+    }
     oss << "\nError: " << errorMsg;
     return oss.str();
 }

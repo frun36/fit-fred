@@ -16,8 +16,9 @@ BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenc
 
 BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCommunicationHandler& handler, std::string fifoName, size_t wordsToRead)
 {
-    if (wordsToRead == 0)
+    if (wordsToRead == 0) {
         return BoardCommunicationHandler::FifoResponse::EmptyFifoResponse;
+    }
 
     std::string seq;
     try {

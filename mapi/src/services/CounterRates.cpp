@@ -15,8 +15,9 @@ CounterRates::CounterRates(shared_ptr<Board> board)
 optional<uint32_t> CounterRates::getFifoLoad()
 {
     auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         return nullopt;
+    }
     return m_handler.getBoard()->at("COUNTERS_FIFO_LOAD").getElectronicValueOptional();
 }
 
@@ -51,8 +52,9 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         }
     }
 
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7)
+    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
+    }
 
     double currReadInterval = mapReadIntervalCodeToSeconds(*currReadIntervalCode);
     bool readIntervalChanged = (currReadInterval != m_readInterval);
@@ -87,8 +89,9 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
 
 CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommunicationHandler::FifoResponse&& fifoResult, bool clearOnly)
 {
-    if (fifoResult.isError())
+    if (fifoResult.isError()) {
         return FifoReadResult::Failure;
+    }
 
     if (clearOnly) {
         resetService();
@@ -104,10 +107,12 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
         size_t counterValuesSize = counterValues.size();
         const vector<uint32_t>& newValues = counterValues.back();
         const vector<uint32_t>& oldValues = (counterValuesSize > 1) ? counterValues[counterValuesSize - 2] : *m_counters;
-        if (!m_rates.has_value())
+        if (!m_rates.has_value()) {
             m_rates = vector<double>(m_numberOfCounters);
-        for (size_t i = 0; i < m_numberOfCounters; i++)
+        }
+        for (size_t i = 0; i < m_numberOfCounters; i++) {
             m_rates->at(i) = (newValues[i] - oldValues[i]) / m_readInterval;
+        }
         m_counters = newValues;
         return FifoReadResult::Success;
     }
@@ -160,16 +165,19 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 vector<uint32_t> CounterRates::readDirectly()
 {
     string request;
-    for (const auto& name : m_names)
+    for (const auto& name : m_names) {
         WinCCRequest::appendToRequest(request, WinCCRequest::readRequest(name));
+    }
     auto parsedResponse = processSequenceThroughHandler(m_handler, request);
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         return {};
+    }
 
     vector<uint32_t> result;
     result.reserve(m_numberOfCounters);
-    for (const auto& name : m_names)
+    for (const auto& name : m_names) {
         result.push_back(m_handler.getBoard()->at(name).getElectronicValue());
+    }
     return result;
 }
 
@@ -180,18 +188,22 @@ bool CounterRates::resetCounters()
     // reset request is handled directly after last read from FIFO
 
     vector<uint32_t> directCounters = readDirectly();
-    if (directCounters.empty())
+    if (directCounters.empty()) {
         return false;
+    }
 
     auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1), false);
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         return false;
+    }
 
-    if (m_counters.has_value())
-        for (size_t i = 0; i < m_counters->size(); i++)
+    if (m_counters.has_value()) {
+        for (size_t i = 0; i < m_counters->size(); i++) {
             // underflow generated on purpose - works like a negative number for subtraction in rates calculation
             // required to compensate for the fact that zeroing of counters can occur anywhere between FIFO loads
             m_counters->at(i) -= directCounters[i];
+        }
+    }
     // m_counters->at(i) = 0;
 
     return true;
@@ -204,8 +216,9 @@ void CounterRates::processExecution()
 
     // Fixes segfault after SIGINT termination
     isRequestAvailable(running);
-    if (!running)
+    if (!running) {
         return;
+    }
 
 #ifdef FIT_UNIT_TEST
     ReadIntervalState readIntervalState = ReadIntervalState::Ok;

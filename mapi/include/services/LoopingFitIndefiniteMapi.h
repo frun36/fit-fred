@@ -30,6 +30,8 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
             : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), isError(isError), errorMsg(errorMsg) {};
 
         operator std::string() const;
+
+        bool isEmpty() const;
     };
 
     bool addHandler(const std::string& request, RequestHandler handler);

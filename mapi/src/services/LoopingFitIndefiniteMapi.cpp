@@ -29,7 +29,7 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
 {
     if (!m_stopped) {
         m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
-        
+
         if (interval == 0) {
             return;
         }
@@ -101,4 +101,9 @@ LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
     }
     oss << "\nError: " << errorMsg;
     return oss.str();
+}
+
+bool LoopingFitIndefiniteMapi::RequestExecutionResult::isEmpty() const
+{
+    return executed.empty() && skipped.empty();
 }

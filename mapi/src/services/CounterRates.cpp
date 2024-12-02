@@ -9,7 +9,13 @@ CounterRates::CounterRates(shared_ptr<Board> board)
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
-    addHandler("RESET", [this]() { return resetCounters(); });
+    addHandler("RESET", [this]() {
+        bool result = resetCounters();
+        if (result) {
+            Print::PrintInfo(name, "Successfully reset counters");
+        }
+        return result;
+    });
 }
 
 optional<uint32_t> CounterRates::getFifoLoad()
@@ -135,7 +141,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 
     FifoState fifoState;
     if (readIntervalState == ReadIntervalState::Changed) {
-        Print::PrintInfo(name, "Counter read interval changed to" + to_string(m_readInterval) + "s");
+        Print::PrintInfo(name, "Counter read interval changed to " + to_string(m_readInterval) + " s");
         fifoState = FifoState::Outdated;
     } else {
         fifoState = evaluateFifoState(*fifoLoad);
@@ -245,7 +251,7 @@ void CounterRates::processExecution()
 
         if (result.isError) {
             publishError(result);
-        } else {
+        } else if (!result.isEmpty()) {
             response += '\n';
             response += result;
         }

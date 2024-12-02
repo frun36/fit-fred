@@ -1,7 +1,7 @@
 #include "services/BoardStatus.h"
 #include "Alfred/print.h"
 #include <sstream>
-#include<unistd.h>
+#include <unistd.h>
 
 BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> toRefresh) : m_boardHandler(board), m_gbtFifoHandler(board)
 {
@@ -12,23 +12,20 @@ BoardStatus::BoardStatus(std::shared_ptr<Board> board, std::list<std::string> to
     std::string request = requestStream.str();
     request.pop_back();
     m_request = m_boardHandler.processMessageFromWinCC(request);
-
-    execStartTimePoint(); // Initialize execution time
 }
 
 void BoardStatus::processExecution()
 {
     bool running = true;
-
-    execEndTimePoint();
-    if(m_duration.count() < 1e6){
-        usleep(1e6 - m_duration.count());
+    RequestExecutionResult result = executeQueuedRequests(running);
+    if (result.isError) {
+        Print::PrintWarning(name, "Bad request from WinCC\n" + static_cast<string>(result));
+        // don't return; - the service's operation isn't disturbed by unexpected requests; START/STOP are always successful
     }
-    execStartTimePoint();
-
-    isRequestAvailable(running);
-    if (running == false)
+    handleSleepAndWake(1'000'000, running);
+    if (!running) {
         return;
+    }
 
     std::string response = executeAlfSequence(m_request.getSequence());
 
@@ -63,8 +60,8 @@ void BoardStatus::processExecution()
 
     Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
-    
-    if(m_gbtError.get() != nullptr){
+
+    if (m_gbtError.get() != nullptr) {
         m_gbtError->saveErrorReport();
         m_gbtError.reset();
     }
@@ -99,5 +96,5 @@ BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()
 
     m_gbtError = gbt::parseFifoData(fifoData);
 
-    return {m_gbtError->createWinCCResponse(),{}};
+    return { m_gbtError->createWinCCResponse(), {} };
 }

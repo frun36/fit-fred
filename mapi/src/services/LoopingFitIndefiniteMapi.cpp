@@ -3,10 +3,24 @@
 #include <chrono>
 #include <Alfred/print.h>
 
-LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi()
+LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_stopped(isDefaultStopped)
 {
-    addHandler("START", [this]() { m_stopped = false; return true; });
-    addHandler("STOP", [this]() { m_stopped = true; return true; });
+    addHandler("START", [this]() { 
+        Print::PrintInfo(name, "Service started");
+        m_stopped = false; 
+        return true; 
+    });
+    
+    addHandler("STOP", [this]() {
+        Print::PrintInfo(name, "Service stopped");
+        m_stopped = true; 
+        return true; 
+    });
+
+    if(m_stopped)
+        Print::PrintInfo(name, "Service stopped by default");
+    else
+        Print::PrintInfo(name, "Service started by default");
 
     m_startTime = std::chrono::high_resolution_clock::now();
 }
@@ -18,10 +32,10 @@ bool LoopingFitIndefiniteMapi::addHandler(const std::string& request, RequestHan
 
 void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& running)
 {
-    if(!m_stopped) {
+    if (!m_stopped) {
         m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
         if (m_elapsed >= interval)
-            Print::PrintWarning("Service overloaded: elapsed " + std::to_string(m_elapsed) + ", interval " + std::to_string(interval));
+            Print::PrintWarning(name, "Service overloaded: elapsed " + std::to_string(m_elapsed * 0.001) + " ms, interval " + std::to_string(interval * 0.001) + " ms");
         else
             usleep(interval - m_elapsed);
     }
@@ -32,7 +46,7 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
             return;
 
         if (request == "START")
-            m_stopped = false;
+            m_requestHandlers["START"]();
         else
             publishError("Unexpected request received while stopped: '" + request + "'");
     }

@@ -130,6 +130,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 
     FifoState fifoState;
     if (readIntervalState == ReadIntervalState::Changed) {
+        Print::PrintInfo(name, "Counter read interval changed to" + to_string(m_readInterval) + "s");
         fifoState = FifoState::Outdated;
     } else {
         fifoState = evaluateFifoState(*fifoLoad);
@@ -238,7 +239,7 @@ void CounterRates::processExecution()
     }
 
     if (readoutResult.has_value()) {
-        Print::PrintVerbose(response);
+        Print::PrintVerbose(name, "\n" + response);
         publishAnswer(response);
     }
 }

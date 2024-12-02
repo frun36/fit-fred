@@ -7,7 +7,7 @@ using RequestHandler = std::function<bool(void)>;
 class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
 {
    private:
-    bool m_stopped = false;
+    bool m_stopped;
     std::unordered_map<std::string, RequestHandler> m_requestHandlers;
     chrono::system_clock::time_point m_startTime;
     useconds_t m_elapsed = 0;
@@ -36,5 +36,5 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     RequestExecutionResult executeQueuedRequests(bool& running);
 
    public:
-    LoopingFitIndefiniteMapi();
+    LoopingFitIndefiniteMapi(bool isDefaultStopped = false);
 };

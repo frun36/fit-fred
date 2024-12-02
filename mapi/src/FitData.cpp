@@ -59,12 +59,12 @@ bool FitData::fetchBoardParamters(std::string boardType)
     sql::SelectModel query;
     query.select("*").from(db_tables::Parameters::TableName).where(sql::column(db_tables::Parameters::BoardType.name) == boardType);
 
-    Print::PrintInfo("Fetching" + boardType + " register map");
+    Print::PrintInfo("Fetching " + boardType + " register map");
     auto parameters = DatabaseInterface::executeQuery(query.str());
     Print::PrintInfo("Fetched " + std::to_string(parameters.size()) + " rows");
 
     if (parameters.size() == 0) {
-        Print::PrintError(boardType + " register data have not been found!");
+        Print::PrintError(boardType + " register data has not been found!");
         return false;
     }
 
@@ -75,7 +75,7 @@ bool FitData::fetchBoardParamters(std::string boardType)
 
 bool FitData::fetchEnvironment()
 {
-    Print::PrintInfo("Fetching information about unit defintion and others environement variables");
+    Print::PrintInfo("Fetching information about unit definitions and other environment variables");
     sql::SelectModel query;
     query.select("*").from(db_tables::Environment::TableName);
 

@@ -1,6 +1,7 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
 #include <unistd.h>
+#include <iomanip>
 
 CounterRates::CounterRates(shared_ptr<Board> board)
     : m_handler(board),
@@ -356,7 +357,7 @@ string CounterRates::ReadoutResult::getString() const
     ss << "\nRATES";
     if (rates.has_value()) {
         for (auto r : *rates) {
-            ss << "," << r;
+            ss << "," << scientific << setprecision(9) << r;
         }
     } else {
         ss << ",-";

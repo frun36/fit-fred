@@ -49,7 +49,7 @@ class CounterRates : public LoopingFitIndefiniteMapi
         Single,
         Multiple,
         Outdated,
-        Unexpected
+        Partial
     };
 
     friend ostream& operator<<(ostream& os, FifoState readIntervalState);

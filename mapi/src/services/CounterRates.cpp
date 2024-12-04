@@ -90,7 +90,7 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
     } else if (fifoLoad >= m_maxFifoWords) {
         return FifoState::Outdated;
     } else {
-        return FifoState::Unexpected;
+        return FifoState::Partial;
     }
 }
 
@@ -150,14 +150,16 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
     if (fifoState == FifoState::BoardError) {
         publishError("A board error occurred on FIFO_LOAD readout");
         return nullopt;
-    } else if (fifoState == FifoState::Unexpected) {
-        publishError("Unexpected FIFO_LOAD state (" + to_string(*fifoLoad) + ")  - clearing fifo");
+    } else if (fifoState == FifoState::Partial) {
+        Print::PrintWarning(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
+        // By the time the next IPbus packet arrives, the FIFO will have been filled with the complete set of counters
+        *fifoLoad += m_numberOfCounters - (*fifoLoad % m_numberOfCounters); 
     }
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
-    if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
+    if (fifoState == FifoState::Single || fifoState == FifoState::Multiple || fifoState == FifoState::Partial) {
         fifoReadResult = readFifo(*fifoLoad);
-    } else if (fifoState == FifoState::Outdated || fifoState == FifoState::Unexpected) {
+    } else if (fifoState == FifoState::Outdated) {
         fifoReadResult = clearFifo(*fifoLoad);
     }
 
@@ -304,8 +306,8 @@ ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
         case CounterRates::FifoState::Outdated:
             os << "OUTDATED";
             break;
-        case CounterRates::FifoState::Unexpected:
-            os << "UNEXPECTED";
+        case CounterRates::FifoState::Partial:
+            os << "PARTIAL";
             break;
         default:
             os << "_INTERNAL_ERROR";

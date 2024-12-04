@@ -59,7 +59,9 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
         }
     }
 
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
+    if (!currReadIntervalCode.has_value()) {
+        return ReadIntervalState::Unknown;  
+    } else if (*currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
     }
 
@@ -236,8 +238,13 @@ void CounterRates::processExecution()
 #endif
 
     optional<ReadoutResult> readoutResult;
-    if (readIntervalState == ReadIntervalState::Invalid) {
-        publishError("Invalid read interval");
+    if (readIntervalState == ReadIntervalState::Unknown) {
+        publishError("Failed to read COUNTER_READ_INTERVAL value");
+        usleep(100'000);
+        return;
+    } if (readIntervalState == ReadIntervalState::Invalid) {
+        publishError("Invalid COUNTER_READ_INTERVAL value");
+        usleep(100'000);
         return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
         readoutResult = handleDirectReadout();
@@ -271,6 +278,9 @@ ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalSta
     switch (readIntervalState) {
         case CounterRates::ReadIntervalState::Invalid:
             os << "INVALID";
+            break;
+        case CounterRates::ReadIntervalState::Unknown:
+            os << "UNKNOWN";
             break;
         case CounterRates::ReadIntervalState::Disabled:
             os << "DISABLED";

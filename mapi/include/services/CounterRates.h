@@ -36,6 +36,7 @@ class CounterRates : public LoopingFitIndefiniteMapi
    private:
     enum class ReadIntervalState {
         Disabled,
+        Unknown,
         Invalid,
         Changed,
         Ok

@@ -19,4 +19,18 @@ The FIT FRED implementation utilizes a board-based command layout and emphasizes
 
 ![](docs/imgs/FIT-FRED-Schema.jpg)
 
+## Documentation
 
+### Services
+
+- [Parameters](docs/services/PARAMETERS.md)
+- [Board status](docs/services/BOARD_STATUS.md)
+- [Configurations](docs/services/CONFIGURATIONS.md)
+- [Reset system](docs/services/RESET_SYSTEM.md)
+- [Reset errors](docs/services/RESET_ERRORS.md)
+- [Reset](docs/services/RESET.md)
+
+### Others
+
+- [Database](docs/others/Database.md)
+- [WinCC message format](docs/others/ReadWriteWinCC.md)

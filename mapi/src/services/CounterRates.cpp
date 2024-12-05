@@ -144,7 +144,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 
     FifoState fifoState;
     if (readIntervalState == ReadIntervalState::Changed) {
-        Print::PrintInfo(name, "Counter read interval changed to " + to_string(m_readInterval) + " s");
+        Print::PrintInfo(name, "COUNTER_READ_INTERVAL changed to " + to_string(m_readInterval) + " s");
         fifoState = FifoState::Outdated;
     } else {
         fifoState = evaluateFifoState(*fifoLoad);
@@ -269,7 +269,7 @@ void CounterRates::processExecution()
 
     if (readoutResult.has_value()) {
         Print::PrintVerbose(name, "\n" + response);
-        publishAnswer(response);
+        publishAnswer(response + "\nPREV_ELAPSED," + to_string(getElapsed()));
     }
 }
 
@@ -369,7 +369,8 @@ string CounterRates::ReadoutResult::getString() const
     ss << "\nRATES";
     if (rates.has_value()) {
         for (auto r : *rates) {
-            ss << "," << scientific << setprecision(9) << r;
+            // We divide by max. 2; 5; 10; so we don't need more precision
+            ss << "," << fixed << setprecision(1) << r;
         }
     } else {
         ss << ",-";

@@ -30,7 +30,7 @@ At one-second intervals, the service updates electronic board status. Status is 
 `BoardStatus` is implemented as a class inheriting from the IndefiniteMapi interface.
 
 ### Parent classes
-- `BasicFitIndefiniteMapi` - provides method for FIFO read, which is neccessary to fetch information about GBT errors
+- `LoopingFitIndefiniteMapi` - provides method for FIFO read, which is neccessary to fetch information about GBT errors, and handles self-looping
 - `GbtRateMonitor` - provides method for GBT rate calculation
 
 ### Members

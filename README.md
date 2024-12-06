@@ -12,3 +12,6 @@ make
 cd ..
 bin/FREDServer
 ```
+
+## Documentation
+See the [fit-fred wiki](https://github.com/frun36/fit-fred/wiki).

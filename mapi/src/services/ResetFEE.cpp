@@ -99,7 +99,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 {
-    std::string pmRequest = WinCCRequest::readRequest(pm_parameters::HighVoltage);
+    std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
 
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
@@ -114,7 +114,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
-            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::HighVoltage.data()).getElectronicValue() == 0xFFFFF) {
+            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
             }
         }

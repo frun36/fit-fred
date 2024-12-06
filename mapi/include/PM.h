@@ -7,7 +7,7 @@
 
 namespace pm_parameters
 {
-constexpr std::string_view HighVoltage{ "1.8V_POWER" };
+constexpr std::string_view HighVoltage{ "1_8V_POWER" };
 constexpr std::string_view Ch01CtrCfd{ "CH01_CTR_CFD" };
 constexpr std::string_view Ch01CtrTrg{ "CH01_CTR_TRG" };
 constexpr std::string_view Ch02CtrCfd{ "CH02_CTR_CFD" };

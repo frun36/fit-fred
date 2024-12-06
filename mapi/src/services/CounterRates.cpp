@@ -60,7 +60,7 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     }
 
     if (!currReadIntervalCode.has_value()) {
-        return ReadIntervalState::Unknown;  
+        return ReadIntervalState::Unknown;
     } else if (*currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
     }
@@ -155,7 +155,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
     } else if (fifoState == FifoState::Partial) {
         Print::PrintWarning(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
         // By the time the next IPbus packet arrives, the FIFO will have been filled with the complete set of counters
-        *fifoLoad += m_numberOfCounters - (*fifoLoad % m_numberOfCounters); 
+        *fifoLoad += m_numberOfCounters - (*fifoLoad % m_numberOfCounters);
     }
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
@@ -170,7 +170,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
         return nullopt;
     }
 
-    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates);
+    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates, getPrevElapsed());
 }
 
 vector<uint32_t> CounterRates::readDirectly()
@@ -242,7 +242,8 @@ void CounterRates::processExecution()
         publishError("Failed to read COUNTER_READ_INTERVAL value");
         usleep(100'000);
         return;
-    } if (readIntervalState == ReadIntervalState::Invalid) {
+    }
+    if (readIntervalState == ReadIntervalState::Invalid) {
         publishError("Invalid COUNTER_READ_INTERVAL value");
         usleep(100'000);
         return;
@@ -269,7 +270,7 @@ void CounterRates::processExecution()
 
     if (readoutResult.has_value()) {
         Print::PrintVerbose(name, "\n" + response);
-        publishAnswer(response + "\nPREV_ELAPSED," + to_string(getElapsed()));
+        publishAnswer(response);
     }
 }
 
@@ -375,6 +376,8 @@ string CounterRates::ReadoutResult::getString() const
     } else {
         ss << ",-";
     }
+
+    ss << "\nPREV_ELAPSED," << prevElapsed * 0.001 << "ms";
 
     return ss.str();
 }

@@ -71,6 +71,7 @@ class CounterRates : public LoopingFitIndefiniteMapi
         FifoState fifoState;
         uint32_t fifoLoad;
         FifoReadResult fifoReadResult;
+        useconds_t prevElapsed;
 
         optional<vector<uint32_t>> counters;
         optional<vector<double>> rates;
@@ -82,13 +83,15 @@ class CounterRates : public LoopingFitIndefiniteMapi
             uint32_t fifoLoad,
             FifoReadResult fifoReadResult,
             const optional<vector<uint32_t>>& counters,
-            const optional<vector<double>>& rates) : readIntervalState(readIntervalState),
-                                                     readInterval(readInterval),
-                                                     fifoState(fifoState),
-                                                     fifoLoad(fifoLoad),
-                                                     fifoReadResult(fifoReadResult),
-                                                     counters(counters),
-                                                     rates(rates) {}
+            const optional<vector<double>>& rates,
+            useconds_t prevElapsed) : readIntervalState(readIntervalState),
+                                      readInterval(readInterval),
+                                      fifoState(fifoState),
+                                      fifoLoad(fifoLoad),
+                                      fifoReadResult(fifoReadResult),
+                                      counters(counters),
+                                      rates(rates),
+                                      prevElapsed(prevElapsed) {}
 
         string getString() const;
     };

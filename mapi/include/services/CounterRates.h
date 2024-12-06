@@ -99,8 +99,9 @@ class CounterRates : public LoopingFitIndefiniteMapi
     BoardCommunicationHandler m_handler;
     const uint32_t m_numberOfCounters;
     const uint32_t m_maxFifoWords;
-    const string m_counterFifo;
-    const string m_counterResetFlag;
+    const string m_resetFlagName;
+    const string m_fifoName;
+    const string m_fifoLoadName;
     const vector<string> m_names;
     optional<vector<uint32_t>> m_counters;
     double m_readInterval;
@@ -113,7 +114,7 @@ class CounterRates : public LoopingFitIndefiniteMapi
     FifoState evaluateFifoState(uint32_t fifoLoad) const;
 
     FifoReadResult handleCounterValues(const BoardCommunicationHandler::FifoResponse&& fifoResult, bool clearOnly);
-    inline FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false) { return handleCounterValues(move(BasicFitIndefiniteMapi::readFifo(m_handler, m_counterFifo, fifoLoad)), clearOnly); }
+    inline FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false) { return handleCounterValues(move(BasicFitIndefiniteMapi::readFifo(m_handler, m_fifoName, fifoLoad)), clearOnly); }
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     vector<uint32_t> readDirectly();
     void resetService();

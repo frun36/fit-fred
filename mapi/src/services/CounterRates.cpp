@@ -9,8 +9,9 @@ CounterRates::CounterRates(shared_ptr<Board> board)
     : m_handler(board),
       m_numberOfCounters(board->isTcm() ? 15 : 24),
       m_maxFifoWords(board->isTcm() ? 495 : 480),
-      m_counterFifo(board->isTcm() ? tcm_parameters::CounterFifo : pm_parameters::CounterFifo),
-      m_counterResetFlag(board->isTcm() ? tcm_parameters::ResetCounters : pm_parameters::ResetCountersAndHistograms),
+      m_resetFlagName(board->isTcm() ? tcm_parameters::ResetCounters : pm_parameters::ResetCountersAndHistograms),
+      m_fifoName(board->isTcm() ? tcm_parameters::CounterFifo : pm_parameters::CounterFifo),
+      m_fifoLoadName(board->isTcm() ? tcm_parameters::CountersFifoLoad : pm_parameters::CountersFifoLoad),
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
@@ -25,11 +26,11 @@ CounterRates::CounterRates(shared_ptr<Board> board)
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(tcm_parameters::CountersFifoLoad));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(m_fifoLoadName));
     if (parsedResponse.isError()) {
         return nullopt;
     }
-    return m_handler.getBoard()->at(tcm_parameters::CountersFifoLoad).getElectronicValueOptional();
+    return m_handler.getBoard()->at(m_fifoLoadName).getElectronicValueOptional();
 }
 
 double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)
@@ -51,7 +52,7 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     if (board->isTcm()) {
         currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
-            processSequenceThroughHandler(m_handler, string(tcm_parameters::CounterReadInterval) + ",READ");
+            processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(tcm_parameters::CounterReadInterval));
             currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         }
     } else {
@@ -206,7 +207,7 @@ bool CounterRates::resetCounters()
         return false;
     }
 
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(m_counterResetFlag, 1), false);
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(m_resetFlagName, 1), false);
     if (parsedResponse.isError()) {
         return false;
     }

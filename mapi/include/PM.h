@@ -33,6 +33,9 @@ constexpr std::string_view Ch11CtrTrg{ "CH11_CTR_TRG" };
 constexpr std::string_view Ch12CtrCfd{ "CH12_CTR_CFD" };
 constexpr std::string_view Ch12CtrTrg{ "CH12_CTR_TRG" };
 
+constexpr std::string_view ResetCountersAndHistograms{ "RESET_COUNTERS_AND_HISTOGRAMS" };
+constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
+
 inline std::vector<std::string> getAllCounters()
 {
     return {

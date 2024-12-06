@@ -37,6 +37,11 @@ constexpr std::string_view Background7{ "BACKGROUND_7_COUNTER" };
 constexpr std::string_view Background8{ "BACKGROUND_8_COUNTER" };
 constexpr std::string_view Background9{ "BACKGROUND_9_COUNTER" };
 
+constexpr std::string_view CounterReadInterval{ "COUNTER_READ_INTERVAL" };
+constexpr std::string_view CountersFifoLoad{ "COUNTERS_FIFO_LOAD" };
+constexpr std::string_view ResetCounters{ "BOARD_STATUS_RESET_COUNTERS" };
+constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
+
 inline std::vector<std::string> getAllCounters()
 {
     return { Trigger5.data(), Trigger4.data(), Trigger2.data(), Trigger1.data(), Trigger3.data(),

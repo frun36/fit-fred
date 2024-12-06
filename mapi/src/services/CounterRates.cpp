@@ -1,5 +1,7 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
+#include "TCM.h"
+#include "PM.h"
 #include <unistd.h>
 #include <iomanip>
 
@@ -7,6 +9,8 @@ CounterRates::CounterRates(shared_ptr<Board> board)
     : m_handler(board),
       m_numberOfCounters(board->isTcm() ? 15 : 24),
       m_maxFifoWords(board->isTcm() ? 495 : 480),
+      m_counterFifo(board->isTcm() ? tcm_parameters::CounterFifo : pm_parameters::CounterFifo),
+      m_counterResetFlag(board->isTcm() ? tcm_parameters::ResetCounters : pm_parameters::ResetCountersAndHistograms),
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
@@ -21,11 +25,11 @@ CounterRates::CounterRates(shared_ptr<Board> board)
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(tcm_parameters::CountersFifoLoad));
     if (parsedResponse.isError()) {
         return nullopt;
     }
-    return m_handler.getBoard()->at("COUNTERS_FIFO_LOAD").getElectronicValueOptional();
+    return m_handler.getBoard()->at(tcm_parameters::CountersFifoLoad).getElectronicValueOptional();
 }
 
 double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)
@@ -45,17 +49,17 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     optional<int64_t> currReadIntervalCode;
     shared_ptr<Board> board = m_handler.getBoard();
     if (board->isTcm()) {
-        currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
-            processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
-            currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+            processSequenceThroughHandler(m_handler, string(tcm_parameters::CounterReadInterval) + ",READ");
+            currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         }
     } else {
-        currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        currReadIntervalCode = board->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
             // Wait until TCM reads the value
             usleep(100'000);
-            currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+            currReadIntervalCode = board->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         }
     }
 
@@ -194,7 +198,6 @@ vector<uint32_t> CounterRates::readDirectly()
 
 bool CounterRates::resetCounters()
 {
-    string flagName = m_handler.getBoard()->isTcm() ? "BOARD_STATUS_RESET_COUNTERS" : "RESET_COUNTERS_AND_HISTOGRAMS";
     // additional read from FIFO (like in CS) shouldn't be required:
     // reset request is handled directly after last read from FIFO
 
@@ -203,7 +206,7 @@ bool CounterRates::resetCounters()
         return false;
     }
 
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1), false);
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(m_counterResetFlag, 1), false);
     if (parsedResponse.isError()) {
         return false;
     }

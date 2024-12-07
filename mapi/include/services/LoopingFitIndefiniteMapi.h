@@ -13,7 +13,7 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     useconds_t m_elapsed = 0;
 
    protected:
-    useconds_t getElapsed() const { return m_elapsed; }
+    useconds_t getPrevElapsed() const { return m_elapsed; }
     void handleSleepAndWake(useconds_t interval, bool& running);
 
     // Handling potential incoming requests

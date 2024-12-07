@@ -1,5 +1,7 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
+#include "TCM.h"
+#include "PM.h"
 #include <unistd.h>
 #include <iomanip>
 
@@ -7,6 +9,9 @@ CounterRates::CounterRates(shared_ptr<Board> board)
     : m_handler(board),
       m_numberOfCounters(board->isTcm() ? 15 : 24),
       m_maxFifoWords(board->isTcm() ? 495 : 480),
+      m_resetFlagName(board->isTcm() ? tcm_parameters::ResetCounters : pm_parameters::ResetCountersAndHistograms),
+      m_fifoName(board->isTcm() ? tcm_parameters::CounterFifo : pm_parameters::CounterFifo),
+      m_fifoLoadName(board->isTcm() ? tcm_parameters::CountersFifoLoad : pm_parameters::CountersFifoLoad),
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
@@ -21,11 +26,11 @@ CounterRates::CounterRates(shared_ptr<Board> board)
 
 optional<uint32_t> CounterRates::getFifoLoad()
 {
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest("COUNTERS_FIFO_LOAD"));
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(m_fifoLoadName));
     if (parsedResponse.isError()) {
         return nullopt;
     }
-    return m_handler.getBoard()->at("COUNTERS_FIFO_LOAD").getElectronicValueOptional();
+    return m_handler.getBoard()->at(m_fifoLoadName).getElectronicValueOptional();
 }
 
 double CounterRates::mapReadIntervalCodeToSeconds(int64_t code)
@@ -45,21 +50,23 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
     optional<int64_t> currReadIntervalCode;
     shared_ptr<Board> board = m_handler.getBoard();
     if (board->isTcm()) {
-        currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
-            processSequenceThroughHandler(m_handler, "COUNTER_READ_INTERVAL,READ");
-            currReadIntervalCode = board->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+            processSequenceThroughHandler(m_handler, WinCCRequest::readRequest(tcm_parameters::CounterReadInterval));
+            currReadIntervalCode = board->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         }
     } else {
-        currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+        currReadIntervalCode = board->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         if (!currReadIntervalCode.has_value()) {
             // Wait until TCM reads the value
             usleep(100'000);
-            currReadIntervalCode = board->getParentBoard()->at("COUNTER_READ_INTERVAL").getElectronicValueOptional();
+            currReadIntervalCode = board->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional();
         }
     }
 
-    if (!currReadIntervalCode.has_value() || *currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
+    if (!currReadIntervalCode.has_value()) {
+        return ReadIntervalState::Unknown;
+    } else if (*currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
     }
 
@@ -90,7 +97,7 @@ CounterRates::FifoState CounterRates::evaluateFifoState(uint32_t fifoLoad) const
     } else if (fifoLoad >= m_maxFifoWords) {
         return FifoState::Outdated;
     } else {
-        return FifoState::Unexpected;
+        return FifoState::Partial;
     }
 }
 
@@ -142,7 +149,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 
     FifoState fifoState;
     if (readIntervalState == ReadIntervalState::Changed) {
-        Print::PrintInfo(name, "Counter read interval changed to " + to_string(m_readInterval) + " s");
+        Print::PrintInfo(name, "COUNTER_READ_INTERVAL changed to " + to_string(m_readInterval) + " s");
         fifoState = FifoState::Outdated;
     } else {
         fifoState = evaluateFifoState(*fifoLoad);
@@ -150,14 +157,16 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
     if (fifoState == FifoState::BoardError) {
         publishError("A board error occurred on FIFO_LOAD readout");
         return nullopt;
-    } else if (fifoState == FifoState::Unexpected) {
-        publishError("Unexpected FIFO_LOAD state (" + to_string(*fifoLoad) + ")  - clearing fifo");
+    } else if (fifoState == FifoState::Partial) {
+        Print::PrintWarning(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
+        // By the time the next IPbus packet arrives, the FIFO will have been filled with the complete set of counters
+        *fifoLoad += m_numberOfCounters - (*fifoLoad % m_numberOfCounters);
     }
 
     FifoReadResult fifoReadResult = FifoReadResult::NotPerformed;
-    if (fifoState == FifoState::Single || fifoState == FifoState::Multiple) {
+    if (fifoState == FifoState::Single || fifoState == FifoState::Multiple || fifoState == FifoState::Partial) {
         fifoReadResult = readFifo(*fifoLoad);
-    } else if (fifoState == FifoState::Outdated || fifoState == FifoState::Unexpected) {
+    } else if (fifoState == FifoState::Outdated) {
         fifoReadResult = clearFifo(*fifoLoad);
     }
 
@@ -166,7 +175,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
         return nullopt;
     }
 
-    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates);
+    return ReadoutResult(readIntervalState, m_readInterval, fifoState, *fifoLoad, fifoReadResult, m_counters, m_rates, getPrevElapsed());
 }
 
 vector<uint32_t> CounterRates::readDirectly()
@@ -190,7 +199,6 @@ vector<uint32_t> CounterRates::readDirectly()
 
 bool CounterRates::resetCounters()
 {
-    string flagName = m_handler.getBoard()->isTcm() ? "BOARD_STATUS_RESET_COUNTERS" : "RESET_COUNTERS_AND_HISTOGRAMS";
     // additional read from FIFO (like in CS) shouldn't be required:
     // reset request is handled directly after last read from FIFO
 
@@ -199,7 +207,7 @@ bool CounterRates::resetCounters()
         return false;
     }
 
-    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(flagName, 1), false);
+    auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(m_resetFlagName, 1), false);
     if (parsedResponse.isError()) {
         return false;
     }
@@ -234,8 +242,14 @@ void CounterRates::processExecution()
 #endif
 
     optional<ReadoutResult> readoutResult;
+    if (readIntervalState == ReadIntervalState::Unknown) {
+        publishError("Failed to read COUNTER_READ_INTERVAL value");
+        usleep(100'000);
+        return;
+    }
     if (readIntervalState == ReadIntervalState::Invalid) {
-        publishError("Invalid read interval");
+        publishError("Invalid COUNTER_READ_INTERVAL value");
+        usleep(100'000);
         return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
         readoutResult = handleDirectReadout();
@@ -269,6 +283,9 @@ ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalSta
     switch (readIntervalState) {
         case CounterRates::ReadIntervalState::Invalid:
             os << "INVALID";
+            break;
+        case CounterRates::ReadIntervalState::Unknown:
+            os << "UNKNOWN";
             break;
         case CounterRates::ReadIntervalState::Disabled:
             os << "DISABLED";
@@ -304,8 +321,8 @@ ostream& operator<<(ostream& os, CounterRates::FifoState fifoState)
         case CounterRates::FifoState::Outdated:
             os << "OUTDATED";
             break;
-        case CounterRates::FifoState::Unexpected:
-            os << "UNEXPECTED";
+        case CounterRates::FifoState::Partial:
+            os << "PARTIAL";
             break;
         default:
             os << "_INTERNAL_ERROR";
@@ -357,11 +374,14 @@ string CounterRates::ReadoutResult::getString() const
     ss << "\nRATES";
     if (rates.has_value()) {
         for (auto r : *rates) {
-            ss << "," << scientific << setprecision(9) << r;
+            // We divide by max. 2; 5; 10; so we don't need more precision
+            ss << "," << fixed << setprecision(1) << r;
         }
     } else {
         ss << ",-";
     }
+
+    ss << "\nPREV_ELAPSED," << prevElapsed * 0.001 << "ms";
 
     return ss.str();
 }

@@ -9,7 +9,7 @@
 namespace tcm_parameters
 {
 constexpr std::string_view PmSpiMask{ "BITMASK_PM_LINKS_SPI_ENABLED" };
-constexpr std::string_view HighVoltage{ "1.8V_POWER" };
+constexpr std::string_view SupplyVoltage1_8V{ "1.8V_POWER" };
 constexpr std::string_view SystemRestarted{ "BOARD_STATUS_SYSTEM_RESTARTED" };
 constexpr std::string_view ForceLocalClock{ "BOARD_STATUS_FORCE_LOCAL_CLOCK" };
 constexpr std::string_view ResetSystem{ "BOARD_STATUS_RESET_SYSTEM" };
@@ -36,6 +36,11 @@ constexpr std::string_view Background6{ "BACKGROUND_6_COUNTER" };
 constexpr std::string_view Background7{ "BACKGROUND_7_COUNTER" };
 constexpr std::string_view Background8{ "BACKGROUND_8_COUNTER" };
 constexpr std::string_view Background9{ "BACKGROUND_9_COUNTER" };
+
+constexpr std::string_view CounterReadInterval{ "COUNTER_READ_INTERVAL" };
+constexpr std::string_view ResetCounters{ "BOARD_STATUS_RESET_COUNTERS" };
+constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
+constexpr std::string_view CountersFifoLoad{ "COUNTERS_FIFO_LOAD" };
 
 inline std::vector<std::string> getAllCounters()
 {

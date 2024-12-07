@@ -36,7 +36,7 @@ constexpr std::string_view ResetReadoutFsm{ "GBT_RESET_READOUT_FSM" };
 constexpr std::string_view FifoReportReset{ "GBT_RESET_ERROR_REPORT_FIFO" };
 constexpr std::string_view ForceIdle{ "GBT_FORCE_IDLE" };
 
-constexpr std::string_view BoardId{ "GBT_RDH_FEEID" };
+constexpr std::string_view BoardId{ "GBT_RDH_FEE_ID" };
 constexpr std::string_view SystemId{ "GBT_RDH_SYSTEM_ID" };
 constexpr std::string_view BcIdDelay{ "GBT_BCID_OFFSET" };
 

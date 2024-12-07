@@ -114,7 +114,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
-            } else if (m_PMs[pmIdx].getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
+            } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
             }
         }

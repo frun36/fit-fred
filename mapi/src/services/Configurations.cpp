@@ -133,6 +133,7 @@ bool Configurations::TcmConfigurations::handleDelays()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + " was not applied: delay change failed\n");
+        Print::PrintError(name, "Delay change failed - ALF response: " + parsedResponse.getContents());
         publishError(m_response);
         return false;
     }
@@ -147,6 +148,7 @@ bool Configurations::TcmConfigurations::handleData()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + (m_response.empty() ? " was not applied\n" : " was applied partially\n"));
+        Print::PrintError(name, "Data application failed - ALF response: " + parsedResponse.getContents());
         publishError(m_response);
         return false;
     }

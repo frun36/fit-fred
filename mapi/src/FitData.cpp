@@ -28,6 +28,7 @@ FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 
         this->index = std::stoi(name.substr(3, 1));
     }
+    isConnected = db_tables::boolean::parse(dbRow[db_tables::ConnectedDevices::IsConnected.idx]);
 }
 
 FitData::FitData() : m_ready(false)
@@ -112,6 +113,12 @@ bool FitData::fetchConnectedDevices()
         }
         Print::PrintInfo("Registering " + device.name);
         TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
+        m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
+    }
+
+    if (TCM.get() == nullptr) {
+            Print::PrintVerbose("Missing TCM!");
+            return false;
     }
 
     for (auto& deviceRow : connectedDevices) {
@@ -119,12 +126,17 @@ bool FitData::fetchConnectedDevices()
         if (device.type == DeviceInfo::BoardType::TCM) {
             continue;
         }
-        Print::PrintInfo("Registering " + device.name);
 
-        if (TCM.get() == nullptr) {
-            Print::PrintVerbose("Missing TCM!");
-            return false;
+        if(!device.isConnected){
+            Print::PrintWarning(device.name + " is not connected");
+            m_environmentalVariables->emplace({device.name, Equation{"0",{}}});
+            continue;
         }
+        else{
+            m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
+        }
+        
+        Print::PrintInfo("Registering " + device.name);
 
         switch (device.side) {
             case DeviceInfo::Side::A:

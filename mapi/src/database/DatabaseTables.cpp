@@ -81,6 +81,7 @@ const std::string Parameters::RefreshCNT{ "CNT" };
 const std::string ConnectedDevices::TableName{ "CONNECTED_DEVICES" };
 const Column ConnectedDevices::BoardName{ 0, "BOARD_NAME" };
 const Column ConnectedDevices::BoardType{ 1, "BOARD_TYPE" };
+const Column ConnectedDevices::IsConnected{ 2, "IS_CONNECTED" };
 const std::string ConnectedDevices::TypePM{ "PM" };
 const std::string ConnectedDevices::TypeTCM{ "TCM" };
 

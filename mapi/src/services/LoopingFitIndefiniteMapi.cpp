@@ -50,9 +50,7 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
         if (request == "START") {
             m_requestHandlers["START"]();
         } else {
-            std::string errorMsg = "Unexpected request received while stopped: '" + request + "'";
-            Print::PrintError(name, errorMsg);
-            publishError(errorMsg);
+            printAndPublishError("Unexpected request received while stopped: '" + request + "'");
         }
     }
 

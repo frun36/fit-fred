@@ -12,12 +12,13 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
 {
     string names;
     for (auto [name, board] : boards) {
-        if (name.find("TCM") != string::npos)
+        if (name.find("TCM") != string::npos) {
             m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
-        else if (name.find("PM") != string::npos)
+        } else if (name.find("PM") != string::npos) {
             m_boardCofigurationServices[name] = make_unique<PmConfigurations>(board);
-        else
+        } else {
             throw runtime_error("Unexpected board name: " + name);
+        }
         names += name + "; ";
     }
     Print::PrintInfo("CONFIGURATIONS initialized for boards: " + names);
@@ -25,8 +26,9 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
 
 string Configurations::processInputMessage(string msg)
 {
-    if (!DatabaseInterface::isConnected())
+    if (!DatabaseInterface::isConnected()) {
         throw runtime_error("No DB connection");
+    }
 
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
@@ -38,20 +40,23 @@ string Configurations::processInputMessage(string msg)
         .from(db_tables::ConfigurationParameters::TableName)
         .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
     auto boardNameData = DatabaseInterface::executeQuery(query.str());
-    if (boardNameData.empty())
+    if (boardNameData.empty()) {
         throw runtime_error(configurationName + ": configuration not found");
+    }
 
     vector<pair<string, string>> requests(boardNameData.size());
     std::transform(boardNameData.begin(), boardNameData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
-        if (!entry[0]->isString())
+        if (!entry[0]->isString()) {
             throw runtime_error(configurationName + ": invalid board name format in DB");
+        }
 
         string boardName = entry[0]->getString();
         string serviceName = m_fredName;
-        if (boardName == "TCM0")
+        if (boardName == "TCM0") {
             serviceName += "/TCM/TCM0/";
-        else if (boardName.find("PM") != string::npos)
+        } else if (boardName.find("PM") != string::npos) {
             serviceName += "/PM/" + boardName + "/";
+        }
         serviceName += "_INTERNAL_CONFIGURATIONS";
 
         return make_pair(serviceName, configurationName);
@@ -80,17 +85,19 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
     optional<double> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
+        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble()) {
             throw runtime_error(string_utils::concatenate(configurationName, ": invalid CONFIGURATIONS data row"));
+        }
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();
-        if (parameterName == tcm_parameters::DelayA)
+        if (parameterName == tcm_parameters::DelayA) {
             delayA = parameterValue;
-        else if (parameterName == tcm_parameters::DelayC)
+        } else if (parameterName == tcm_parameters::DelayC) {
             delayC = parameterValue;
-        else
+        } else {
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
+        }
     }
 
     return ConfigurationInfo(string(configurationName), request, delayA, delayC);
@@ -110,10 +117,11 @@ string Configurations::PmConfigurations::processInputMessage(string request)
 string Configurations::PmConfigurations::processOutputMessage(string msg)
 {
     auto parsedResponse = m_handler.processMessageFromALF(msg);
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         returnError = true;
-    else
+    } else {
         Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
+    }
     return parsedResponse.getContents();
 }
 
@@ -133,8 +141,7 @@ bool Configurations::TcmConfigurations::handleDelays()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + " was not applied: delay change failed\n");
-        Print::PrintError(name, "Delay change failed - ALF response: " + parsedResponse.getContents());
-        publishError(m_response);
+        printAndPublishError(m_response);
         return false;
     }
 
@@ -148,8 +155,7 @@ bool Configurations::TcmConfigurations::handleData()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + (m_response.empty() ? " was not applied\n" : " was applied partially\n"));
-        Print::PrintError(name, "Data application failed - ALF response: " + parsedResponse.getContents());
-        publishError(m_response);
+        printAndPublishError(m_response);
         return false;
     }
 
@@ -182,14 +188,17 @@ void Configurations::TcmConfigurations::processExecution()
     m_configurationInfo = getConfigurationInfo(configurationName);
     Print::PrintVerbose("Configuration '" + configurationName + "' for " + m_boardName);
 
-    if (!handleDelays())
+    if (!handleDelays()) {
         return;
-    if (!handleData())
+    }
+    if (!handleData()) {
         return;
+    }
+    
     // Required after change of delays and SIDE_[A/C]_CHANNEL_MASK
     // Performed always for simplicity
     // Clearing readiness changed bits should be enough - tests will show
-    handleResetErrors(); 
+    handleResetErrors();
     Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
     publishAnswer(m_response);
 }

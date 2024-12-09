@@ -66,7 +66,11 @@ CounterRates::ReadIntervalState CounterRates::handleReadInterval()
 
     if (!currReadIntervalCode.has_value()) {
         return ReadIntervalState::Unknown;
-    } else if (*currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
+    }
+
+    m_readIntervalCode = *currReadIntervalCode;
+
+    if (*currReadIntervalCode < 0 || *currReadIntervalCode > 7) {
         return ReadIntervalState::Invalid;
     }
 
@@ -134,7 +138,7 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
 
 optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
-    publishError("Direct counter readout mode unsupported");
+    printAndPublishError("Direct counter readout mode unsupported");
     usleep(1'000'000);
     return nullopt;
 }
@@ -143,7 +147,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
 {
     optional<uint32_t> fifoLoad = getFifoLoad();
     if (!fifoLoad.has_value()) {
-        publishError("Couldn't read FIFO state");
+        printAndPublishError("Couldn't read FIFO state");
         return nullopt;
     }
 
@@ -155,7 +159,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
         fifoState = evaluateFifoState(*fifoLoad);
     }
     if (fifoState == FifoState::BoardError) {
-        publishError("A board error occurred on FIFO_LOAD readout");
+        printAndPublishError("A board error occurred on FIFO_LOAD readout");
         return nullopt;
     } else if (fifoState == FifoState::Partial) {
         Print::PrintWarning(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
@@ -171,7 +175,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
     }
 
     if (fifoReadResult == FifoReadResult::Failure) {
-        publishError("Couldn't read FIFO");
+        printAndPublishError("Couldn't read FIFO");
         return nullopt;
     }
 
@@ -243,12 +247,12 @@ void CounterRates::processExecution()
 
     optional<ReadoutResult> readoutResult;
     if (readIntervalState == ReadIntervalState::Unknown) {
-        publishError("Failed to read COUNTER_READ_INTERVAL value");
+        printAndPublishError("Failed to read COUNTER_READ_INTERVAL value");
         usleep(100'000);
         return;
     }
     if (readIntervalState == ReadIntervalState::Invalid) {
-        publishError("Invalid COUNTER_READ_INTERVAL value");
+        printAndPublishError("Invalid COUNTER_READ_INTERVAL code (" + to_string(m_readIntervalCode) + ")");
         usleep(100'000);
         return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
@@ -265,7 +269,7 @@ void CounterRates::processExecution()
         RequestExecutionResult result = executeQueuedRequests(running);
 
         if (result.isError) {
-            publishError(result);
+            printAndPublishError(result);
         } else if (!result.isEmpty()) {
             response += '\n';
             response += result;

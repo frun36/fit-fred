@@ -95,6 +95,10 @@ class Configurations : public Mapigroup
             return parseConfigurationInfo(configurationName, dbData);
         }
 
+        // Due to lack of virtual inheritance for IndefiniteMapi, I don't think we can have BoardConfigurations inherit Mapi
+        // And implement this method here
+        virtual const string& getServiceName() const = 0;
+
         virtual ~BoardConfigurations() = default;
        protected:
         BoardCommunicationHandler m_handler;
@@ -110,6 +114,8 @@ class Configurations : public Mapigroup
         PmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board) {}
         string processInputMessage(string msg);
         string processOutputMessage(string msg);
+
+        const string& getServiceName() const override { return name; }
     };
 
     class TcmConfigurations : public BasicFitIndefiniteMapi, public BoardConfigurations
@@ -129,11 +135,15 @@ class Configurations : public Mapigroup
         bool handleDelays();
         bool handleData();
         void handleResetErrors();
+
+        const string& getServiceName() const override { return name; }
     };
 
    public:
     Configurations() = default;
     Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards);
+
+    vector<string> fetchBoardNamesToConfigure(const string& configurationName) const;
 
     string processInputMessage(string msg) override;
     string processOutputMessage(string msg) override { throw std::runtime_error("Configurations: unexpectedly received '" + msg + "' from ALF"); };

@@ -64,7 +64,12 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
         if (!running) {
             return RequestExecutionResult(requests, requests.begin(), true, "Error getting available requests: not running");
         }
-        requests.push_back(getRequest());
+        std::string currRequest = getRequest();
+        // Insert only if the request is different than the last one
+        // (treats consecutive identical queued requests as one)
+        if (requests.empty() || requests.back() != currRequest) {
+            requests.push_back(currRequest);
+        }
     }
 
     for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {

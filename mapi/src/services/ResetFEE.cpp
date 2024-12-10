@@ -72,7 +72,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
     }
 
     {
-        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetSystem());
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetSystem(), false);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }

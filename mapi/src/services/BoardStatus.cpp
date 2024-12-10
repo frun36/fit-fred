@@ -57,9 +57,16 @@ void BoardStatus::processExecution()
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
+    WinCCResponse systemClock;
 
-    Print::PrintVerbose("Publishing board status data");
-    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
+    if(m_boardHandler.getBoard()->isTcm()){
+        systemClock.addParameter(environment::parameters::SystemClock.data(),
+                                {m_boardHandler.getBoard()->getEnvironment(environment::parameters::SystemClock.data())}
+                                );
+    }
+
+    Print::PrintVerbose("Publishing " + m_boardHandler.getBoard()->getName() + " status");
+    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents() + systemClock.getContents());
 
     if (m_gbtError.get() != nullptr) {
         m_gbtError->saveErrorReport();

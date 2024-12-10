@@ -23,7 +23,7 @@ double EnvironmentVariables::updateVariable(const std::string& name)
     for (const auto& var : setting.equation.variables) {
         values.emplace_back(m_settings.at(var).value);
     }
-    setting.value = Utility::calculateEquation(setting.equation.equation, setting.equation.variables, values);
+    setting.value = Equation::calculate(setting.equation.equation, setting.equation.variables, values);
     return setting.value;
 }
 

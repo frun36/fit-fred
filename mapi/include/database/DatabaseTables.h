@@ -73,6 +73,7 @@ class ConnectedDevices
 
     static const Column BoardName;
     static const Column BoardType;
+    static const Column IsConnected;
 
     static const std::string TypePM;
     static const std::string TypeTCM;

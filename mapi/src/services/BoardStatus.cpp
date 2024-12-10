@@ -79,6 +79,7 @@ void BoardStatus::updateEnvironment()
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
                                               (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
+    m_boardHandler.getBoard()->updateEnvironment(environment::parameters::BcInvterval.data());
 }
 
 BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()

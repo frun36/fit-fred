@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <functional>
 #include <sstream>
+#include "Alfred/print.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
 {

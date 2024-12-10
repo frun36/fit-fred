@@ -39,9 +39,8 @@ void BoardStatus::processExecution()
         for (auto& report : parsedResponse.errors) {
             error << report.what() << '\n';
         }
-        error << parsedResponse.response.getContents();
-        Print::PrintVerbose("Publishing error");
-        publishError(error.str());
+        Print::PrintError(error.str());
+        publishError(parsedResponse.getContents());
         return;
     }
 

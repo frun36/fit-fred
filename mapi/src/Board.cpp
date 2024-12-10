@@ -207,7 +207,7 @@ int64_t Board::calculateElectronic(const std::string& param, double physical) co
         }
     }
 
-    return static_cast<int64_t>(Equation::calculate(info.physicToElectronic.equation, info.physicToElectronic.variables, values));
+    return static_cast<int64_t>(std::llround(Equation::calculate(info.physicToElectronic.equation, info.physicToElectronic.variables, values)));
 }
 
 uint32_t Board::convertElectronicToRaw(const std::string& param, int64_t physcial) const

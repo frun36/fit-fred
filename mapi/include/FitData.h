@@ -30,6 +30,7 @@ class FitData
         enum class BoardType { PM,
                                TCM } type;
         uint32_t index;
+        bool isConnected;
     };
 
     [[nodiscard]] bool fetchBoardParamters(std::string boardType);

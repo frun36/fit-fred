@@ -206,12 +206,9 @@ std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 std::string ResetFEE::seqSetResetSystem()
 {
     std::stringstream request;
-
+    bool forceLocalClock = m_TCM.getBoard()->at(tcm_parameters::ForceLocalClock).getElectronicValueOptional().value_or(0);
     request << WinCCRequest::writeRequest(tcm_parameters::ResetSystem, 1) << "\n";
-    if (m_forceLocalClock) {
-        request << WinCCRequest::writeRequest(tcm_parameters::ForceLocalClock, 1);
-    }
-
+    request << WinCCRequest::writeRequest(tcm_parameters::ForceLocalClock, forceLocalClock);
     return request.str();
 }
 

@@ -72,7 +72,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
     }
 
     {
-        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetSystem());
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSetResetSystem(), false);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
@@ -206,12 +206,8 @@ std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 std::string ResetFEE::seqSetResetSystem()
 {
     std::stringstream request;
-
     request << WinCCRequest::writeRequest(tcm_parameters::ResetSystem, 1) << "\n";
-    if (m_forceLocalClock) {
-        request << WinCCRequest::writeRequest(tcm_parameters::ForceLocalClock, 1);
-    }
-
+    request << WinCCRequest::writeRequest(tcm_parameters::ForceLocalClock, m_forceLocalClock);
     return request.str();
 }
 

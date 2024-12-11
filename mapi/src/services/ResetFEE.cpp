@@ -29,7 +29,7 @@ void ResetFEE::processExecution()
     {
         auto response = applyResetFEE();
         if (response.errors.empty() == false) {
-            publishError(response.getContents());
+            printAndPublishError(response);
             return;
         }
     }
@@ -38,7 +38,7 @@ void ResetFEE::processExecution()
     {
         auto response = applyTriggersSign();
         if (response.errors.empty() == false) {
-            publishError(response.getContents());
+            printAndPublishError(response);
             return;
         }
     }
@@ -47,7 +47,7 @@ void ResetFEE::processExecution()
     {
         auto response = testPMLinks();
         if (response.errors.empty() == false) {
-            publishError(response.getContents());
+            printAndPublishError(response);
             return;
         }
     }
@@ -55,7 +55,7 @@ void ResetFEE::processExecution()
     {
         auto response = applyGbtConfiguration();
         if (response.errors.empty() == false) {
-            publishError(response.getContents());
+            printAndPublishError(response);
             return;
         }
     }

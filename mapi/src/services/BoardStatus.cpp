@@ -40,7 +40,7 @@ void BoardStatus::processExecution()
             error << report.what() << '\n';
         }
         Print::PrintError(error.str());
-        publishError(parsedResponse.getContents());
+        printAndPublishError(parsedResponse);
         return;
     }
 
@@ -50,14 +50,13 @@ void BoardStatus::processExecution()
 
     auto gbtErrors = checkGbtErrors();
     if (gbtErrors.isError()) {
-        publishError(gbtErrors.getContents());
+        printAndPublishError(gbtErrors);
     }
 
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
 
-    Print::PrintVerbose("Publishing board status data");
     publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
 
     if (m_gbtError.get() != nullptr) {

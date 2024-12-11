@@ -31,4 +31,9 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         Print::PrintError(name, errorMsg);
         publishError(errorMsg);
     }
+
+    inline void printAndPublishError(const BoardCommunicationHandler::ParsedResponse& response) {
+        Print::PrintError(name, response.getError());
+        publishError(response.getContents());
+    }
 };

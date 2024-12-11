@@ -28,13 +28,13 @@ void Reset::processExecution()
     }
 
     if (m_resetParameters.find(request) == m_resetParameters.end()) {
-        publishError("Unexpected request: " + request);
+        printAndPublishError("Unexpected request: " + request);
     }
 
     {
         auto parsedResponse = processSequenceThroughHandler(m_boardHandler, m_reqClearResetBits);
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
             return;
         }
     }
@@ -42,7 +42,7 @@ void Reset::processExecution()
     {
         auto parsedResponse = processSequenceThroughHandler(m_boardHandler, WinCCRequest::writeRequest(request, 1));
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
         } else {
             success = true;
         }
@@ -51,7 +51,7 @@ void Reset::processExecution()
     {
         auto parsedResponse = processSequenceThroughHandler(m_boardHandler, m_reqClearResetBits);
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
         }
     }
 

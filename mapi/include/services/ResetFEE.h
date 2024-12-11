@@ -25,6 +25,7 @@ class ResetFEE : public BasicFitIndefiniteMapi
     std::string seqSetBoardId(std::shared_ptr<Board> board);
     std::string seqSetSystemId();
     std::string seqMaskPMLink(uint32_t idx, bool mask);
+    std::string seqCntUpdateRate(uint8_t updateRate);
 
     BoardCommunicationHandler::ParsedResponse applyResetFEE();
     BoardCommunicationHandler::ParsedResponse testPMLinks();

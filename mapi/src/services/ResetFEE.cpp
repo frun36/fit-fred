@@ -64,6 +64,8 @@ void ResetFEE::processExecution()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 {
+    uint8_t cntUpdateRate = static_cast<uint8_t>(m_TCM.getBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional().value_or(0));
+
     {
         auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSwitchGBTErrorReports(false));
         if (parsedResponse.errors.empty() == false) {
@@ -89,6 +91,13 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 
     {
         auto parsedResponse = processSequenceThroughHandler(m_TCM, seqSwitchGBTErrorReports(true));
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
+        }
+    }
+
+    {
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, seqCntUpdateRate(cntUpdateRate));
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
@@ -197,6 +206,11 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
 
     return processSequenceThroughHandler(boardHandler, request.str());
 }
+
+std::string ResetFEE::seqCntUpdateRate(uint8_t updateRate)
+{
+    return WinCCRequest::writeRequest(tcm_parameters::CounterReadInterval, updateRate);
+}   
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 {

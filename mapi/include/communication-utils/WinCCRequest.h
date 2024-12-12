@@ -21,7 +21,8 @@ class WinCCRequest
 {
    public:
     enum class Operation { Read,
-                           Write };
+                           Write,
+                           WriteElectronic };
 
     struct Command {
         std::string name;
@@ -53,13 +54,20 @@ class WinCCRequest
 
     bool isWrite() const
     {
-        return m_reqType.has_value() && m_reqType.value() == Operation::Write;
+        return m_reqType.has_value() && (m_reqType.value() == Operation::Write || m_reqType.value() == Operation::WriteElectronic);
     }
 
     template <typename T>
     static std::string writeRequest(std::string_view param, T value)
     {
         return string_utils::concatenate(param, ",WRITE,", std::to_string(value));
+    }
+
+    template <typename T>
+    static std::string writeElectronicRequest(std::string_view param, T value)
+    {
+        static_assert((!std::is_same<T,double>::value) && (!std::is_same<T,float>::value), "Electronic value has to be integer type");
+        return string_utils::concatenate(param, ",WRITE_ELECTRONIC,", std::to_string(value));
     }
 
     static std::string readRequest(std::string_view param)

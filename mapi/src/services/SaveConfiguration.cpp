@@ -27,44 +27,46 @@ std::string SaveConfiguration::makeEntry(std::string_view line)
     if(stop == start || stop == (start + 1) || stop == std::string::npos){
         throw std::runtime_error(string_utils::concatenate("Unexpected entry: ", line));
     }
-    std::string_view configurationName = line.substr(start, stop);   
-    if(m_knownConfigs.find(configurationName.data()) == m_knownConfigs.end()){
+    std::string configurationName{ line.substr(start, stop) };   
+    if(m_knownConfigs.find(configurationName) == m_knownConfigs.end()){
         throw std::runtime_error(string_utils::concatenate("Unknown configuration: ", configurationName));
     }
 
-    start = stop;
-    stop = line.find(',', start+1);
+    start = stop+1;
+    stop = line.find(',', start);
     if(stop == start || stop == (start + 1) || stop == std::string::npos){
         throw std::runtime_error("Unexpected entry: " + std::string(line));
     }
-    std::string_view boardName = line.substr(start, stop);
-    auto boardItr = m_Boards.find(boardName.data());
+    std::string boardName {line.substr(start, stop-start)};
+    auto boardItr = m_Boards.find(boardName);
     if(boardItr == m_Boards.end()){
         throw std::runtime_error(string_utils::concatenate("Unknown board: ", boardName));
     }
     auto board = boardItr->second;
+    Print::PrintData(boardName);
     std::string_view boradType = board->isTcm() ? "TCM" : "PM";
 
-    start = stop;
-    stop = line.find(',', start+1);
+    start = stop+1;
+    stop = line.find(',', start);
     if(stop == start || stop == (start + 1) || stop == std::string::npos){
         throw std::runtime_error("Unexpected entry: " + std::string(line));
     }
-    std::string_view parameterName = line.substr(start, stop);
-    if(!board->doesExist(parameterName.data())){
+    std::string parameterName{ line.substr(start, stop-start) };
+    Print::PrintData("|" + parameterName + "|");
+    if(!board->doesExist(parameterName)){
         throw std::runtime_error(string_utils::concatenate("Unknown parameter: ", parameterName));
     }
 
-    start = stop;
+    start = stop+1;
     double physcialValue = std::stod(line.substr(start).data());
     int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
 
     
     sql::InsertModel query;
-    query.insert(db_tables::ConfigurationParameters::ConfigurationName.name, configurationName.data())
-                (db_tables::ConfigurationParameters::BoardName.name, boardName.data())
+    query.insert(db_tables::ConfigurationParameters::ConfigurationName.name, configurationName)
+                (db_tables::ConfigurationParameters::BoardName.name, boardName)
                 (db_tables::ConfigurationParameters::BoardType.name, boradType.data())
-                (db_tables::ConfigurationParameters::ParameterName.name, parameterName.data())
+                (db_tables::ConfigurationParameters::ParameterName.name, parameterName)
                 (db_tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).into(db_tables::ConfigurationParameters::TableName);
 
     return query.str();
@@ -104,7 +106,7 @@ void SaveConfiguration::processExecution()
             continue;
         }
         try{
-            query.append(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg))).append(";");
+            query.append(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg)));
         }
         catch(std::runtime_error& err){
             errorMessage = err.what();
@@ -126,6 +128,11 @@ void SaveConfiguration::processExecution()
         return;
     }
 
-    DatabaseInterface::executeQuery(query);
+    DatabaseInterface::executeUpdate(query, errorMessage);
+    if(errorMessage.empty() == false){
+        Print::PrintError(name, errorMessage);
+        publishError(errorMessage);
+    } else {
     publishAnswer("Updated database");
+    }
 }

@@ -43,7 +43,6 @@ std::string SaveConfiguration::makeEntry(std::string_view line)
         throw std::runtime_error(string_utils::concatenate("Unknown board: ", boardName));
     }
     auto board = boardItr->second;
-    Print::PrintData(boardName);
     std::string_view boradType = board->isTcm() ? "TCM" : "PM";
 
     start = stop+1;
@@ -52,7 +51,6 @@ std::string SaveConfiguration::makeEntry(std::string_view line)
         throw std::runtime_error("Unexpected entry: " + std::string(line));
     }
     std::string parameterName{ line.substr(start, stop-start) };
-    Print::PrintData("|" + parameterName + "|");
     if(!board->doesExist(parameterName)){
         throw std::runtime_error(string_utils::concatenate("Unknown parameter: ", parameterName));
     }
@@ -90,7 +88,7 @@ void SaveConfiguration::processExecution()
     }
 
     fetchAllConfigs();
-    std::string query;
+    std::list<std::string> queries;
 
     size_t lineBeg = 0;
     size_t lineEnd = std::numeric_limits<size_t>::max();
@@ -106,7 +104,7 @@ void SaveConfiguration::processExecution()
             continue;
         }
         try{
-            query.append(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg)));
+            queries.emplace_back(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg)));
         }
         catch(std::runtime_error& err){
             errorMessage = err.what();
@@ -128,11 +126,21 @@ void SaveConfiguration::processExecution()
         return;
     }
 
-    DatabaseInterface::executeUpdate(query, errorMessage);
+    size_t queryLine = 0;
+    for(auto& query: queries){
+        std::string mess;
+        DatabaseInterface::executeUpdate(query, mess);
+        if(mess.empty() == false){
+            errorMessage.append("\n Line: ").append(std::to_string(queryLine)).append(mess);
+            Print::PrintError(name, errorMessage);
+        }
+        queryLine++;
+    }
+
     if(errorMessage.empty() == false){
-        Print::PrintError(name, errorMessage);
         publishError(errorMessage);
-    } else {
-    publishAnswer("Updated database");
+    }
+    else{
+        publishAnswer("Updated database successfully");
     }
 }

@@ -104,7 +104,7 @@ void SaveConfiguration::processExecution()
             continue;
         }
         try{
-            query.append(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg)));
+            query.append(makeEntry(std::string_view(&request[lineBeg], lineEnd-lineBeg))).append(";");
         }
         catch(std::runtime_error& err){
             errorMessage = err.what();

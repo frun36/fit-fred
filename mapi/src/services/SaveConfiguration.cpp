@@ -137,6 +137,8 @@ void SaveConfiguration::processExecution()
         queryLine++;
     }
 
+    DatabaseInterface::commitUpdate(true);
+    
     if(errorMessage.empty() == false){
         publishError(errorMessage);
     }

@@ -9,6 +9,9 @@ class SaveConfiguration: public IndefiniteMapi
     public:
     /*  Expected line: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[VALUE]
     */
+    SaveConfiguration(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
+       
+    }
     void processExecution() override;
 
     private:

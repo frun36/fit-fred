@@ -107,7 +107,7 @@ class Board
         std::optional<int64_t> m_electronicValue;
     };
 
-    Board(std::string name, uint32_t address, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentVariables> settings = nullptr);
+    Board(std::string name, uint32_t address, bool isConnected, std::shared_ptr<Board> main = nullptr, std::shared_ptr<EnvironmentVariables> settings = nullptr);
 
     bool emplace(const ParameterInfo&);
     bool emplace(ParameterInfo&& info);
@@ -143,6 +143,11 @@ class Board
         return m_identity.type == Type::TCM;
     }
 
+    bool isConnected() const
+    {
+        return m_isConnected;
+    }
+
     std::shared_ptr<Board> getParentBoard()
     {
         return m_parentBoard;
@@ -155,4 +160,6 @@ class Board
     std::shared_ptr<Board> m_parentBoard;
     std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
     std::unordered_map<std::string, ParameterInfo> m_parameters;
+
+    const bool m_isConnected;
 };

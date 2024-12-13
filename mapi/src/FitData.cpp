@@ -112,7 +112,7 @@ bool FitData::fetchConnectedDevices()
             continue;
         }
         Print::PrintInfo("Registering " + device.name);
-        TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, m_templateBoards["TCM"])).first->second;
+        TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, device.isConnected, m_templateBoards["TCM"])).first->second;
         m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
     }
 
@@ -130,7 +130,6 @@ bool FitData::fetchConnectedDevices()
         if(!device.isConnected){
             Print::PrintWarning(device.name + " is not connected");
             m_environmentalVariables->emplace({device.name, Equation{"0",{}}});
-            continue;
         }
         else{
             m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
@@ -140,11 +139,11 @@ bool FitData::fetchConnectedDevices()
 
         switch (device.side) {
             case DeviceInfo::Side::A:
-                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, m_templateBoards["PM"], TCM));
+                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMA, device.isConnected, m_templateBoards["PM"], TCM));
                 break;
 
             case DeviceInfo::Side::C:
-                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, m_templateBoards["PM"], TCM));
+                m_boards.emplace(device.name, constructBoardFromTemplate(device.name, device.index * AddressSpaceSizePM + BaseAddressPMC, device.isConnected, m_templateBoards["PM"], TCM));
                 break;
         }
     }
@@ -154,7 +153,7 @@ bool FitData::fetchConnectedDevices()
 
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
-    std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0);
+    std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0, false);
     for (auto& row : boardTable) {
         Print::PrintVerbose("Parsing parameter: " + row[db_tables::Parameters::Name.idx]->getString());
         board->emplace(parseParameter(row));
@@ -228,9 +227,9 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     };
 }
 
-std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
+std::shared_ptr<Board> FitData::constructBoardFromTemplate(std::string name, uint32_t address, bool isConnected, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main)
 {
-    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, main, m_environmentalVariables);
+    std::shared_ptr<Board> board = std::make_shared<Board>(name, address, isConnected, main, m_environmentalVariables);
     for (const auto& parameter : templateBoard->getParameters()) {
         board->emplace(parameter.second);
     }

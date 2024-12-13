@@ -12,7 +12,7 @@
 
 #endif
 
-Board::Board(std::string name, uint32_t address, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_parentBoard(main), m_environmentalVariables(settings)
+Board::Board(std::string name, uint32_t address, bool isConnected, std::shared_ptr<Board> main, std::shared_ptr<EnvironmentVariables> settings) : m_name(name), m_address(address), m_parentBoard(main), m_environmentalVariables(settings), m_isConnected(isConnected)
 {
     if (name.find("TCM") != std::string::npos) {
         m_identity.type = Type::TCM;

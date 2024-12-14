@@ -13,17 +13,12 @@ class SaveConfiguration: public IndefiniteMapi
     /*  Expected line: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[VALUE]
     */
     SaveConfiguration(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
-       
+       connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
+       connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
     }
     void processExecution() override;
 
     private:
-
-    static constexpr std::string_view Create{"CREATE"};
-    static constexpr std::string_view Insert{"INSERT"};
-    static constexpr std::string_view Update{"UPDATE"};
-    static constexpr std::string_view Fetch{"FETCH"};
-
     Result<std::string,std::string> substring(std::string_view sequence, size_t& start, char delimiter, std::function<bool(const std::string&)> validator, const std::string& errorMessage)
     {
         size_t stop = sequence.find(delimiter, start+1);
@@ -55,17 +50,37 @@ class SaveConfiguration: public IndefiniteMapi
     }
     std::function<bool(const std::string&)> validatorBoardName = wrapMemberFunction(this, &SaveConfiguration::validateBoardName);
 
+    // Command validator
+    bool validateCmd(const std::string& cmdName)
+    {
+        return m_operations.find(cmdName) != m_operations.end();
+    }
+    std::function<bool(const std::string&)> validatorCommand = wrapMemberFunction(this, &SaveConfiguration::validateCmd);
+
     // No validation
     bool noValidation(const std::string&){
         return true;
     }
     std::function<bool(const std::string&)> alwaysValid = wrapMemberFunction(this, &SaveConfiguration::noValidation);
 
-    Result<std::string,std::string> constructCreate(std::string_view line);
-    Result<std::string,std::string> constructInsert(std::string_view line);
-
     void fetchAllConfigs();
 
     std::unordered_map<std::string, std::shared_ptr<Board>> m_Boards;
     std::unordered_set<std::string> m_knownConfigs;
+
+    //
+
+    typedef std::function<Result<std::string,std::string>(std::string_view)> QueryConstructor;
+
+    std::unordered_map<std::string, QueryConstructor> m_operations;
+    void connect(const std::string& operation, QueryConstructor queryConstructor){
+        m_operations[operation] = queryConstructor;
+    }
+
+    Result<std::string,std::string> construct(std::string_view line, const std::string& cmd){
+        return m_operations[cmd](line);
+    }
+
+    Result<std::string,std::string> constructCreate(std::string_view line);
+    Result<std::string,std::string> constructInsert(std::string_view line);
 };

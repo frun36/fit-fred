@@ -146,19 +146,13 @@ void SaveConfiguration::processExecution()
         Result<std::string,std::string> result;
 
         try{
-            auto cmdParsingResult = substring(line,start,',',alwaysValid,{});
+            auto cmdParsingResult = substring(line,start,',',validatorCommand,"Invalid command");
             if(cmdParsingResult.success() == false){
                 errorMessage = result.error.value();
                 success = false;
                 break;
             }
-            const auto& cmd = cmdParsingResult.result.value();
-            if(cmd == Insert){
-                result = constructInsert(line);    
-            }
-            else if(cmd == Create){
-                result = constructCreate(line);
-            }
+            result = construct(line.substr(start), cmdParsingResult.result.value());
         }
         catch(std::runtime_error& err){
             result = {.result=std::nullopt, .error = err.what()};

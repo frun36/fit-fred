@@ -59,6 +59,6 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), m_resetError.get());
     m_setPhaseDelay = std::make_unique<SetPhaseDelay>(tcm);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
-    m_saveConfiguration = std::make_unique<SaveConfiguration>(boardsData.getBoards());
+    m_saveConfiguration = std::make_unique<ConfigurationDatabaseBroker>(boardsData.getBoards());
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SAVE_CONFIFURATION"), m_saveConfiguration.get());
 }

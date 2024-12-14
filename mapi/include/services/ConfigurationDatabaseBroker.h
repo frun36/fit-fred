@@ -7,19 +7,19 @@
 #include <unordered_set>
 #include <functional>
 
-class SaveConfiguration: public IndefiniteMapi
+class ConfigurationDatabaseBroker: public IndefiniteMapi
 {
     public:
-    SaveConfiguration(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
-       connect_constructor("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
-       connect_constructor("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
-       connect_constructor("UPDATE", wrapMemberFunction(this, &SaveConfiguration::constructUpdate));
-       connect_constructor("SELECT", wrapMemberFunction(this, &SaveConfiguration::constructSelect));
+    ConfigurationDatabaseBroker(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
+       connect_constructor("INSERT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructInsert));
+       connect_constructor("CREATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructCreate));
+       connect_constructor("UPDATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructUpdate));
+       connect_constructor("SELECT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructSelect));
 
-       connect_executor("INSERT", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
-       connect_executor("UPDATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
-       connect_executor("CREATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
-       connect_executor("SELECT", wrapMemberFunction(this, &SaveConfiguration::executeSelectParameters));
+       connect_executor("INSERT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
+       connect_executor("UPDATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
+       connect_executor("CREATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
+       connect_executor("SELECT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeSelectParameters));
     }
     void processExecution() override;
 
@@ -46,27 +46,27 @@ class SaveConfiguration: public IndefiniteMapi
     {
         return (m_knownConfigs.find(configurationName) != m_knownConfigs.end());
     }
-    std::function<bool(const std::string&)> validatorConfigurationName = wrapMemberFunction(this, &SaveConfiguration::validateConfigurationName);
+    std::function<bool(const std::string&)> validatorConfigurationName = wrapMemberFunction(this, &ConfigurationDatabaseBroker::validateConfigurationName);
 
     // Board name validator
     bool validateBoardName(const std::string& boardName) 
     {
         return m_Boards.find(boardName) != m_Boards.end();
     }
-    std::function<bool(const std::string&)> validatorBoardName = wrapMemberFunction(this, &SaveConfiguration::validateBoardName);
+    std::function<bool(const std::string&)> validatorBoardName = wrapMemberFunction(this, &ConfigurationDatabaseBroker::validateBoardName);
 
     // Command validator
     bool validateCmd(const std::string& cmdName)
     {
         return m_constructors.find(cmdName) != m_constructors.end();
     }
-    std::function<bool(const std::string&)> validatorCommand = wrapMemberFunction(this, &SaveConfiguration::validateCmd);
+    std::function<bool(const std::string&)> validatorCommand = wrapMemberFunction(this, &ConfigurationDatabaseBroker::validateCmd);
 
     // No validation
     bool noValidation(const std::string&){
         return true;
     }
-    std::function<bool(const std::string&)> alwaysValid = wrapMemberFunction(this, &SaveConfiguration::noValidation);
+    std::function<bool(const std::string&)> alwaysValid = wrapMemberFunction(this, &ConfigurationDatabaseBroker::noValidation);
 
     void fetchAllConfigs();
 

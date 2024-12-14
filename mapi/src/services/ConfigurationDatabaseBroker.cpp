@@ -1,8 +1,8 @@
-#include "services/SaveConfiguration.h"
+#include "services/ConfigurationDatabaseBroker.h"
 #include "database/sql.h"
 #include <limits>
 
-void SaveConfiguration::fetchAllConfigs()
+void ConfigurationDatabaseBroker::fetchAllConfigs()
 {
     m_knownConfigs.clear();
     sql::SelectModel query;
@@ -13,7 +13,7 @@ void SaveConfiguration::fetchAllConfigs()
     }
 }
 
-Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsert(std::string_view line)
 {
     size_t pos = 0;
 
@@ -63,7 +63,7 @@ Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_v
     return {.result=query.str(), .error=std::nullopt};
 }
 
-Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std::string_view line)
 {
     size_t pos = 0;
     std::string configurationName;
@@ -105,7 +105,7 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
     return {.result = query.str(), .error = std::nullopt};
 }
 
-Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdate(std::string_view line)
 {
      size_t pos = 0;
 
@@ -155,7 +155,7 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
     return {.result = query.str(), .error = std::nullopt};
 }
 
-Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelect(std::string_view line)
 {
     size_t pos = 0;
     std::string configurationName;
@@ -192,7 +192,7 @@ Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_v
     return {.result = query.str(), .error = std::nullopt};
 }
 
-void SaveConfiguration::processExecution()
+void ConfigurationDatabaseBroker::processExecution()
 {
     bool running = true;
     std::string request = waitForRequest(running);
@@ -281,7 +281,7 @@ void SaveConfiguration::processExecution()
     publishAnswer(queriesResult);
 }
 
-Result<std::string,std::string> SaveConfiguration::executeSelectParameters(const std::string& query)
+Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectParameters(const std::string& query)
 {
     std::string rows;
     bool status = false;
@@ -302,7 +302,7 @@ Result<std::string,std::string> SaveConfiguration::executeSelectParameters(const
     return {.result = rows, .error = std::nullopt};
 }
 
-Result<std::string,std::string> SaveConfiguration::executeUpdate(const std::string& query)
+Result<std::string,std::string> ConfigurationDatabaseBroker::executeUpdate(const std::string& query)
 {
     std::string errorMessage;
     DatabaseInterface::executeUpdate(query,errorMessage);

@@ -15,11 +15,11 @@ void SaveConfiguration::fetchAllConfigs()
 
 Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_view line)
 {
-    size_t start = 0;
+    size_t pos = 0;
 
     std::string configurationName;
     {
-        auto parsingResult = substring(line,start,',',validatorConfigurationName, "Unknown configuration: ");
+        auto parsingResult = substring(line,pos,',',validatorConfigurationName, "Unknown configuration: ");
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -28,7 +28,7 @@ Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_v
 
     std::string boardName;
     {
-        auto parsingResult = substring(line,start,',',validatorBoardName, "Unknown board: ");
+        auto parsingResult = substring(line,pos,',',validatorBoardName, "Unknown board: ");
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -41,7 +41,7 @@ Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_v
 
     std::string parameterName;
     {
-        auto parsingResult = substring(line, start, ',', 
+        auto parsingResult = substring(line, pos, ',', 
                             [&board](const std::string&parameterName){return board->doesExist(parameterName);},
                             "Unknown parameter: ");
         if(!parsingResult.success()){
@@ -50,7 +50,7 @@ Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_v
         parameterName = parsingResult.result.value();
     }
 
-    double physcialValue = std::stod(line.substr(start).data());
+    double physcialValue = std::stod(line.substr(pos).data());
     int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
 
     sql::InsertModel query;
@@ -65,10 +65,10 @@ Result<std::string,std::string> SaveConfiguration::constructInsert(std::string_v
 
 Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_view line)
 {
-    size_t start = 0;
+    size_t pos = 0;
     std::string configurationName;
     {
-        auto parsingResult = substring(line,start,',',alwaysValid, {});
+        auto parsingResult = substring(line,pos,',',alwaysValid, {});
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -77,7 +77,7 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
 
     std::string author;
     {
-        auto parsingResult = substring(line,start,',',alwaysValid,{});
+        auto parsingResult = substring(line,pos,',',alwaysValid,{});
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -86,14 +86,14 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
 
     std::string date;
     {
-        auto parsingResult = substring(line,start,',',alwaysValid,{});
+        auto parsingResult = substring(line,pos,',',alwaysValid,{});
         if(!parsingResult.success()){
             return parsingResult;
         }
         date = parsingResult.result.value();
     }
 
-    std::string comment{ line.substr(start).data() };
+    std::string comment{ line.substr(pos).data() };
 
     m_knownConfigs.emplace(configurationName);
 
@@ -107,11 +107,11 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
 
 Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_view line)
 {
-     size_t start = 0;
+     size_t pos = 0;
 
     std::string configurationName;
     {
-        auto parsingResult = substring(line,start,',',validatorConfigurationName, "Unknown configuration: ");
+        auto parsingResult = substring(line,pos,',',validatorConfigurationName, "Unknown configuration: ");
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -120,7 +120,7 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
 
     std::string boardName;
     {
-        auto parsingResult = substring(line,start,',',validatorBoardName, "Unknown board: ");
+        auto parsingResult = substring(line,pos,',',validatorBoardName, "Unknown board: ");
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -133,7 +133,7 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
 
     std::string parameterName;
     {
-        auto parsingResult = substring(line, start, ',', 
+        auto parsingResult = substring(line, pos, ',', 
                             [&board](const std::string&parameterName){return board->doesExist(parameterName);},
                             "Unknown parameter: ");
         if(!parsingResult.success()){
@@ -142,7 +142,7 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
         parameterName = parsingResult.result.value();
     }
 
-    double physcialValue = std::stod(line.substr(start).data());
+    double physcialValue = std::stod(line.substr(pos).data());
     int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
 
     sql::UpdateModel query;
@@ -157,10 +157,10 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
 
 Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_view line)
 {
-    size_t start = 0;
+    size_t pos = 0;
     std::string configurationName;
     {
-        auto parsingResult = substring(line,start,',',alwaysValid, {});
+        auto parsingResult = substring(line,pos,',',alwaysValid, {});
         if(!parsingResult.success()){
             return parsingResult;
         }
@@ -169,20 +169,14 @@ Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_v
 
     std::string boardName;
     {
-        auto parsingResult = substring(line,start,',',alwaysValid, {});
+        auto parsingResult = substring(line,pos,',',alwaysValid, {});
         if(!parsingResult.success()){
             return parsingResult;
         }
         boardName = parsingResult.result.value();
     }
-    std::string parameterName;
-    {
-        auto parsingResult = substring(line, start, ',', alwaysValid, {});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        parameterName = parsingResult.result.value();
-    }
+    std::string parameterName{line.substr(pos)};
+   
     sql::SelectModel query;
     query.select("*").from(db_tables::ConfigurationParameters::TableName);
     if(configurationName != "*"){
@@ -231,20 +225,20 @@ void SaveConfiguration::processExecution()
             Print::PrintWarning(name, "Line " + std::to_string(lineNumber) + " is empty. Skipping");
             continue;
         }
-        size_t start = 0;
+        size_t pos = 0;
         std::string_view line = std::string_view(&request[lineBeg], lineEnd-lineBeg);
         Result<std::string,std::string> result;
         std::string command;
 
         try{
-            auto cmdParsingResult = substring(line,start,',',validatorCommand,"Invalid command");
+            auto cmdParsingResult = substring(line,pos,',',validatorCommand,"Invalid command");
             if(cmdParsingResult.success() == false){
                 errorMessage = result.error.value();
                 success = false;
                 break;
             }
             command = cmdParsingResult.result.value();
-            result = construct(line.substr(start), command);
+            result = construct(line.substr(pos), command);
         }
         catch(std::runtime_error& err){
             result = {.result=std::nullopt, .error = err.what()};

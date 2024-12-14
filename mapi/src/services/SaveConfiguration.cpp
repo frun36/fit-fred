@@ -93,7 +93,7 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
         date = parsingResult.result.value();
     }
 
-    std::string comment{ line.substr(start) };
+    std::string comment{ line.substr(start).data() };
 
     m_knownConfigs.emplace(configurationName);
 

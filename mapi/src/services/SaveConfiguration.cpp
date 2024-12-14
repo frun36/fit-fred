@@ -105,6 +105,56 @@ Result<std::string,std::string> SaveConfiguration::constructCreate(std::string_v
     return {.result = query.str(), .error = std::nullopt};
 }
 
+Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_view line)
+{
+     size_t start = 0;
+
+    std::string configurationName;
+    {
+        auto parsingResult = substring(line,start,',',validatorConfigurationName, "Unknown configuration: ");
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        configurationName = parsingResult.result.value();
+    }
+
+    std::string boardName;
+    {
+        auto parsingResult = substring(line,start,',',validatorBoardName, "Unknown board: ");
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        boardName = parsingResult.result.value();
+    }
+
+    auto boardItr = m_Boards.find(boardName);
+    auto board = boardItr->second;
+    std::string boradType = board->isTcm() ? "TCM" : "PM";
+
+    std::string parameterName;
+    {
+        auto parsingResult = substring(line, start, ',', 
+                            [&board](const std::string&parameterName){return board->doesExist(parameterName);},
+                            "Unknown parameter: ");
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        parameterName = parsingResult.result.value();
+    }
+
+    double physcialValue = std::stod(line.substr(start).data());
+    int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
+
+    sql::UpdateModel query;
+    query.update(db_tables::ConfigurationParameters::TableName).set(db_tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).where(
+        sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName &&
+        sql::column(db_tables::ConfigurationParameters::BoardType.name) == boradType &&
+        sql::column(db_tables::ConfigurationParameters::BoardName.name) == boardName &&
+        sql::column(db_tables::ConfigurationParameters::ParameterName.name) == parameterName
+        );
+    return {.result = query.str(), .error = std::nullopt};
+}
+
 void SaveConfiguration::processExecution()
 {
     bool running = true;

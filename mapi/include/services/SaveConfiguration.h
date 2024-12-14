@@ -15,6 +15,7 @@ class SaveConfiguration: public IndefiniteMapi
     SaveConfiguration(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
        connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
        connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
+       connect("UPDATE", wrapMemberFunction(this, &SaveConfiguration::constructUpdate));
     }
     void processExecution() override;
 
@@ -83,4 +84,5 @@ class SaveConfiguration: public IndefiniteMapi
 
     Result<std::string,std::string> constructCreate(std::string_view line);
     Result<std::string,std::string> constructInsert(std::string_view line);
+    Result<std::string,std::string> constructUpdate(std::string_view line);
 };

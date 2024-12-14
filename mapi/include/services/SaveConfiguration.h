@@ -27,7 +27,7 @@ class SaveConfiguration: public IndefiniteMapi
     Result<std::string,std::string> substring(std::string_view sequence, size_t& start, char delimiter, std::function<bool(const std::string&)> validator, const std::string& errorMessage)
     {
         size_t stop = sequence.find(delimiter, start+1);
-        if(stop == start || stop == (start + 1) || stop == std::string::npos){
+        if(stop == start || stop == std::string::npos){
             Print::PrintError(name, string_utils::concatenate("Empty substring"));
             return {.result=std::nullopt,.error="Empty substring"};
         }

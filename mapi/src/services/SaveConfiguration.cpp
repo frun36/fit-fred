@@ -154,10 +154,10 @@ void SaveConfiguration::processExecution()
             }
             const auto& cmd = cmdParsingResult.result.value();
             if(cmd == Insert){
-                auto result = constructInsert(line);    
+                result = constructInsert(line);    
             }
             else if(cmd == Create){
-                auto result = constructCreate(line);
+                result = constructCreate(line);
             }
         }
         catch(std::runtime_error& err){

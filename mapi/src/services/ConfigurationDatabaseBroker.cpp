@@ -221,7 +221,8 @@ void ConfigurationDatabaseBroker::processExecution()
     do {
         lineBeg = lineEnd+1;
         lineEnd = request.find('\n',lineBeg);
-        if(lineEnd - lineBeg == 0){
+        lineEnd = (lineEnd != std::string::npos) ? lineEnd : request.length();
+        if(lineEnd - lineBeg <= 1){
             Print::PrintWarning(name, "Line " + std::to_string(lineNumber) + " is empty. Skipping");
             continue;
         }
@@ -233,7 +234,7 @@ void ConfigurationDatabaseBroker::processExecution()
         try{
             auto cmdParsingResult = substring(line,pos,',',validatorCommand,"Invalid command");
             if(cmdParsingResult.success() == false){
-                errorMessage = result.error.value();
+                errorMessage = cmdParsingResult.error.value();
                 success = false;
                 break;
             }

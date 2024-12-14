@@ -16,6 +16,9 @@ class SaveConfiguration: public IndefiniteMapi
        connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
        connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
        connect("UPDATE", wrapMemberFunction(this, &SaveConfiguration::constructUpdate));
+       connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect("UPDATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
     }
     void processExecution() override;
 
@@ -54,7 +57,7 @@ class SaveConfiguration: public IndefiniteMapi
     // Command validator
     bool validateCmd(const std::string& cmdName)
     {
-        return m_operations.find(cmdName) != m_operations.end();
+        return m_constructors.find(cmdName) != m_constructors.end();
     }
     std::function<bool(const std::string&)> validatorCommand = wrapMemberFunction(this, &SaveConfiguration::validateCmd);
 
@@ -72,17 +75,31 @@ class SaveConfiguration: public IndefiniteMapi
     //
 
     typedef std::function<Result<std::string,std::string>(std::string_view)> QueryConstructor;
+    typedef std::function<Result<std::string,std::string>(const std::string&)> QueryExecutor;
 
-    std::unordered_map<std::string, QueryConstructor> m_operations;
+    std::unordered_map<std::string, QueryConstructor> m_constructors;
     void connect(const std::string& operation, QueryConstructor queryConstructor){
-        m_operations[operation] = queryConstructor;
+        m_constructors[operation] = queryConstructor;
     }
 
     Result<std::string,std::string> construct(std::string_view line, const std::string& cmd){
-        return m_operations[cmd](line);
+        return m_constructors[cmd](line);
     }
 
     Result<std::string,std::string> constructCreate(std::string_view line);
     Result<std::string,std::string> constructInsert(std::string_view line);
     Result<std::string,std::string> constructUpdate(std::string_view line);
+
+    //
+    std::unordered_map<std::string, QueryExecutor> m_executors;
+    void connect(const std::string& operation, QueryExecutor queryExecutor){
+        m_executors[operation] = queryExecutor;
+    }
+
+    Result<std::string,std::string> executeUpdate(const std::string& query);
+    Result<std::string,std::string> executeSelectParameters(const std::string& query);
+    Result<std::string,std::string> execute(const std::string& query, const std::string& cmd)
+    {
+        return m_executors[cmd](query);
+    }
 };

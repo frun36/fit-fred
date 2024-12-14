@@ -178,6 +178,7 @@ void SaveConfiguration::processExecution()
     size_t lineEnd = std::numeric_limits<size_t>::max();
     size_t lineNumber = 0;
     std::string errorMessage;
+    std::string queriesResult;
     bool success =  true;
     
     do {
@@ -190,6 +191,7 @@ void SaveConfiguration::processExecution()
         size_t start = 0;
         std::string_view line = std::string_view(&request[lineBeg], lineEnd-lineBeg);
         Result<std::string,std::string> result;
+        std::string command;
 
         try{
             auto cmdParsingResult = substring(line,start,',',validatorCommand,"Invalid command");
@@ -198,7 +200,8 @@ void SaveConfiguration::processExecution()
                 success = false;
                 break;
             }
-            result = construct(line.substr(start), cmdParsingResult.result.value());
+            command = cmdParsingResult.result.value();
+            result = construct(line.substr(start), command);
         }
         catch(std::runtime_error& err){
             result = {.result=std::nullopt, .error = err.what()};
@@ -213,10 +216,14 @@ void SaveConfiguration::processExecution()
             break;
         }
 
-        DatabaseInterface::executeUpdate(result.result.value(),errorMessage);
-        if(errorMessage.empty() == false){
+        auto queryResult = execute(result.result.value(), command);
+        if(queryResult.success() == false){
             success = false;
+            errorMessage = queryResult.error.value();
             break;
+        }
+        if(queryResult.result.has_value()){
+            queriesResult.append(queryResult.result.value());
         }
         lineNumber++;
 
@@ -231,5 +238,39 @@ void SaveConfiguration::processExecution()
     }
 
     DatabaseInterface::commitUpdate(true);
-    publishAnswer("Updated database successfully");
+    if(queriesResult.empty()){
+        queriesResult = "Updated database successfully";
+    }
+    publishAnswer(queriesResult);
+}
+
+Result<std::string,std::string> SaveConfiguration::executeSelectParameters(const std::string& query)
+{
+    std::string rows;
+    bool status = false;
+    auto results = DatabaseInterface::executeQuery(query,status);
+
+    if(!status){
+        return {.result = std::nullopt, .error = "SELECT query failed: " + query};
+    }
+
+    for(auto& row: results){
+        rows += row[db_tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
+        rows += row[db_tables::ConfigurationParameters::BoardName.idx]->getString() + ",";
+        rows += row[db_tables::ConfigurationParameters::BoardType.idx]->getString() + ",";
+        rows += row[db_tables::ConfigurationParameters::ParameterName.idx]->getString() + ",";
+        rows += row[db_tables::ConfigurationParameters::ParameterValue.idx]->getString() + ",";
+        rows += "\n";
+    }
+    return {.result = rows, .error = std::nullopt};
+}
+
+Result<std::string,std::string> SaveConfiguration::executeUpdate(const std::string& query)
+{
+    std::string errorMessage;
+    DatabaseInterface::executeUpdate(query,errorMessage);
+    if(errorMessage.empty() == false){
+        return {.result = std::nullopt, .error = errorMessage};
+    }
+    return {.result = std::nullopt, .error = std::nullopt};
 }

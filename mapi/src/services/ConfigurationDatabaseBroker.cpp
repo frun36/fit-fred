@@ -221,7 +221,7 @@ void ConfigurationDatabaseBroker::processExecution()
     do {
         lineBeg = lineEnd+1;
         lineEnd = request.find('\n',lineBeg);
-        lineEnd = (lineEnd != std::string::npos) ? lineEnd : request.length();
+        lineEnd = (lineEnd != std::string::npos) ? lineEnd : request.size();
         if(lineEnd - lineBeg <= 1){
             Print::PrintWarning(name, "Line " + std::to_string(lineNumber) + " is empty. Skipping");
             continue;
@@ -265,7 +265,7 @@ void ConfigurationDatabaseBroker::processExecution()
         }
         lineNumber++;
 
-    }while(lineEnd != std::string::npos);
+    }while(lineEnd < request.size());
 
     if(!success){
         DatabaseInterface::commitUpdate(false);

@@ -93,6 +93,9 @@ const Column Environment::Equation{ 1, "EQUATION" };
 // Configurations class
 const std::string Configurations::TableName{ "CONFIGURATIONS" };
 const Column Configurations::ConfigurationName{ 0, "CONFIGURATION_NAME" };
+const Column Configurations::Author{ 1, "AUTHOR" };
+const Column Configurations::Date{ 2, "TIME_UPDATED" };
+const Column Configurations::Comment{ 3, "COMMENTS" };
 
 // ConfigurationParameters class
 const std::string ConfigurationParameters::TableName{ "CONFIGURATION_PARAMETERS" };

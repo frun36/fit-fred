@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <functional>
 
 template <typename IntegerType, typename RawType>
 RawType twosComplementEncode(IntegerType value, uint32_t bitsNumber)
@@ -42,6 +43,21 @@ IntegerType twosComplementDecode(RawType code, uint32_t bitsNumber)
 
         return static_cast<IntegerType>(code);
     }
+}
+
+template<typename ResultType, typename ErrorType>
+struct Result
+{
+    std::optional<ResultType> result;
+    std::optional<ErrorType> error;
+    bool success(){
+        return !error.has_value();
+    }
+};
+
+template<typename ObjectType, typename ResultType, typename ...Args>
+std::function<ResultType(Args...)> wrapMemberFunction(ObjectType* obj, ResultType (ObjectType::*func)(Args...)){
+    return [obj,func](Args... args)->ResultType{return (obj->*func)(std::forward<Args>(args)...);};
 }
 
 // constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)

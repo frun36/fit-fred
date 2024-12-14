@@ -175,7 +175,7 @@ Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_v
         }
         boardName = parsingResult.result.value();
     }
-    std::string parameterName{line.substr(pos)};
+    std::string parameterName{line.substr(pos).data()};
    
     sql::SelectModel query;
     query.select("*").from(db_tables::ConfigurationParameters::TableName);

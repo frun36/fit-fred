@@ -10,15 +10,16 @@
 class SaveConfiguration: public IndefiniteMapi
 {
     public:
-    /*  Expected line: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[VALUE]
-    */
     SaveConfiguration(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
-       connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
-       connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
-       connect("UPDATE", wrapMemberFunction(this, &SaveConfiguration::constructUpdate));
-       connect("INSERT", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
-       connect("UPDATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
-       connect("CREATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect_constructor("INSERT", wrapMemberFunction(this, &SaveConfiguration::constructInsert));
+       connect_constructor("CREATE", wrapMemberFunction(this, &SaveConfiguration::constructCreate));
+       connect_constructor("UPDATE", wrapMemberFunction(this, &SaveConfiguration::constructUpdate));
+       connect_constructor("SELECT", wrapMemberFunction(this, &SaveConfiguration::constructSelect));
+
+       connect_executor("INSERT", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect_executor("UPDATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect_executor("CREATE", wrapMemberFunction(this, &SaveConfiguration::executeUpdate));
+       connect_executor("SELECT", wrapMemberFunction(this, &SaveConfiguration::executeSelectParameters));
     }
     void processExecution() override;
 
@@ -78,7 +79,7 @@ class SaveConfiguration: public IndefiniteMapi
     typedef std::function<Result<std::string,std::string>(const std::string&)> QueryExecutor;
 
     std::unordered_map<std::string, QueryConstructor> m_constructors;
-    void connect(const std::string& operation, QueryConstructor queryConstructor){
+    void connect_constructor(const std::string& operation, QueryConstructor queryConstructor){
         m_constructors[operation] = queryConstructor;
     }
 
@@ -89,10 +90,11 @@ class SaveConfiguration: public IndefiniteMapi
     Result<std::string,std::string> constructCreate(std::string_view line);
     Result<std::string,std::string> constructInsert(std::string_view line);
     Result<std::string,std::string> constructUpdate(std::string_view line);
+    Result<std::string,std::string> constructSelect(std::string_view line);
 
     //
     std::unordered_map<std::string, QueryExecutor> m_executors;
-    void connect(const std::string& operation, QueryExecutor queryExecutor){
+    void connect_executor(const std::string& operation, QueryExecutor queryExecutor){
         m_executors[operation] = queryExecutor;
     }
 

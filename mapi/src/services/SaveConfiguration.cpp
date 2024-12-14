@@ -155,6 +155,49 @@ Result<std::string,std::string> SaveConfiguration::constructUpdate(std::string_v
     return {.result = query.str(), .error = std::nullopt};
 }
 
+Result<std::string,std::string> SaveConfiguration::constructSelect(std::string_view line)
+{
+    size_t start = 0;
+    std::string configurationName;
+    {
+        auto parsingResult = substring(line,start,',',alwaysValid, {});
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        configurationName = parsingResult.result.value();
+    }
+
+    std::string boardName;
+    {
+        auto parsingResult = substring(line,start,',',alwaysValid, {});
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        boardName = parsingResult.result.value();
+    }
+    std::string parameterName;
+    {
+        auto parsingResult = substring(line, start, ',', alwaysValid, {});
+        if(!parsingResult.success()){
+            return parsingResult;
+        }
+        parameterName = parsingResult.result.value();
+    }
+    sql::SelectModel query;
+    query.select("*").from(db_tables::ConfigurationParameters::TableName);
+    if(configurationName != "*"){
+        query.where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
+    }
+    if(boardName != "*"){
+        query.where(sql::column(db_tables::ConfigurationParameters::BoardName.name) == boardName);
+    }
+    if(parameterName != "*"){
+        query.where(sql::column(db_tables::ConfigurationParameters::ParameterName.name) == parameterName);
+    }
+
+    return {.result = query.str(), .error = std::nullopt};
+}
+
 void SaveConfiguration::processExecution()
 {
     bool running = true;

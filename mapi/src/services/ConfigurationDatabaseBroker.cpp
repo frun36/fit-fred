@@ -93,7 +93,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std
         date = parsingResult.result.value();
     }
 
-    std::string comment{ line.substr(pos).data() };
+    std::string comment{line, pos, line.size() - pos};
 
     m_knownConfigs.emplace(configurationName);
 
@@ -175,7 +175,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelect(std
         }
         boardName = parsingResult.result.value();
     }
-    std::string parameterName{line.substr(pos).data()};
+    std::string parameterName{line, pos, line.size() - pos};
    
     sql::SelectModel query;
     query.select("*").from(db_tables::ConfigurationParameters::TableName);

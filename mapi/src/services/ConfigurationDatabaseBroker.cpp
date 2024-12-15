@@ -2,6 +2,8 @@
 #include "database/sql.h"
 #include <limits>
 
+#include <iomanip>
+
 void ConfigurationDatabaseBroker::fetchAllConfigs()
 {
     m_knownConfigs.clear();
@@ -293,11 +295,17 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectParame
     }
 
     for(auto& row: results){
+        std::string boardName = row[db_tables::ConfigurationParameters::BoardName.idx]->getString();
+        std::string parameterName = row[db_tables::ConfigurationParameters::ParameterName.idx]->getString();
+        int64_t electronicValue = std::stoll(row[db_tables::ConfigurationParameters::ParameterValue.idx]->getString());
+        double physicalValue = m_Boards[boardName]->calculatePhysical(parameterName,electronicValue);
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(3) << physicalValue;
+
         rows += row[db_tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
-        rows += row[db_tables::ConfigurationParameters::BoardName.idx]->getString() + ",";
-        rows += row[db_tables::ConfigurationParameters::BoardType.idx]->getString() + ",";
-        rows += row[db_tables::ConfigurationParameters::ParameterName.idx]->getString() + ",";
-        rows += row[db_tables::ConfigurationParameters::ParameterValue.idx]->getString() + ",";
+        rows += boardName + ",";
+        rows += parameterName + ",";
+        rows += ss.str();
         rows += "\n";
     }
     return {.result = rows, .error = std::nullopt};

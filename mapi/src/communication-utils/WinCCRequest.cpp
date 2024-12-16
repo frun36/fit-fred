@@ -23,6 +23,18 @@ WinCCRequest::Command::Command(const std::string& line)
 
         if (!value.has_value())
             throw std::runtime_error(name + ": Invalid WRITE argument format \"" + arguments[2] + "\"");
+    } else if(arguments[1] == "WRITE_ELECTRONIC"){
+        operation = Operation::WriteElectronic;
+
+        if (arguments.size() < 3){
+            throw std::runtime_error(name + ": Too few arguments for WRITE_ELECTRONIC operation");
+        }
+
+        value = stringToDouble(arguments[2]);
+
+        if (!value.has_value()){
+            throw std::runtime_error(name + ": Invalid WRITE_ELECTRONIC argument format \"" + arguments[2] + "\"");
+        }
     } else {
         throw std::runtime_error(name + ": Invalid operation \"" + arguments[1] + "\"");
     }
@@ -35,10 +47,12 @@ WinCCRequest::WinCCRequest(const std::string& input)
     for (const auto& line : lines) {
         Command cmd(line);
 
-        if (!m_reqType.has_value())
+        if (!m_reqType.has_value()){
             m_reqType = cmd.operation;
-        else if (m_reqType.value() != cmd.operation)
+        }
+        else if (m_reqType.value() != cmd.operation){
             throw std::runtime_error(cmd.name + ": attempted operation mixing in single request");
+        }
 
         m_commands.push_back(cmd);
     }

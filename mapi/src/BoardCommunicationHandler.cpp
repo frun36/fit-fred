@@ -89,7 +89,14 @@ SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const Wi
         throw std::runtime_error(parameter.name + ": no data for WRITE operation");
     }
 
-    int64_t electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
+    int64_t electronicValue = 0;
+    if(command.operation == WinCCRequest::Operation::WriteElectronic){
+        electronicValue = static_cast<int64_t>(command.value.value());
+    }
+    else{
+        electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
+    }
+    
     if (electronicValue > parameter.maxValue || electronicValue < parameter.minValue) {
         throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range - value: " + std::to_string(electronicValue));
     }

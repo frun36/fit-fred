@@ -58,20 +58,19 @@ string Configurations::processInputMessage(string msg)
     if (boardNames.empty()) {
         throw runtime_error(configurationName + ": configuration not found");
     }
-}
 
-vector<pair<string, string>> requests(boardNames.size());
-std::transform(boardNames.begin(), boardNames.end(), requests.begin(), [&configurationName, this](const auto& boardName) {
-    if (m_boardCofigurationServices.find(boardName) == m_boardCofigurationServices.end()) {
-        throw runtime_error(configurationName + ": board '" + boardName + "' is not connected");
-    }
+    vector<pair<string, string>> requests(boardNames.size());
+    std::transform(boardNames.begin(), boardNames.end(), requests.begin(), [&configurationName, this](const auto& boardName) {
+        if (m_boardCofigurationServices.find(boardName) == m_boardCofigurationServices.end()) {
+            throw runtime_error(configurationName + ": board '" + boardName + "' is not connected");
+        }
 
-    return make_pair(m_boardCofigurationServices[name]->getServiceName(), configurationName);
-});
+        return make_pair(m_boardCofigurationServices[name]->getServiceName(), configurationName);
+    });
 
-newMapiGroupRequest(requests);
-noRpcRequest = true;
-return "";
+    newMapiGroupRequest(requests);
+    noRpcRequest = true;
+    return "";
 }
 
 // BoardConfigurations

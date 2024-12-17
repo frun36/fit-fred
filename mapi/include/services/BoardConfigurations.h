@@ -16,7 +16,7 @@ class BoardConfigurations
         optional<double> delayC;
 
         ConfigurationInfo() = default;
-        ConfigurationInfo(const string& name, const string& req, optional<double> delayA, optional<double> delayC) : name(name), req(req), delayA(delayA), delayC(delayC) {}
+        ConfigurationInfo(const string& name, const string& req, optional<int64_t> delayA, optional<int64_t> delayC) : name(name), req(req), delayA(delayA), delayC(delayC) {}
     };
 
     static vector<vector<MultiBase*>> fetchConfiguration(string_view configurationName, string_view boardName);

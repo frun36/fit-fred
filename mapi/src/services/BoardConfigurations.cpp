@@ -1,4 +1,4 @@
-#include "BoardConfigurations.h"
+#include "services/BoardConfigurations.h"
 #include "database/sql.h"
 #include "database/DatabaseTables.h"
 #include "DelayChange.h"
@@ -17,8 +17,8 @@ std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(str
 
 BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
 {
-    optional<double> delayA = nullopt;
-    optional<double> delayC = nullopt;
+    optional<int64_t> delayA = nullopt;
+    optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
         if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble()) {
@@ -26,7 +26,7 @@ BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationIn
         }
 
         string parameterName = row[0]->getString();
-        double parameterValue = row[1]->getDouble();
+        int64_t parameterValue = static_cast<int64_t>(row[1]->getDouble());
         if (parameterName == tcm_parameters::DelayA) {
             delayA = parameterValue;
         } else if (parameterName == tcm_parameters::DelayC) {
@@ -65,7 +65,7 @@ string PmConfigurations::processOutputMessage(string msg)
 
 bool TcmConfigurations::handleDelays()
 {
-    optional<DelayChange> delayChange = DelayChange::fromPhysicalValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
+    optional<DelayChange> delayChange = DelayChange::fromElectronicValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
 
     if (!delayChange.has_value()) {
         return true;

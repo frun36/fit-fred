@@ -39,7 +39,7 @@ Result<std::vector<std::string>, std::string> parse(std::string_view line, bool 
     std::string errorMessage;
 
     auto process_validator = [&](auto& validator) {
-        if (!errorMessage.empty()) return;
+        if (!errorMessage.empty() || pos >= line.size()) return;
 
         auto parsingResult = substring(line, pos, ',', validator, "Invalid token: ");
         if (!parsingResult.success()) {

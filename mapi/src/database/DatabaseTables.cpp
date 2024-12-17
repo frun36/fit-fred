@@ -100,6 +100,6 @@ const Column ConfigurationParameters::ConfigurationName{ 0, "CONFIGURATION_NAME"
 const Column ConfigurationParameters::BoardName{ 1, "BOARD_NAME" };
 const Column ConfigurationParameters::BoardType{ 2, "BOARD_TYPE" };
 const Column ConfigurationParameters::ParameterName{ 3, "PARAMETER_NAME" };
-const Column ConfigurationParameters::ParameterValue{ 4, "PARAMETER_VALUE" };
+const Column ConfigurationParameters::ParameterValue{ 4, "PARAMETER_ELECTRONIC_VALUE" };
 
 } // namespace db_tables

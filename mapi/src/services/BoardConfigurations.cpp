@@ -32,7 +32,7 @@ BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationIn
         } else if (parameterName == tcm_parameters::DelayC) {
             delayC = parameterValue;
         } else {
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parameterName, parameterValue));
         }
     }
 
@@ -65,7 +65,7 @@ string PmConfigurations::processOutputMessage(string msg)
 
 bool TcmConfigurations::handleDelays()
 {
-    optional<DelayChange> delayChange = DelayChange::fromValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
+    optional<DelayChange> delayChange = DelayChange::fromPhysicalValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
 
     if (!delayChange.has_value()) {
         return true;
@@ -105,7 +105,7 @@ void TcmConfigurations::handleResetErrors()
 {
     // Control Server performs entire reset errors - shouldn't be needed
     string resetReq;
-    WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
+    WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1));
     processSequenceThroughHandler(m_handler, resetReq, false);
     return;
 }

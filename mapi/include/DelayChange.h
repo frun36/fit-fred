@@ -14,7 +14,8 @@ struct DelayChange {
 
     DelayChange(const std::string& req, uint32_t delayDifference) : req(req), delayDifference(delayDifference) {}
 
-    static std::optional<DelayChange> fromValues(BoardCommunicationHandler& tcm, std::optional<double> newDelayA, std::optional<double> newDelayC);
+    static std::optional<DelayChange> fromPhysicalValues(BoardCommunicationHandler& tcm, std::optional<double> newDelayA, std::optional<double> newDelayC);
+    static std::optional<DelayChange> fromElectronicValues(BoardCommunicationHandler& tcm, std::optional<int64_t> newDelayA, std::optional<int64_t> newDelayC);
 
     static std::optional<DelayChange> fromWinCCRequest(BoardCommunicationHandler& tcm, const string& request);
 

@@ -39,7 +39,7 @@ void BoardStatus::processExecution()
         for (auto& report : parsedResponse.errors) {
             error << report.what() << '\n';
         }
-        Print::PrintError(error.str());
+        Print::PrintError(name, error.str());
         printAndPublishError(parsedResponse);
         return;
     }

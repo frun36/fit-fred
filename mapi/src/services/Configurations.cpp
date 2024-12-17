@@ -24,6 +24,27 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
     Print::PrintInfo("CONFIGURATIONS initialized for boards: " + names);
 }
 
+vector<string> Configurations::fetchBoardNamesToConfigure(const string& configurationName) const
+{
+    sql::SelectModel query;
+    query
+        .select(db_tables::ConfigurationParameters::BoardName.name)
+        .distinct()
+        .from(db_tables::ConfigurationParameters::TableName)
+        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
+    auto boardNameData = DatabaseInterface::executeQuery(query.str());
+
+    vector<string> names(boardNameData.size());
+    std::transform(boardNameData.begin(), boardNameData.end(), names.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
+        if (entry.empty() || !entry[0]->isString()) {
+            throw runtime_error(configurationName + ": invalid board name format in DB");
+        }
+        return entry[0]->getString();
+    });
+
+    return names;
+}
+
 string Configurations::processInputMessage(string msg)
 {
     if (!DatabaseInterface::isConnected()) {
@@ -33,38 +54,24 @@ string Configurations::processInputMessage(string msg)
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
 
-    sql::SelectModel query;
-    query
-        .select(db_tables::ConfigurationParameters::BoardName.name)
-        .distinct()
-        .from(db_tables::ConfigurationParameters::TableName)
-        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
-    auto boardNameData = DatabaseInterface::executeQuery(query.str());
-    if (boardNameData.empty()) {
+    vector<string> boardNames = fetchBoardNamesToConfigure(configurationName);
+    if (boardNames.empty()) {
         throw runtime_error(configurationName + ": configuration not found");
     }
+}
 
-    vector<pair<string, string>> requests(boardNameData.size());
-    std::transform(boardNameData.begin(), boardNameData.end(), requests.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
-        if (!entry[0]->isString()) {
-            throw runtime_error(configurationName + ": invalid board name format in DB");
-        }
+vector<pair<string, string>> requests(boardNames.size());
+std::transform(boardNames.begin(), boardNames.end(), requests.begin(), [&configurationName, this](const auto& boardName) {
+    if (m_boardCofigurationServices.find(boardName) == m_boardCofigurationServices.end()) {
+        throw runtime_error(configurationName + ": board '" + boardName + "' is not connected");
+    }
 
-        string boardName = entry[0]->getString();
-        string serviceName = m_fredName;
-        if (boardName == "TCM0") {
-            serviceName += "/TCM/TCM0/";
-        } else if (boardName.find("PM") != string::npos) {
-            serviceName += "/PM/" + boardName + "/";
-        }
-        serviceName += "_INTERNAL_CONFIGURATIONS";
+    return make_pair(m_boardCofigurationServices[name]->getServiceName(), configurationName);
+});
 
-        return make_pair(serviceName, configurationName);
-    });
-
-    newMapiGroupRequest(requests);
-    noRpcRequest = true;
-    return "";
+newMapiGroupRequest(requests);
+noRpcRequest = true;
+return "";
 }
 
 // BoardConfigurations
@@ -194,7 +201,7 @@ void Configurations::TcmConfigurations::processExecution()
     if (!handleData()) {
         return;
     }
-    
+
     // Required after change of delays and SIDE_[A/C]_CHANNEL_MASK
     // Performed always for simplicity
     // Clearing readiness changed bits should be enough - tests will show

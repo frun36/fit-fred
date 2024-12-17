@@ -50,7 +50,7 @@ constexpr std::string_view Trigger2Signature{ "TRIGGER_2_SIGNATURE" };
 constexpr std::string_view Trigger3Signature{ "TRIGGER_3_SIGNATURE" };
 constexpr std::string_view Trigger4Signature{ "TRIGGER_4_SIGNATURE" };
 constexpr std::string_view Trigger5Signature{ "TRIGGER_5_SIGNATURE" };
-
+constexpr std::string_view BcInvterval{ "BC_INTERVAL" };
 } // namespace parameters
 
 namespace constants

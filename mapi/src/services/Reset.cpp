@@ -5,7 +5,7 @@ Reset::Reset(std::shared_ptr<Board> board) : m_boardHandler(board)
 {
     m_resetParameters.emplace(gbt::parameters::Reset, m_boardHandler.getBoard()->at(gbt::parameters::Reset));
     m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_boardHandler.getBoard()->at(gbt::parameters::ResetDataCounters));
-    m_resetParameters.emplace(gbt::parameters::ResetDataCounters, m_boardHandler.getBoard()->at(gbt::parameters::ResetStartEmulation));
+    m_resetParameters.emplace(gbt::parameters::ResetStartEmulation, m_boardHandler.getBoard()->at(gbt::parameters::ResetStartEmulation));
     m_resetParameters.emplace(gbt::parameters::ResetOrbitSync, m_boardHandler.getBoard()->at(gbt::parameters::ResetOrbitSync));
     m_resetParameters.emplace(gbt::parameters::ResetReadoutFsm, m_boardHandler.getBoard()->at(gbt::parameters::ResetReadoutFsm));
     m_resetParameters.emplace(gbt::parameters::ResetRxError, m_boardHandler.getBoard()->at(gbt::parameters::ResetRxError));

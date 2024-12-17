@@ -56,8 +56,16 @@ void BoardStatus::processExecution()
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);
     Board::ParameterInfo& eventsCount = m_boardHandler.getBoard()->at(gbt::parameters::EventsCount);
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
+    WinCCResponse systemClock;
 
-    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents());
+    if(m_boardHandler.getBoard()->isTcm()){
+        systemClock.addParameter(environment::parameters::SystemClock.data(),
+                                {m_boardHandler.getBoard()->getEnvironment(environment::parameters::SystemClock.data())}
+                                );
+    }
+
+    Print::PrintVerbose("Publishing " + m_boardHandler.getBoard()->getName() + " status");
+    publishAnswer(parsedResponse.response.getContents() + gbtRates.getContents() + gbtErrors.getContents() + systemClock.getContents());
 
     if (m_gbtError.get() != nullptr) {
         m_gbtError->saveErrorReport();
@@ -70,6 +78,7 @@ void BoardStatus::updateEnvironment()
     m_boardHandler.getBoard()->setEnvironment(environment::parameters::SystemClock.data(),
                                               (m_boardHandler.getBoard()->at(ActualSystemClock).getPhysicalValue() == environment::constants::SourceExternalClock) ? m_boardHandler.getBoard()->getEnvironment(environment::parameters::ExtenalClock.data()) : m_boardHandler.getBoard()->getEnvironment(environment::parameters::InternalClock.data()));
     m_boardHandler.getBoard()->updateEnvironment(environment::parameters::TDC.data());
+    m_boardHandler.getBoard()->updateEnvironment(environment::parameters::BcInvterval.data());
 }
 
 BoardCommunicationHandler::ParsedResponse BoardStatus::checkGbtErrors()

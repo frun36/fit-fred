@@ -29,7 +29,7 @@ Result<std::string,std::string> substring(std::string_view sequence, size_t& sta
 }
 
 template <typename... Validators>
-Result<std::vector<std::string>, std::string> parse(std::string_view line, Validators&... validators) {
+Result<std::vector<std::string>, std::string> parse(std::string_view line, bool isPartialValid, Validators&... validators) {
     static_assert((std::is_invocable_r<bool,Validators,const std::string&>::value && ...), "All validators must be bool(const std::string&) callables");
 
     std::vector<std::string> results;
@@ -52,9 +52,12 @@ Result<std::vector<std::string>, std::string> parse(std::string_view line, Valid
     (process_validator(validators), ...); // Fold expression
 
     if (!errorMessage.empty()) {
-        return {.result=std::nullopt, .error=errorMessage};
+        return {.result=std::move(results), .error=errorMessage};
     }
-    return {.result=std::move(results),.error=errorMessage};
+    if(!isPartialValid && results.size() < (sizeof...(Validators))){
+        return {.result=std::nullopt, .error="Missing tokens: " + std::to_string(results.size()) + " parsed, expected " + std::to_string(sizeof...(Validators))};
+    }
+    return {.result=std::move(results),.error=std::nullopt};
 }
 
 /// 
@@ -73,7 +76,7 @@ void ConfigurationDatabaseBroker::fetchAllConfigs()
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertParameters(std::string_view line)
 {
     //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
-    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    auto result = parse(line, false, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -107,7 +110,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertPara
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std::string_view line)
 {
     //[CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
-    auto result = parse(line,alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -130,7 +133,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdateParameters(std::string_view line)
 {
     //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
-    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    auto result = parse(line, false, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -164,7 +167,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdatePara
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectParameters(std::string_view line)
 {
     //[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ( ,[STARTING DATE] )
-    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    auto result = parse(line, true, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -173,7 +176,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
     const std::string& configurationName = tokens[0];
     const std::string& boardName = tokens[1];
     const std::string& parameterName = tokens[2];
-    const std::string& startDate = tokens[3];
+    std::string startDate = (tokens.size() == 4) ? tokens[3] : std::string();
    
     sql::SelectModel query;
     bool where = false;

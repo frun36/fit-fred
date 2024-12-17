@@ -65,7 +65,7 @@ string Configurations::processInputMessage(string msg)
             throw runtime_error(configurationName + ": board '" + boardName + "' is not connected");
         }
 
-        return make_pair(m_boardCofigurationServices[name]->getServiceName(), configurationName);
+        return make_pair(m_boardCofigurationServices[boardName]->getServiceName(), configurationName);
     });
 
     newMapiGroupRequest(requests);

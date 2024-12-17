@@ -53,6 +53,15 @@ class BoardCommunicationHandler
             return ss.str();
         }
 
+        string getError() const
+        {
+            std::stringstream ss;
+            for (auto& report : errors){
+                ss << report.what() << '\n';
+            }
+            return ss.str();
+        }
+
         static const ParsedResponse EmptyResponse;
     };
 

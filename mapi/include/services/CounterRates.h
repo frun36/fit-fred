@@ -104,6 +104,7 @@ class CounterRates : public LoopingFitIndefiniteMapi
     const string m_fifoLoadName;
     const vector<string> m_names;
     optional<vector<uint32_t>> m_counters;
+    uint32_t m_readIntervalCode;
     double m_readInterval;
     optional<vector<double>> m_rates;
 

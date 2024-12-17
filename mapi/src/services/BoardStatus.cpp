@@ -39,9 +39,8 @@ void BoardStatus::processExecution()
         for (auto& report : parsedResponse.errors) {
             error << report.what() << '\n';
         }
-        error << parsedResponse.response.getContents();
-        Print::PrintVerbose("Publishing error");
-        publishError(error.str());
+        Print::PrintError(name, error.str());
+        printAndPublishError(parsedResponse);
         return;
     }
 
@@ -51,7 +50,7 @@ void BoardStatus::processExecution()
 
     auto gbtErrors = checkGbtErrors();
     if (gbtErrors.isError()) {
-        publishError(gbtErrors.getContents());
+        printAndPublishError(gbtErrors);
     }
 
     Board::ParameterInfo& wordsCount = m_boardHandler.getBoard()->at(gbt::parameters::WordsCount);

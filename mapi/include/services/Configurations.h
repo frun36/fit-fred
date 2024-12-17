@@ -25,7 +25,6 @@
 
 #endif
 
-
 /*
 Control Server - void fileRead() from FITelectronics.h
 TCM - parsing of group "TCM":
@@ -100,6 +99,7 @@ class Configurations : public Mapigroup
         virtual const string& getServiceName() const = 0;
 
         virtual ~BoardConfigurations() = default;
+
        protected:
         BoardCommunicationHandler m_handler;
         ConfigurationInfo m_configurationInfo;
@@ -123,8 +123,9 @@ class Configurations : public Mapigroup
        public:
         TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
         {
-            if (!board->doesExist(string(tcm_parameters::DelayA)) || !board->doesExist(string(tcm_parameters::DelayC)))
+            if (!board->doesExist(string(tcm_parameters::DelayA)) || !board->doesExist(string(tcm_parameters::DelayC))) {
                 throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
+            }
         }
 
         void processExecution() override;

@@ -12,18 +12,20 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
 {
     string names;
     for (auto [name, board] : boards) {
-        if (name.find("TCM") != string::npos)
+        if (name.find("TCM") != string::npos) {
             m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
-        else if (name.find("PM") != string::npos)
+        } else if (name.find("PM") != string::npos) {
             m_boardCofigurationServices[name] = make_unique<PmConfigurations>(board);
-        else
+        } else {
             throw runtime_error("Unexpected board name: " + name);
+        }
         names += name + "; ";
     }
     Print::PrintInfo("CONFIGURATIONS initialized for boards: " + names);
 }
 
-vector<string> Configurations::fetchBoardNamesToConfigure(const string& configurationName) const {
+vector<string> Configurations::fetchBoardNamesToConfigure(const string& configurationName) const
+{
     sql::SelectModel query;
     query
         .select(db_tables::ConfigurationParameters::BoardName.name)
@@ -34,8 +36,9 @@ vector<string> Configurations::fetchBoardNamesToConfigure(const string& configur
 
     vector<string> names(boardNameData.size());
     std::transform(boardNameData.begin(), boardNameData.end(), names.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
-        if (entry.empty() || !entry[0]->isString())
+        if (entry.empty() || !entry[0]->isString()) {
             throw runtime_error(configurationName + ": invalid board name format in DB");
+        }
         return entry[0]->getString();
     });
 
@@ -44,21 +47,24 @@ vector<string> Configurations::fetchBoardNamesToConfigure(const string& configur
 
 string Configurations::processInputMessage(string msg)
 {
-    if (!DatabaseInterface::isConnected())
+    if (!DatabaseInterface::isConnected()) {
         throw runtime_error("No DB connection");
+    }
 
     Utility::removeWhiteSpaces(msg);
     const string& configurationName = msg;
 
     vector<string> boardNames = fetchBoardNamesToConfigure(configurationName);
-    if (boardNames.empty())
+    if (boardNames.empty()) {
         throw runtime_error(configurationName + ": configuration not found");
+    }
 
     vector<pair<string, string>> requests(boardNames.size());
     std::transform(boardNames.begin(), boardNames.end(), requests.begin(), [&configurationName, this](const auto& boardName) {
-        if (m_boardCofigurationServices.find(boardName) == m_boardCofigurationServices.end())
+        if (m_boardCofigurationServices.find(boardName) == m_boardCofigurationServices.end()) {
             throw runtime_error(configurationName + ": board '" + boardName + "' is not connected");
-        
+        }
+
         return make_pair(m_boardCofigurationServices[name]->getServiceName(), configurationName);
     });
 
@@ -85,17 +91,19 @@ Configurations::BoardConfigurations::ConfigurationInfo Configurations::BoardConf
     optional<double> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble())
+        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble()) {
             throw runtime_error(string_utils::concatenate(configurationName, ": invalid CONFIGURATIONS data row"));
+        }
 
         string parameterName = row[0]->getString();
         double parameterValue = row[1]->getDouble();
-        if (parameterName == tcm_parameters::DelayA)
+        if (parameterName == tcm_parameters::DelayA) {
             delayA = parameterValue;
-        else if (parameterName == tcm_parameters::DelayC)
+        } else if (parameterName == tcm_parameters::DelayC) {
             delayC = parameterValue;
-        else
+        } else {
             WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(parameterName, parameterValue));
+        }
     }
 
     return ConfigurationInfo(string(configurationName), request, delayA, delayC);
@@ -115,10 +123,11 @@ string Configurations::PmConfigurations::processInputMessage(string request)
 string Configurations::PmConfigurations::processOutputMessage(string msg)
 {
     auto parsedResponse = m_handler.processMessageFromALF(msg);
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         returnError = true;
-    else
+    } else {
         Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
+    }
     return parsedResponse.getContents();
 }
 
@@ -138,7 +147,7 @@ bool Configurations::TcmConfigurations::handleDelays()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + " was not applied: delay change failed\n");
-        publishError(m_response);
+        printAndPublishError(m_response);
         return false;
     }
 
@@ -152,7 +161,7 @@ bool Configurations::TcmConfigurations::handleData()
     m_response += parsedResponse.getContents();
     if (parsedResponse.isError()) {
         m_response.insert(0, "TCM configuration " + m_configurationInfo.name + (m_response.empty() ? " was not applied\n" : " was applied partially\n"));
-        publishError(m_response);
+        printAndPublishError(m_response);
         return false;
     }
 
@@ -185,14 +194,17 @@ void Configurations::TcmConfigurations::processExecution()
     m_configurationInfo = getConfigurationInfo(configurationName);
     Print::PrintVerbose("Configuration '" + configurationName + "' for " + m_boardName);
 
-    if (!handleDelays())
+    if (!handleDelays()) {
         return;
-    if (!handleData())
+    }
+    if (!handleData()) {
         return;
+    }
+
     // Required after change of delays and SIDE_[A/C]_CHANNEL_MASK
     // Performed always for simplicity
     // Clearing readiness changed bits should be enough - tests will show
-    handleResetErrors(); 
+    handleResetErrors();
     Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
     publishAnswer(m_response);
 }

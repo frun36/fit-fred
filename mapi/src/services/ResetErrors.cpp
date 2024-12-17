@@ -45,7 +45,7 @@ void ResetErrors::processExecution()
     {
         auto parsedResponse = applyResetBoard(m_TCM);
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
             return;
         }
     }
@@ -53,7 +53,7 @@ void ResetErrors::processExecution()
     for (auto& pmHandler : m_PMs) {
         auto parsedResponse = applyResetBoard(pmHandler);
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
             return;
         }
     }
@@ -61,7 +61,7 @@ void ResetErrors::processExecution()
     {
         auto parsedResponse = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1), false);
         if (parsedResponse.isError()) {
-            publishError(parsedResponse.getContents());
+            printAndPublishError(parsedResponse);
             return;
         }
     }

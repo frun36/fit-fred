@@ -7,39 +7,54 @@
 #include <unordered_set>
 #include <functional>
 
+/*
+---- CONFIGURATION PARAMETERS TABLE ----
+
+    ->Fetch configuration parameters:
+        -> request: SELECT CONFIGURATION_PARAMETERS,[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ( ,[STARTING DATE] )
+        -> response: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE] ( ,[VERSION START DATE],[VERSION END DATE] )
+
+    ->Add parameter to configuration:
+        ->request: INSERT CONFIGURATION_PARAMETERS,[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
+        ->response: -
+
+    ->Update parameter value:
+        ->request: UPDATE CONFIGURATION_PARAMETERS,[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
+        ->response: -
+
+---- CONFIGURATION TABLE ----
+
+    ->Create new configuration:
+        ->request: INSERT CONFIGURATIONS,[CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
+        ->response: -
+
+    ->Fetch all configurations:
+        ->request: SELECT CONFIGURATIONS,[CONFIGURATION NAME / *],[AUTHOR / *]
+        ->response: [CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
+*/
+
+
 class ConfigurationDatabaseBroker: public IndefiniteMapi
 {
     public:
     ConfigurationDatabaseBroker(std::unordered_map<std::string, std::shared_ptr<Board>>& boards): m_Boards(boards) {
-       connect_constructor("INSERT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructInsert));
-       connect_constructor("CREATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructCreate));
-       connect_constructor("UPDATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructUpdate));
-       connect_constructor("SELECT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructSelect));
-
-       connect_executor("INSERT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
-       connect_executor("UPDATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
-       connect_executor("CREATE", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
-       connect_executor("SELECT", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeSelectParameters));
+    // CONFIGURATION_PARAMETERS
+       connect_constructor("INSERT CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructInsertParameters));
+       connect_constructor("UPDATE CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructUpdateParameters));
+       connect_constructor("SELECT CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructSelectParameters));
+       
+       connect_executor("INSERT CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
+       connect_executor("UPDATE CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
+       connect_executor("SELECT CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeSelectParameters));
+       
+    // CONFIGURATION
+       connect_constructor("INSERT CONFIGURATIONS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructCreate));
+       connect_executor("INSERT CONFIGURATIONS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
     }
     void processExecution() override;
 
     private:
-    Result<std::string,std::string> substring(std::string_view sequence, size_t& start, char delimiter, std::function<bool(const std::string&)> validator, const std::string& errorMessage)
-    {
-        size_t stop = sequence.find(delimiter, start+1);
-        if(stop == start || stop == std::string::npos){
-            Print::PrintError(name, string_utils::concatenate("Empty substring"));
-            return {.result=std::nullopt,.error="Empty substring"};
-        }
-
-        std::string strPhrase{sequence.substr(start,stop-start)};
-        if(!validator(strPhrase)){
-            Print::PrintError(name, string_utils::concatenate(errorMessage, strPhrase));
-            return {.result=std::nullopt,.error=errorMessage};
-        }
-        start=stop+1;
-        return {.result=std::move(strPhrase),.error=std::nullopt};
-    }
+    
 
     // Configuration name validator
     bool validateConfigurationName(const std::string& configurationName) 
@@ -88,9 +103,9 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
     }
 
     Result<std::string,std::string> constructCreate(std::string_view line);
-    Result<std::string,std::string> constructInsert(std::string_view line);
-    Result<std::string,std::string> constructUpdate(std::string_view line);
-    Result<std::string,std::string> constructSelect(std::string_view line);
+    Result<std::string,std::string> constructInsertParameters(std::string_view line);
+    Result<std::string,std::string> constructUpdateParameters(std::string_view line);
+    Result<std::string,std::string> constructSelectParameters(std::string_view line);
 
     //
     std::unordered_map<std::string, QueryExecutor> m_executors;
@@ -104,4 +119,17 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
     {
         return m_executors[cmd](query);
     }
+
+    //
+
+    std::string versions(const std::string& startDate)
+    {
+        return string_utils::concatenate("VERSIONS BETWEEN timestamp to_timestamp(", startDate, ") and SYSTIMESTAMP");
+    }
+
+    static constexpr std::string_view VersionColumns{"VERSIONS_STARTTIME,VERSIONS_ENDTIME,VERSIONS_OPERATION"};
+
+
 };
+
+

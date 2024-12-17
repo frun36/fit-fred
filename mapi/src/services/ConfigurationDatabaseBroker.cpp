@@ -4,6 +4,61 @@
 
 #include <iomanip>
 
+
+Result<std::string,std::string> substring(std::string_view sequence, size_t& start, char delimiter, std::function<bool(const std::string&)> validator, const std::string& errorMessage)
+{
+    if(start == std::string::npos || start > sequence.size()){
+        return {.result=std::nullopt,.error="Out of bound, tried to access string at pos " + std::to_string(start) + " (size: " + std::to_string(sequence.size()) +")"};
+    }
+
+    size_t stop = sequence.find(delimiter, start+1);
+    if(stop == std::string::npos){
+        stop = sequence.size();
+    }
+
+    if(stop == start){
+        return {.result=std::nullopt,.error="Empty substring"};
+    }
+
+    std::string strPhrase{sequence.substr(start,stop-start)};
+    if(!validator(strPhrase)){
+        return {.result=std::nullopt,.error=errorMessage};
+    }
+    start=stop+1;
+    return {.result=std::move(strPhrase),.error=std::nullopt};
+}
+
+template <typename... Validators>
+Result<std::vector<std::string>, std::string> parse(std::string_view line, Validators&... validators) {
+    static_assert((std::is_invocable_r<bool,Validators,const std::string&>::value && ...), "All validators must be bool(const std::string&) callables");
+
+    std::vector<std::string> results;
+    results.reserve(sizeof...(Validators));
+
+    size_t pos = 0;
+    std::string errorMessage;
+
+    auto process_validator = [&](auto& validator) {
+        if (!errorMessage.empty()) return;
+
+        auto parsingResult = substring(line, pos, ',', validator, "Invalid token: ");
+        if (!parsingResult.success()) {
+            errorMessage = parsingResult.error.value();
+        } else {
+            results.push_back(*parsingResult.result);
+        }
+    };
+
+    (process_validator(validators), ...); // Fold expression
+
+    if (!errorMessage.empty()) {
+        return {.result=std::nullopt, .error=errorMessage};
+    }
+    return {.result=std::move(results),.error=errorMessage};
+}
+
+/// 
+
 void ConfigurationDatabaseBroker::fetchAllConfigs()
 {
     m_knownConfigs.clear();
@@ -15,50 +70,34 @@ void ConfigurationDatabaseBroker::fetchAllConfigs()
     }
 }
 
-Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsert(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertParameters(std::string_view line)
 {
-    size_t pos = 0;
-
-    std::string configurationName;
-    {
-        auto parsingResult = substring(line,pos,',',validatorConfigurationName, "Unknown configuration: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        configurationName = parsingResult.result.value();
+    //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
+    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
     }
 
-    std::string boardName;
-    {
-        auto parsingResult = substring(line,pos,',',validatorBoardName, "Unknown board: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        boardName = parsingResult.result.value();
+    const auto& tokens = result.result.value();
+    const std::string& configurationName = tokens[0];
+    const std::string& boardName = tokens[1];
+    const std::string& parameterName = tokens[2];
+    const std::string& parameterValue = tokens[3];
+    
+    auto& board = m_Boards[boardName];
+    if(board->doesExist(parameterName) == false){
+        return {.result = std::nullopt, .error = "Invalid parameter name: " + parameterName};
     }
 
-    auto boardItr = m_Boards.find(boardName);
-    auto board = boardItr->second;
-    std::string_view boradType = board->isTcm() ? "TCM" : "PM";
+    std::string boradType = board->isTcm() ? "TCM" : "PM";
 
-    std::string parameterName;
-    {
-        auto parsingResult = substring(line, pos, ',', 
-                            [&board](const std::string&parameterName){return board->doesExist(parameterName);},
-                            "Unknown parameter: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        parameterName = parsingResult.result.value();
-    }
-
-    double physcialValue = std::stod(line.substr(pos).data());
+    double physcialValue = std::stod(parameterValue);
     int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
 
     sql::InsertModel query;
     query.insert(db_tables::ConfigurationParameters::ConfigurationName.name, configurationName)
                 (db_tables::ConfigurationParameters::BoardName.name, boardName)
-                (db_tables::ConfigurationParameters::BoardType.name, boradType.data())
+                (db_tables::ConfigurationParameters::BoardType.name, boradType)
                 (db_tables::ConfigurationParameters::ParameterName.name, parameterName)
                 (db_tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).into(db_tables::ConfigurationParameters::TableName);
 
@@ -67,35 +106,16 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsert(std
 
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std::string_view line)
 {
-    size_t pos = 0;
-    std::string configurationName;
-    {
-        auto parsingResult = substring(line,pos,',',alwaysValid, {});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        configurationName = parsingResult.result.value();
+    //[CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
+    auto result = parse(line,alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
     }
-
-    std::string author;
-    {
-        auto parsingResult = substring(line,pos,',',alwaysValid,{});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        author = parsingResult.result.value();
-    }
-
-    std::string date;
-    {
-        auto parsingResult = substring(line,pos,',',alwaysValid,{});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        date = parsingResult.result.value();
-    }
-
-    std::string comment{line, pos, line.size() - pos};
+    const auto& tokens = result.result.value();
+    const std::string& configurationName = tokens[0];
+    const std::string& author = tokens[1];
+    const std::string& date = tokens[2];
+    const std::string& comment = tokens[3];
 
     m_knownConfigs.emplace(configurationName);
 
@@ -107,44 +127,28 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std
     return {.result = query.str(), .error = std::nullopt};
 }
 
-Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdate(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdateParameters(std::string_view line)
 {
-     size_t pos = 0;
-
-    std::string configurationName;
-    {
-        auto parsingResult = substring(line,pos,',',validatorConfigurationName, "Unknown configuration: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        configurationName = parsingResult.result.value();
+    //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
+    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
     }
 
-    std::string boardName;
-    {
-        auto parsingResult = substring(line,pos,',',validatorBoardName, "Unknown board: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        boardName = parsingResult.result.value();
+    const auto& tokens = result.result.value();
+    const std::string& configurationName = tokens[0];
+    const std::string& boardName = tokens[1];
+    const std::string& parameterName = tokens[2];
+    const std::string& parameterValue = tokens[3];
+    
+    auto& board = m_Boards[boardName];
+    if(board->doesExist(parameterName) == false){
+        return {.result = std::nullopt, .error = "Invalid parameter name: " + parameterName};
     }
 
-    auto boardItr = m_Boards.find(boardName);
-    auto board = boardItr->second;
     std::string boradType = board->isTcm() ? "TCM" : "PM";
 
-    std::string parameterName;
-    {
-        auto parsingResult = substring(line, pos, ',', 
-                            [&board](const std::string&parameterName){return board->doesExist(parameterName);},
-                            "Unknown parameter: ");
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        parameterName = parsingResult.result.value();
-    }
-
-    double physcialValue = std::stod(line.substr(pos).data());
+    double physcialValue = std::stod(parameterValue);
     int64_t electronicValue = board->calculateElectronic(parameterName.data(), physcialValue);
 
     sql::UpdateModel query;
@@ -157,41 +161,50 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdate(std
     return {.result = query.str(), .error = std::nullopt};
 }
 
-Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelect(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectParameters(std::string_view line)
 {
-    size_t pos = 0;
-    std::string configurationName;
-    {
-        auto parsingResult = substring(line,pos,',',alwaysValid, {});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        configurationName = parsingResult.result.value();
+    //[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ( ,[STARTING DATE] )
+    auto result = parse(line, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
     }
 
-    std::string boardName;
-    {
-        auto parsingResult = substring(line,pos,',',alwaysValid, {});
-        if(!parsingResult.success()){
-            return parsingResult;
-        }
-        boardName = parsingResult.result.value();
-    }
-    std::string parameterName{line, pos, line.size() - pos};
+    const auto& tokens = result.result.value();
+    const std::string& configurationName = tokens[0];
+    const std::string& boardName = tokens[1];
+    const std::string& parameterName = tokens[2];
+    const std::string& startDate = tokens[3];
    
     sql::SelectModel query;
+    bool where = false;
     query.select("*").from(db_tables::ConfigurationParameters::TableName);
     if(configurationName != "*"){
+        where = true;
         query.where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
     }
     if(boardName != "*"){
+        where=true;
         query.where(sql::column(db_tables::ConfigurationParameters::BoardName.name) == boardName);
     }
     if(parameterName != "*"){
+        where=true;
         query.where(sql::column(db_tables::ConfigurationParameters::ParameterName.name) == parameterName);
     }
 
-    return {.result = query.str(), .error = std::nullopt};
+    std::string queryStr = query.str();
+
+    if(startDate.length() && where)
+    {
+        std::string version = versions(startDate);
+        queryStr.insert(queryStr.find("where")-1, version);
+    }
+    else if(startDate.length())
+    {
+        std::string version = versions(startDate);
+        queryStr.append(version);
+    }
+
+    return {.result = std::move(queryStr), .error = std::nullopt};
 }
 
 void ConfigurationDatabaseBroker::processExecution()

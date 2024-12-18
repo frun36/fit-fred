@@ -1,6 +1,18 @@
 #include "DelayChange.h"
+#include "TCM.h"
 
-std::optional<DelayChange> DelayChange::fromValues(BoardCommunicationHandler& tcm, std::optional<double> newDelayA, std::optional<double> newDelayC)
+std::optional<DelayChange> DelayChange::fromPhysicalValues(BoardCommunicationHandler& tcm, std::optional<double> newDelayA, std::optional<double> newDelayC)
+{
+    if (!tcm.getBoard()->isTcm())
+        return std::nullopt;
+    
+    std::optional<int64_t> newDelayAElectronic = newDelayA.has_value() ? std::make_optional(tcm.getBoard()->calculateElectronic(string(tcm_parameters::DelayA), *newDelayA)) : std::nullopt;
+    std::optional<int64_t> newDelayCElectronic = newDelayC.has_value() ? std::make_optional(tcm.getBoard()->calculateElectronic(string(tcm_parameters::DelayC), *newDelayC)) : std::nullopt;
+
+    return fromElectronicValues(tcm, newDelayAElectronic, newDelayCElectronic);
+}
+
+std::optional<DelayChange> DelayChange::fromElectronicValues(BoardCommunicationHandler& tcm, std::optional<int64_t> newDelayA, std::optional<int64_t> newDelayC)
 {
     if (!tcm.getBoard()->isTcm())
         return std::nullopt;
@@ -12,19 +24,17 @@ std::optional<DelayChange> DelayChange::fromValues(BoardCommunicationHandler& tc
     uint32_t delayDifference = 0;
 
     if (newDelayA.has_value()) {
-        int64_t newDelayAElectronic = tcm.getBoard()->calculateElectronic("DELAY_A", *newDelayA);
-        delayDifference = abs(newDelayAElectronic - tcm.getBoard()->at("DELAY_A").getElectronicValueOptional().value_or(0));
+        delayDifference = abs(*newDelayA - tcm.getBoard()->at(tcm_parameters::DelayA).getElectronicValueOptional().value_or(0));
         if (delayDifference != 0)
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_A", newDelayA.value()));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(tcm_parameters::DelayA, *newDelayA));
     }
 
     if (newDelayC.has_value()) {
-        int64_t newDelayCElectronic = tcm.getBoard()->calculateElectronic("DELAY_C", *newDelayC);
-        uint32_t cDelayDifference = abs(newDelayCElectronic - tcm.getBoard()->at("DELAY_C").getElectronicValueOptional().value_or(0));
+        uint32_t cDelayDifference = abs(*newDelayC - tcm.getBoard()->at(tcm_parameters::DelayC).getElectronicValueOptional().value_or(0));
         if (cDelayDifference > delayDifference)
             delayDifference = cDelayDifference;
         if (cDelayDifference != 0)
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest("DELAY_C", newDelayC.value()));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(tcm_parameters::DelayC, *newDelayC));
     }
 
     return delayDifference == 0 ? nullopt : make_optional<DelayChange>(request, delayDifference);
@@ -47,7 +57,7 @@ std::optional<DelayChange> DelayChange::fromWinCCRequest(BoardCommunicationHandl
             throw runtime_error("Unexpected parameter in delay change request");
     }
 
-    return DelayChange::fromValues(tcm, newDelayA, newDelayC);
+    return DelayChange::fromPhysicalValues(tcm, newDelayA, newDelayC);
 }
 
 BoardCommunicationHandler::ParsedResponse DelayChange::apply(BasicFitIndefiniteMapi& service, BoardCommunicationHandler& tcm, bool clearReadinessChangedBits)
@@ -61,7 +71,7 @@ BoardCommunicationHandler::ParsedResponse DelayChange::apply(BasicFitIndefiniteM
         usleep((static_cast<useconds_t>(this->delayDifference) + 10) * 1000);
         if (clearReadinessChangedBits) {
             string resetReq;
-            WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest("BOARD_STATUS_SYSTEM_RESTARTED", 1));
+            WinCCRequest::appendToRequest(resetReq, WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1));
             service.processSequenceThroughHandler(tcm, resetReq, false);
         }
     }

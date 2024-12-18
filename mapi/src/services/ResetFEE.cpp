@@ -185,14 +185,14 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfiguration()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler)
 {
-    auto configuration = Configurations::BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, boardHandler.getBoard()->getName());
+    auto configuration = BoardConfigurations::fetchConfiguration(gbt::GbtConfigurationName, boardHandler.getBoard()->getName());
     if (configuration.empty()) {
         return { WinCCResponse(), { { boardHandler.getBoard()->getName(), "Fatal! GBT configuration is not defined!" } } };
     }
 
     std::stringstream request;
 
-    request << Configurations::BoardConfigurations::parseConfigurationInfo(gbt::GbtConfigurationName, configuration).req;
+    request << BoardConfigurations::parseConfigurationInfo(gbt::GbtConfigurationName, configuration).req;
     if (boardHandler.getBoard()->at(gbt::parameters::BcIdDelay).getPhysicalValueOptional() == std::nullopt) {
         request << WinCCRequest::writeRequest(gbt::parameters::BcIdDelay,
                                               static_cast<uint32_t>(m_TCM.getBoard()->getEnvironment(environment::parameters::BcIdOffsetDefault.data())))

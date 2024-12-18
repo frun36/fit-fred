@@ -12,7 +12,7 @@
 
     ->Fetch configuration parameters:
         -> request: SELECT CONFIGURATION_PARAMETERS,[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ( ,[STARTING DATE] )
-        -> response: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE] ( ,[VERSION START DATE],[VERSION END DATE] )
+        -> response: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE] ( ,[VERSIONS START DATE],[VERSIONS END DATE],[VERSIONS OPERATION] )
 
     ->Add parameter to configuration:
         ->request: INSERT CONFIGURATION_PARAMETERS,[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
@@ -25,7 +25,7 @@
 ---- CONFIGURATION TABLE ----
 
     ->Create new configuration:
-        ->request: INSERT CONFIGURATIONS,[CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
+        ->request: INSERT CONFIGURATIONS,[CONFIGURATION NAME],[AUTHOR],[COMMENT]
         ->response: -
 
     ->Fetch all configurations:
@@ -48,7 +48,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
        connect_executor("SELECT CONFIGURATION_PARAMETERS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeSelectParameters));
        
     // CONFIGURATION
-       connect_constructor("INSERT CONFIGURATIONS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructCreate));
+       connect_constructor("INSERT CONFIGURATIONS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::constructInsertConfiguration));
        connect_executor("INSERT CONFIGURATIONS", wrapMemberFunction(this, &ConfigurationDatabaseBroker::executeUpdate));
     }
     void processExecution() override;
@@ -102,7 +102,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
         return m_constructors[cmd](line);
     }
 
-    Result<std::string,std::string> constructCreate(std::string_view line);
+    Result<std::string,std::string> constructInsertConfiguration(std::string_view line);
     Result<std::string,std::string> constructInsertParameters(std::string_view line);
     Result<std::string,std::string> constructUpdateParameters(std::string_view line);
     Result<std::string,std::string> constructSelectParameters(std::string_view line);
@@ -124,12 +124,14 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
 
     std::string versions(const std::string& startDate)
     {
-        return string_utils::concatenate("VERSIONS BETWEEN timestamp to_timestamp(", startDate, ") and SYSTIMESTAMP");
+        return string_utils::concatenate(" VERSIONS BETWEEN timestamp to_timestamp('", startDate, "') and SYSTIMESTAMP ");
     }
 
     static constexpr std::string_view VersionColumns{"VERSIONS_STARTTIME,VERSIONS_ENDTIME,VERSIONS_OPERATION"};
 
 
+    static constexpr size_t SelectSize = 5;
+    static constexpr size_t SelectSizeVersions = 7;
 };
 
 

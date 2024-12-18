@@ -49,7 +49,7 @@ Result<std::vector<std::string>, std::string> parse(std::string_view line, bool 
         }
     };
 
-    (process_validator(validators), ...); // Fold expression
+    (process_validator(validators), ...); 
 
     if (!errorMessage.empty()) {
         return {.result=std::move(results), .error=errorMessage};
@@ -107,25 +107,23 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertPara
     return {.result=query.str(), .error=std::nullopt};
 }
 
-Result<std::string,std::string> ConfigurationDatabaseBroker::constructCreate(std::string_view line)
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertConfiguration(std::string_view line)
 {
-    //[CONFIGURATION NAME],[AUTHOR],[DATE],[COMMENT]
-    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    //[CONFIGURATION NAME],[AUTHOR],[COMMENT]
+    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid);
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
     const auto& tokens = result.result.value();
     const std::string& configurationName = tokens[0];
     const std::string& author = tokens[1];
-    const std::string& date = tokens[2];
-    const std::string& comment = tokens[3];
+    const std::string& comment = tokens[2];
 
     m_knownConfigs.emplace(configurationName);
 
     sql::InsertModel query;
     query.insert(db_tables::Configurations::ConfigurationName.name, configurationName)
                 (db_tables::Configurations::Author.name, author)
-                (db_tables::Configurations::Date.name, date)
                 (db_tables::Configurations::Comment.name, comment).into(db_tables::Configurations::TableName);
     return {.result = query.str(), .error = std::nullopt};
 }
@@ -198,6 +196,8 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
 
     if(startDate.length() && where)
     {
+        size_t starPos = queryStr.find("*");
+        queryStr.insert(starPos-1,string_utils::concatenate(" ",db_tables::ConfigurationParameters::TableName," "));
         std::string version = versions(startDate);
         queryStr.insert(queryStr.find("where")-1, version);
     }
@@ -305,24 +305,49 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectParame
     std::string rows;
     bool status = false;
     auto results = DatabaseInterface::executeQuery(query,status);
+    auto toPhysical = [this](const std::string& boardName, const std::string& parameterName, int64_t electronicValue){
+        double physicalValue = m_Boards[boardName]->calculatePhysical(parameterName,electronicValue);
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(3) << physicalValue;
+        return ss.str();
+    };
 
     if(!status){
         return {.result = std::nullopt, .error = "SELECT query failed: " + query};
     }
 
-    for(auto& row: results){
-        std::string boardName = row[db_tables::ConfigurationParameters::BoardName.idx]->getString();
-        std::string parameterName = row[db_tables::ConfigurationParameters::ParameterName.idx]->getString();
-        int64_t electronicValue = std::stoll(row[db_tables::ConfigurationParameters::ParameterValue.idx]->getString());
-        double physicalValue = m_Boards[boardName]->calculatePhysical(parameterName,electronicValue);
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(3) << physicalValue;
+    if(results.empty()){
+        return {.result = rows, .error = std::nullopt};
+    }
 
-        rows += row[db_tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
-        rows += boardName + ",";
-        rows += parameterName + ",";
-        rows += ss.str();
-        rows += "\n";
+    if(results[0].size() == SelectSize){
+        for(auto& row: results){
+            std::string boardName = row[db_tables::ConfigurationParameters::BoardName.idx]->getString();
+            std::string parameterName = row[db_tables::ConfigurationParameters::ParameterName.idx]->getString();
+            std::string value = toPhysical(boardName, parameterName, row[db_tables::ConfigurationParameters::ParameterValue.idx]->getDouble());
+
+            rows += row[db_tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
+            rows += boardName + ",";
+            rows += parameterName + ",";
+            rows += value;
+            rows += "\n";
+        }
+    }
+    else{
+        for(auto& row: results){
+            std::string boardName = row[db_tables::ConfigurationParameters::BoardName.idx]->getString();
+            std::string parameterName = row[db_tables::ConfigurationParameters::ParameterName.idx]->getString();
+            std::string value = toPhysical(boardName, parameterName, row[db_tables::ConfigurationParameters::ParameterValue.idx]->getDouble());
+
+            rows += row[db_tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
+            rows += boardName + ",";
+            rows += parameterName + ",";
+            rows += value + ",";
+            rows += row[5]->getString() + ",";
+            rows += row[6]->getString() + ",";
+            rows += row[7]->getString();
+            rows += "\n";
+        }
     }
     return {.result = rows, .error = std::nullopt};
 }

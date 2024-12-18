@@ -98,7 +98,7 @@ SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const Wi
     }
     
     if (electronicValue > parameter.maxValue || electronicValue < parameter.minValue) {
-        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range - value: " + std::to_string(electronicValue));
+        throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range [" + std::to_string(parameter.minValue) + "; " + std::to_string(parameter.maxValue) + "] - value: " + std::to_string(electronicValue));
     }
 
     uint32_t rawValue = m_board->convertElectronicToRaw(parameter.name, electronicValue);

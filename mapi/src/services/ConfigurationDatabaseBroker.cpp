@@ -210,6 +210,28 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
     return {.result = std::move(queryStr), .error = std::nullopt};
 }
 
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectConfiguration(std::string_view line)
+{
+    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
+    }
+    const auto& tokens = result.result.value();
+    const std::string& name = tokens[0];
+    const std::string& author = tokens[1];
+
+    sql::SelectModel query;
+    query.select("*").from(db_tables::Configurations::TableName);
+    if(name != "*"){
+        query.where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == name);
+    }
+    if(author != "*"){
+        query.where(sql::column(db_tables::Configurations::Author.name) == author);
+    }
+
+    return {.result=query.str(),.error=std::nullopt};
+}
+
 void ConfigurationDatabaseBroker::processExecution()
 {
     bool running = true;
@@ -235,17 +257,15 @@ void ConfigurationDatabaseBroker::processExecution()
     std::string errorMessage;
     std::string queriesResult;
     bool success =  true;
-    
+    string_utils::Splitter splitter(request, '\n');
+
     do {
-        lineBeg = lineEnd+1;
-        lineEnd = request.find('\n',lineBeg);
-        lineEnd = (lineEnd != std::string::npos) ? lineEnd : request.size();
-        if(lineEnd - lineBeg <= 1){
+        std::string_view line = splitter.getNext();
+        if(line.size() <= 1){
             Print::PrintWarning(name, "Line " + std::to_string(lineNumber) + " is empty. Skipping");
             continue;
         }
         size_t pos = 0;
-        std::string_view line = std::string_view(&request[lineBeg], lineEnd-lineBeg);
         Result<std::string,std::string> result;
         std::string command;
 
@@ -285,7 +305,7 @@ void ConfigurationDatabaseBroker::processExecution()
         }
         lineNumber++;
 
-    }while(lineEnd < request.size());
+    }while(splitter.reachedEnd() == false);
 
     if(!success){
         DatabaseInterface::commitUpdate(false);
@@ -363,3 +383,4 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeUpdate(const
     }
     return {.result = std::nullopt, .error = std::nullopt};
 }
+

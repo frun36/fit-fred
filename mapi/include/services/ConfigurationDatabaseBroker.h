@@ -106,6 +106,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
     Result<std::string,std::string> constructInsertParameters(std::string_view line);
     Result<std::string,std::string> constructUpdateParameters(std::string_view line);
     Result<std::string,std::string> constructSelectParameters(std::string_view line);
+    Result<std::string,std::string> constructSelectConfiguration(std::string_view line);
 
     //
     std::unordered_map<std::string, QueryExecutor> m_executors;
@@ -115,6 +116,8 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
 
     Result<std::string,std::string> executeUpdate(const std::string& query);
     Result<std::string,std::string> executeSelectParameters(const std::string& query);
+    Result<std::string,std::string> executeSelectConfiguration(const std::string& query);
+
     Result<std::string,std::string> execute(const std::string& query, const std::string& cmd)
     {
         return m_executors[cmd](query);

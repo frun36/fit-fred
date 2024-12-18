@@ -86,6 +86,33 @@ std::string concatenate(Args... args)
     (res.append(args), ...);
     return res;
 }
+
+class Splitter
+{
+    public:
+    Splitter(std::string_view sequence_, char delimiter_): sequence(sequence_), delimiter(delimiter)
+    {}
+
+    std::string_view getNext(){
+        currentStart = currentEnd+1;
+        currentEnd = sequence.find(delimiter,currentStart);
+        currentEnd = (currentEnd != std::string::npos) ? currentEnd : sequence.size();
+        return std::string_view(&sequence[currentStart], currentEnd-currentStart);
+    } 
+
+    bool reachedEnd()
+    {
+        return currentEnd >= sequence.size();
+    }
+
+    private:
+
+    const char delimiter;
+    std::string_view sequence;
+    size_t currentStart{0};
+    size_t currentEnd{0};
+};
+
 } // namespace string_utils
 
 

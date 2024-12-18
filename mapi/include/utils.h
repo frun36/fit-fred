@@ -55,16 +55,6 @@ struct Result
     }
 };
 
-template<typename ObjectType, typename ResultType, typename ...Args>
-std::function<ResultType(Args...)> wrapMemberFunction(ObjectType* obj, ResultType (ObjectType::*func)(Args...)){
-    return [obj,func](Args... args)->ResultType{return (obj->*func)(std::forward<Args>(args)...);};
-}
-
-// constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)
-// {
-//     if((last - first + 1u) == 32u) return word;
-//     return static_cast<uint32_t>( (word >> first) & ( (1u << (last - first + 1u)) - 1u));
-// }
 
 template <typename WordType>
 WordType getBitField(WordType word, uint8_t first, uint8_t length)
@@ -98,6 +88,23 @@ public:
         }
 
         size_t pos = sequence.find(delimiter, currentStart);
+        size_t tokenEnd = (pos == std::string::npos) ? sequence.size() : pos;
+        std::string_view token = sequence.substr(currentStart, tokenEnd - currentStart);
+        if (pos == std::string::npos) {
+            currentStart = sequence.size();
+        } else {
+            currentStart = pos + 1;
+        }
+
+        return token;
+    }
+
+    std::string_view getNext(size_t& pos) {
+        if (reachedEnd()) {
+            throw std::out_of_range("Reached end of sequence");
+        }
+
+        pos = sequence.find(delimiter, currentStart);
         size_t tokenEnd = (pos == std::string::npos) ? sequence.size() : pos;
         std::string_view token = sequence.substr(currentStart, tokenEnd - currentStart);
         if (pos == std::string::npos) {

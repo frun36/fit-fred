@@ -272,6 +272,7 @@ void ConfigurationDatabaseBroker::processExecution()
             break;
         }
 
+        Print::PrintData("Executing query: " + result.result.value());
         auto queryResult = execute(result.result.value(), command);
         if(queryResult.success() == false){
             success = false;
@@ -279,6 +280,7 @@ void ConfigurationDatabaseBroker::processExecution()
             break;
         }
         if(queryResult.result.has_value()){
+            Print::PrintData("Query result: " + queryResult.result.value());
             queriesResult.append(queryResult.result.value());
         }
         lineNumber++;

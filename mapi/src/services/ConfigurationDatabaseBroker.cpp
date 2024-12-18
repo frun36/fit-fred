@@ -4,64 +4,6 @@
 
 #include <iomanip>
 
-
-Result<std::string,std::string> substring(std::string_view sequence, size_t& start, char delimiter, std::function<bool(const std::string&)> validator, const std::string& errorMessage)
-{
-    if(start == std::string::npos || start > sequence.size()){
-        return {.result=std::nullopt,.error="Out of bound, tried to access string at pos " + std::to_string(start) + " (size: " + std::to_string(sequence.size()) +")"};
-    }
-
-    size_t stop = sequence.find(delimiter, start+1);
-    if(stop == std::string::npos){
-        stop = sequence.size();
-    }
-
-    if(stop == start){
-        return {.result=std::nullopt,.error="Empty substring"};
-    }
-
-    std::string strPhrase{sequence.substr(start,stop-start)};
-    if(!validator(strPhrase)){
-        return {.result=std::nullopt,.error=errorMessage};
-    }
-    start=stop+1;
-    return {.result=std::move(strPhrase),.error=std::nullopt};
-}
-
-template <typename... Validators>
-Result<std::vector<std::string>, std::string> parse(std::string_view line, bool isPartialValid, Validators&... validators) {
-    static_assert((std::is_invocable_r<bool,Validators,const std::string&>::value && ...), "All validators must be bool(const std::string&) callables");
-
-    std::vector<std::string> results;
-    results.reserve(sizeof...(Validators));
-
-    size_t pos = 0;
-    std::string errorMessage;
-
-    auto process_validator = [&](auto& validator) {
-        if (!errorMessage.empty() || pos >= line.size()) return;
-
-        auto parsingResult = substring(line, pos, ',', validator, "Invalid token: ");
-        if (!parsingResult.success()) {
-            errorMessage = parsingResult.error.value();
-        } else {
-            results.push_back(*parsingResult.result);
-        }
-    };
-
-    (process_validator(validators), ...); 
-
-    if (!errorMessage.empty()) {
-        return {.result=std::move(results), .error=errorMessage};
-    }
-    if(!isPartialValid && results.size() < (sizeof...(Validators))){
-        return {.result=std::nullopt, .error="Missing tokens: " + std::to_string(results.size()) + " parsed, expected " + std::to_string(sizeof...(Validators))};
-    }
-    return {.result=std::move(results),.error=std::nullopt};
-}
-
-/// 
-
 void ConfigurationDatabaseBroker::fetchAllConfigs()
 {
     m_knownConfigs.clear();
@@ -76,7 +18,7 @@ void ConfigurationDatabaseBroker::fetchAllConfigs()
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertParameters(std::string_view line)
 {
     //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
-    auto result = parse(line, false, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    auto result = string_utils::Splitter::getAll(line,',');
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -110,7 +52,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertPara
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertConfiguration(std::string_view line)
 {
     //[CONFIGURATION NAME],[AUTHOR],[COMMENT]
-    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid);
+    auto result = string_utils::Splitter::getAll(line,',');
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -131,7 +73,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertConf
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdateParameters(std::string_view line)
 {
     //[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE]
-    auto result = parse(line, false, validatorConfigurationName, validatorBoardName, alwaysValid, alwaysValid);
+    auto result = string_utils::Splitter::getAll(line,',');
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -165,16 +107,14 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructUpdatePara
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectParameters(std::string_view line)
 {
     //[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ( ,[STARTING DATE] )
-    auto result = parse(line, true, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    auto result = string_utils::Splitter::getAll(line,',');
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
-
     const auto& tokens = result.result.value();
     const std::string& configurationName = tokens[0];
     const std::string& boardName = tokens[1];
     const std::string& parameterName = tokens[2];
-    std::string startDate = (tokens.size() == 4) ? tokens[3] : std::string();
    
     sql::SelectModel query;
     bool where = false;
@@ -194,15 +134,19 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
 
     std::string queryStr = query.str();
 
-    if(startDate.length() && where)
+    if((tokens.size() == 4) && where)
     {
+        const std::string& startDate = tokens[3];
         queryStr.insert(queryStr.find("*"),string_utils::concatenate(" ",db_tables::ConfigurationParameters::TableName,"."));
         queryStr.insert(queryStr.find("*")+1,string_utils::concatenate(",",VersionColumns));
         std::string version = versions(startDate);
         queryStr.insert(queryStr.find("where")-1, version);
     }
-    else if(startDate.length())
+    else if(tokens.size() == 4)
     {
+        const std::string& startDate = tokens[3];
+        queryStr.insert(queryStr.find("*"),string_utils::concatenate(" ",db_tables::ConfigurationParameters::TableName,"."));
+        queryStr.insert(queryStr.find("*")+1,string_utils::concatenate(",",VersionColumns));
         std::string version = versions(startDate);
         queryStr.append(version);
     }
@@ -212,7 +156,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
 
 Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectConfiguration(std::string_view line)
 {
-    auto result = parse(line, false, alwaysValid, alwaysValid, alwaysValid, alwaysValid);
+    auto result = string_utils::Splitter::getAll(line,',');
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
@@ -265,18 +209,14 @@ void ConfigurationDatabaseBroker::processExecution()
             Print::PrintWarning(name, "Line " + std::to_string(lineNumber) + " is empty. Skipping");
             continue;
         }
+
         size_t pos = 0;
         Result<std::string,std::string> result;
         std::string command;
 
         try{
-            auto cmdParsingResult = substring(line,pos,',',validatorCommand,"Invalid command");
-            if(cmdParsingResult.success() == false){
-                errorMessage = cmdParsingResult.error.value();
-                success = false;
-                break;
-            }
-            command = cmdParsingResult.result.value();
+            string_utils::Splitter splitter(line,',');
+            command = splitter.getNext();
             result = construct(line.substr(pos), command);
         }
         catch(std::runtime_error& err){

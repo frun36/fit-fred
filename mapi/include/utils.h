@@ -87,30 +87,58 @@ std::string concatenate(Args... args)
     return res;
 }
 
-class Splitter
-{
-    public:
-    Splitter(std::string_view sequence_, char delimiter_): sequence(sequence_), delimiter(delimiter)
-    {}
+class Splitter {
+public:
+    Splitter(std::string_view sequence_, char delimiter_)
+        : sequence(sequence_), delimiter(delimiter_), currentStart(0), currentEnd(0) {}
 
-    std::string_view getNext(){
-        currentStart = currentEnd+1;
-        currentEnd = sequence.find(delimiter,currentStart);
-        currentEnd = (currentEnd != std::string::npos) ? currentEnd : sequence.size();
-        return std::string_view(&sequence[currentStart], currentEnd-currentStart);
-    } 
+    std::string_view getNext() {
+        if (reachedEnd()) {
+            throw std::out_of_range("Reached end of sequence");
+        }
 
-    bool reachedEnd()
-    {
-        return currentEnd >= sequence.size();
+        size_t pos = sequence.find(delimiter, currentStart);
+        size_t tokenEnd = (pos == std::string::npos) ? sequence.size() : pos;
+        std::string_view token = sequence.substr(currentStart, tokenEnd - currentStart);
+        if (pos == std::string::npos) {
+            currentStart = sequence.size();
+        } else {
+            currentStart = pos + 1;
+        }
+
+        return token;
     }
 
-    private:
+    static Result<std::vector<std::string>,std::string> getAll(std::string_view sequence_, char delimiter_){
+        Splitter splitter(sequence_,delimiter_);
+        std::vector<std::string> substrings;
+        try{
+            while(splitter.reachedEnd()==false){
+                std::string_view next = splitter.getNext();
+                substrings.emplace_back(next,0,next.size());
+            }
+        }
+        catch(std::exception& e){
+            return {.result=std::nullopt,.error=e.what()};
+        }
+        return {.result=std::move(substrings),.error=std::nullopt};
+    }
 
-    const char delimiter;
+
+    bool reachedEnd() const {
+        return sequence.empty() || currentStart >= sequence.size();
+    }
+
+    void reset() {
+        currentStart = 0;
+        currentEnd = 0;
+    }
+
+private:
     std::string_view sequence;
-    size_t currentStart{0};
-    size_t currentEnd{0};
+    const char delimiter;
+    size_t currentStart;
+    size_t currentEnd;
 };
 
 } // namespace string_utils

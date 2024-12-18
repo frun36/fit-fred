@@ -197,7 +197,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
     if(startDate.length() && where)
     {
         queryStr.insert(queryStr.find("*"),string_utils::concatenate(" ",db_tables::ConfigurationParameters::TableName,"."));
-        queryStr.insert(queryStr.find("*"),string_utils::concatenate(",",VersionColumns));
+        queryStr.insert(queryStr.find("*")+1,string_utils::concatenate(",",VersionColumns));
         std::string version = versions(startDate);
         queryStr.insert(queryStr.find("where")-1, version);
     }

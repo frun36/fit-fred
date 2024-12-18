@@ -343,9 +343,9 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectParame
             rows += boardName + ",";
             rows += parameterName + ",";
             rows += value + ",";
-            rows += row[5]->getString() + ",";
-            rows += row[6]->getString() + ",";
-            rows += row[7]->getString();
+            rows += (row[5] != nullptr) ? (row[5]->getString() + ",") : "NULL,";
+            rows += (row[6] != nullptr) ? (row[6]->getString() + ",") : "NULL,";
+            rows += (row[7] != nullptr) ? (row[7]->getString() + ",") : "NULL,";
             rows += "\n";
         }
     }

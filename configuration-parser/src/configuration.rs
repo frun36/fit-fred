@@ -5,6 +5,7 @@ use std::{
     io::{BufWriter, Write},
 };
 
+use colored::Colorize;
 use sql::ConfigurationParametersEntry;
 
 use crate::{
@@ -136,8 +137,9 @@ impl Configuration {
         tcm_map: &BoardMap,
         pm_map: &BoardMap,
         author: &str,
+        output_dir: &str
     ) -> Result<(), Box<dyn Error>> {
-        let path = format!("sql/{}.sql", self.name);
+        let path = format!("{output_dir}/{}.sql", self.name);
         println!("Saving configuration '{}' into '{}'", self.name, path);
         let f = File::create(path)?;
         let mut buff = BufWriter::new(f);
@@ -168,7 +170,7 @@ impl Configuration {
             writeln!(buff)?;
         }
 
-        println!("Configuration '{}' done", self.name);
+        println!("{}: Configuration '{}' done", "Ok".green(), self.name);
 
         Ok(())
     }

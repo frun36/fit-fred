@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::{boards::ParameterInfo, error::Error as CrateError};
 
 #[derive(Clone, Debug)]
@@ -19,7 +21,7 @@ impl Register {
     pub fn insert_parameter(&mut self, p: ParameterInfo) -> Result<(), CrateError> {
         if p.base_address != self.base_address {
             return Err(CrateError::msg(format!(
-                "Parameter {} not in register {:02x}",
+                "Parameter {} not in register {:04X}",
                 p.param_name, self.base_address
             )));
         }
@@ -38,7 +40,8 @@ impl Register {
             let prev = self.parameters.get(position - 1).unwrap();
             if prev.start_bit <= p.start_bit && prev.end_bit >= p.end_bit {
                 return Err(CrateError::msg(format!(
-                    "Warning: parameter '{}' [{}:{}] overshadowed by '{}' [{}:{}]",
+                    "{}: parameter '{}' [{}:{}] overshadowed by '{}' [{}:{}]",
+                    "Warning".yellow(),
                     p.param_name,
                     p.end_bit,
                     p.start_bit,

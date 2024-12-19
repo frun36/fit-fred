@@ -24,14 +24,16 @@ impl ConfigurationParametersEntry {
         configuration_name: &str,
         board_name: &str,
         board_type: &str,
-    ) -> Result<Vec<Self>, crate::error::Error> {
+    ) -> Option<Vec<Self>> {
         let reg_value = match reg.value {
             Some(v) => v,
             None => {
-                return Err(Error::msg(format!(
-                    "Register {:4X} is empty",
-                    reg.base_address
-                )))
+                // println!(
+                //     "{}: no register {:04X} in configuration",
+                //     "Warning".yellow(),
+                //     reg.base_address,
+                // );
+                return None;
             }
         };
 
@@ -54,7 +56,7 @@ impl ConfigurationParametersEntry {
             })
             .collect();
 
-        Ok(vec)
+        Some(vec)
     }
 
     pub fn parse_board(
@@ -66,12 +68,9 @@ impl ConfigurationParametersEntry {
         let result = board_map
             .map
             .values()
-            .map(|reg| Self::parse_register(reg, configuration_name, board_name, board_type))
-            .collect::<Result<Vec<Vec<ConfigurationParametersEntry>>, Error>>()?
-            .iter()
+            .filter_map(|reg| Self::parse_register(reg, configuration_name, board_name, board_type))
             .flat_map(|c| c.clone().to_owned())
             .collect();
-
         Ok(result)
     }
 }

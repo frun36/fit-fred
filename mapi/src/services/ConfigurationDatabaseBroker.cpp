@@ -353,5 +353,24 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeUpdate(const
 
 Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectConfiguration(const std::string& query)
 {
+    std::string rows;
+    bool status = false;
+    auto results = DatabaseInterface::executeQuery(query,status);
 
+    if(!status){
+        return {.result = std::nullopt, .error = "SELECT query failed: " + query};
+    }
+
+    if(results.empty()){
+        return {.result = rows, .error = std::nullopt};
+    }
+
+    for(auto& row: results){
+        rows += row[db_tables::Configurations::ConfigurationName.idx]->getString() + ",";
+        rows += row[db_tables::Configurations::Author.idx]->getString() + ",";
+        rows += row[db_tables::Configurations::Date.idx]->getString() + ",";
+        rows += row[db_tables::Configurations::Comment.idx]->getString();
+        rows += "\n";
+    }
+    return {.result = rows, .error = std::nullopt};
 }

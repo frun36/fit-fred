@@ -15,6 +15,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
         UpdateParameter::Initialize(this);
         SelectParameter::Initialize(this);
         SelectParameterVersion::Initialize(this);
+        DeleteParameter::Initialize(this);
       
         InsertConfiguration::Initialize(this);
         SelectConfiguration::Initialize(this);
@@ -46,6 +47,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
     Result<std::string,std::string> constructSelectParameters(std::string_view line);
     Result<std::string,std::string> constructSelectVersionsParameters(std::string_view line);
     Result<std::string,std::string> constructSelectConfiguration(std::string_view line);
+    Result<std::string,std::string> constructDeleteParameter(std::string_view line);
 
 /*
     =   =   =   Executors   =   =   =
@@ -248,6 +250,32 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
         const std::string& configName;
         const std::string& author;
         const std::string& comment;
+    };
+
+/*
+    -> request: DELETE CONFIGURATION_PARAMETERS,[CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME]
+*/
+    struct DeleteParameter
+    {
+        static constexpr size_t ExpectedSize = 3;
+        static constexpr std::string_view Command = "DELETE CONFIGURATION_PARAMETERS";
+
+        static void Initialize(ConfigurationDatabaseBroker* broker)
+        {
+            broker->connect_constructor(Command.data(), std::bind(&ConfigurationDatabaseBroker::constructDeleteParameter,broker,std::placeholders::_1));
+            broker->connect_executor(Command.data(), std::bind(&ConfigurationDatabaseBroker::executeUpdate, broker, std::placeholders::_1));
+        }
+
+        DeleteParameter(const std::vector<std::string>& tokens):
+            configName(tokens[0]),
+            boardName(tokens[1]),
+            paramName(tokens[2])
+        {     
+        }
+
+        const std::string& configName;
+        const std::string& boardName;
+        const std::string& paramName;
     };
 
 };

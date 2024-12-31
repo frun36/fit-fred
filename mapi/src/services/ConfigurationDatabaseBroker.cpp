@@ -263,6 +263,25 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectConf
     return {.result=query.str(),.error=std::nullopt};
 }
 
+Result<std::string,std::string> ConfigurationDatabaseBroker::constructDeleteParameter(std::string_view line)
+{
+    auto result = string_utils::Splitter::getAll(line,',');
+    if(result.success() == false){
+        return {.result = std::nullopt, .error = result.error};
+    }
+    if(result.result->size() != DeleteParameter::ExpectedSize){
+        return {.result = std::nullopt, .error = "Unexpected number of tokens: " + std::to_string(result.result->size())};
+    }
+    DeleteParameter deletion( result.result.value());
+
+    sql::DeleteModel query;
+    query.from(db_tables::ConfigurationParameters::TableName);
+    query.where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == deletion.configName);
+    query.where(sql::column(db_tables::ConfigurationParameters::BoardName.name) == deletion.boardName);
+    query.where(sql::column(db_tables::ConfigurationParameters::ParameterName.name) == deletion.paramName);
+    return {.result=query.str(), .error = std::nullopt};
+}
+
 
 /*
     =   =   =   Executors   =   =   =
@@ -374,3 +393,4 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectConfig
     }
     return {.result = rows, .error = std::nullopt};
 }
+

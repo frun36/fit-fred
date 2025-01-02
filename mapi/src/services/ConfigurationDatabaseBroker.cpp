@@ -41,7 +41,7 @@ void ConfigurationDatabaseBroker::processExecution()
         try{
             string_utils::Splitter splitter(line,',');
             command = splitter.getNext(pos);
-            result = construct(line.substr(pos), command);
+            result = construct(line.substr(pos+1), command);
         }
         catch(std::runtime_error& err){
             result = {.result=std::nullopt, .error = err.what()};
@@ -186,7 +186,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructSelectPara
     if(result.success() == false){
         return {.result = std::nullopt, .error = result.error};
     }
-    if(result.result->size() != SelectParameterVersion::ExpectedSize){
+    if(result.result->size() != SelectParameter::ExpectedSize){
         return {.result = std::nullopt, .error = "Unexpected number of tokens: " + std::to_string(result.result->size())};
     }
     SelectParameter select(result.result.value());

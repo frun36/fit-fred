@@ -110,7 +110,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::constructInsertPara
 
     std::string boradType = board->isTcm() ? "TCM" : "PM";
 
-    double physcialValue = std::stod(insert.paramName);
+    double physcialValue = std::stod(insert.value);
     int64_t electronicValue = board->calculateElectronic(insert.paramName, physcialValue);
 
     sql::InsertModel query;

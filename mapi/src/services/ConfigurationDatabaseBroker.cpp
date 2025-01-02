@@ -388,7 +388,7 @@ Result<std::string,std::string> ConfigurationDatabaseBroker::executeSelectConfig
         rows += row[db_tables::Configurations::ConfigurationName.idx]->getString() + ",";
         rows += row[db_tables::Configurations::Author.idx]->getString() + ",";
         rows += row[db_tables::Configurations::Date.idx]->getString() + ",";
-        rows += row[db_tables::Configurations::Comment.idx]->getString();
+        rows += (row[db_tables::Configurations::Comment.idx] != nullptr) ? row[db_tables::Configurations::Comment.idx]->getString(): "NULL";
         rows += "\n";
     }
     return {.result = rows, .error = std::nullopt};

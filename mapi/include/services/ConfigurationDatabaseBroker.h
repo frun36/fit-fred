@@ -174,7 +174,7 @@ class ConfigurationDatabaseBroker: public IndefiniteMapi
 
 /*
     Fetch configuration parameters versions:
-        -> request: SELECT CONFIGURATION_PARAMETERS,[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ,[STARTING DATE]
+        -> request: SELECT VERSIONS CONFIGURATION_PARAMETERS,[CONFIGURATION NAME / *],[BOARD NAME / *],[PARAMETER NAME / *] ,[STARTING DATE]
         -> response: [CONFIGURATION NAME],[BOARD NAME],[PARAMETER NAME],[PHYSICAL VALUE],[VERSIONS START DATE],[VERSIONS END DATE],[VERSIONS OPERATION] 
 */
     struct SelectParameterVersion

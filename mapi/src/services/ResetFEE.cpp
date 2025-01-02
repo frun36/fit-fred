@@ -109,11 +109,15 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 {
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
+    Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
+    spiMask.storeValue(0x0, 0x0);
+    
 
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
+        uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 9 : 0;
         {
-            auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, true));
+            auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
             }
@@ -122,9 +126,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
         {
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
-                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
             } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
-                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
             }
         }
     }
@@ -233,10 +237,6 @@ std::string ResetFEE::seqSetResetFinished()
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    if (spiMask.getPhysicalValueOptional() == std::nullopt) {
-        spiMask.storeValue(0x0, 0x0);
-    }
-
     uint32_t masked = static_cast<uint32_t>(spiMask.getPhysicalValue()) & (~(static_cast<uint32_t>(1u) << idx));
     masked |= static_cast<uint32_t>(mask) << idx;
 

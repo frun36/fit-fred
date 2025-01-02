@@ -71,9 +71,10 @@ const Column Parameters::MaxValue{ 7, "MAX_VALUE" };
 const Column Parameters::IsSigned{ 8, "IS_SIGNED" };
 const Column Parameters::IsFifo{ 9, "IS_FIFO" };
 const Column Parameters::IsReadOnly{ 10, "IS_READ_ONLY" };
-const Column Parameters::EqElectronicToPhysic{ 11, "EQ_ELECTRONIC_TO_PHYSIC" };
-const Column Parameters::EqPhysicToElectronic{ 12, "EQ_PHYSIC_TO_ELECTRONIC" };
-const Column Parameters::RefreshType{ 13, "REFRESH_TYPE" };
+const Column Parameters::IsAutoReset{ 11, "AUTO-RESET"};
+const Column Parameters::EqElectronicToPhysic{ 12, "EQ_ELECTRONIC_TO_PHYSIC" };
+const Column Parameters::EqPhysicToElectronic{ 13, "EQ_PHYSIC_TO_ELECTRONIC" };
+const Column Parameters::RefreshType{ 14, "REFRESH_TYPE" };
 const std::string Parameters::RefreshSYNC{ "SYNC" };
 const std::string Parameters::RefreshCNT{ "CNT" };
 

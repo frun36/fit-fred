@@ -38,6 +38,7 @@ Board::ParameterInfo::ParameterInfo(const Board::ParameterInfo& base, uint32_t b
                                                                                                isFifo(base.isFifo),
                                                                                                isReadonly(base.isReadonly),
                                                                                                refreshType(base.refreshType),
+                                                                                               isAutoReset(base.isAutoReset),
                                                                                                m_physicalValue(std::nullopt)
 {
 }
@@ -55,6 +56,7 @@ Board::ParameterInfo::ParameterInfo(
     Equation physicToRaw_,
     bool isFifo_,
     bool isReadonly_,
+    bool isAutoReset_,
     RefreshType refreshType_) : name(name_),
                                 baseAddress(baseAddress_),
                                 startBit(startBit_),
@@ -68,6 +70,7 @@ Board::ParameterInfo::ParameterInfo(
                                 isFifo(isFifo_),
                                 isReadonly(isReadonly_),
                                 refreshType(refreshType_),
+                                isAutoReset(isAutoReset_),
                                 m_physicalValue(std::nullopt) {}
 
 bool Board::emplace(const ParameterInfo& info)

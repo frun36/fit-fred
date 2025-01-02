@@ -58,6 +58,7 @@ class Parameters
     static const Column IsSigned;
     static const Column IsFifo;
     static const Column IsReadOnly;
+    static const Column IsAutoReset;
     static const Column EqElectronicToPhysic;
     static const Column EqPhysicToElectronic;
     static const Column RefreshType;

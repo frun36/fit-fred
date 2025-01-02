@@ -152,7 +152,10 @@ void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line
 
             Board::ParameterInfo info = m_board->at(parameterToHandle.name);
 
-            if (parameterToHandle.toCompare.has_value() && getBitField(read.frame.data, info.startBit, info.bitLength) != parameterToHandle.toCompare.value()) {
+            if ((!info.isAutoReset) 
+                && parameterToHandle.toCompare.has_value()
+                && (getBitField(read.frame.data, info.startBit, info.bitLength) != parameterToHandle.toCompare.value()) 
+                ) {
                 report.emplace_back(
                     parameterToHandle.name,
                     "WRITE FAILED: Received " + std::to_string(value) +

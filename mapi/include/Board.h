@@ -51,6 +51,7 @@ class Board
             Equation physicToElectronic,
             bool isFifo,
             bool isReadonly,
+            bool isAutoReset,
             RefreshType refreshType = RefreshType::NOT);
 
         const std::string name{ 0 };
@@ -67,6 +68,7 @@ class Board
 
         const bool isFifo{ false };
         const bool isReadonly{ false };
+        const bool isAutoReset{ false };
 
         const RefreshType refreshType;
 

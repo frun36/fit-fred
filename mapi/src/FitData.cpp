@@ -224,6 +224,7 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
         physicToElectronic,
         db_tables::boolean::parse(dbRow[db_tables::Parameters::IsFifo.idx]),
         db_tables::boolean::parse(dbRow[db_tables::Parameters::IsReadOnly.idx]),
+        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsAutoReset.idx]),
         refreshType
     };
 }

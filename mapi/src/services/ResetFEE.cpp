@@ -108,21 +108,20 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 {
+    bool isConnected[20] = {false};
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    spiMask.storeValue(0x0, 0x0);
     
-
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
         uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 9 : 0;
+        isConnected[pmIdx+baseIdx] = true;
         {
             auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
             }
         }
-
         {
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
@@ -130,6 +129,19 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
             } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
             }
+        }
+    }
+
+    std::string clearNotConnected;
+    for(int idx = 0; idx < 20; idx++){
+        if(isConnected[idx] == false){
+            clearNotConnected += seqMaskPMLink(idx,false) + "\n";
+        }
+    }
+    {
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, clearNotConnected);
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
         }
     }
 

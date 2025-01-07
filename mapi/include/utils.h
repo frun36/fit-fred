@@ -45,16 +45,16 @@ IntegerType twosComplementDecode(RawType code, uint32_t bitsNumber)
     }
 }
 
-template<typename ResultType, typename ErrorType>
-struct Result
-{
-    std::optional<ResultType> result;
+template <typename OkType, typename ErrorType>
+struct Result {
+    std::optional<OkType> ok;
     std::optional<ErrorType> error;
-    bool success(){
+
+    bool isOk()
+    {
         return !error.has_value();
     }
 };
-
 
 template <typename WordType>
 WordType getBitField(WordType word, uint8_t first, uint8_t length)
@@ -77,12 +77,14 @@ std::string concatenate(Args... args)
     return res;
 }
 
-class Splitter {
-public:
+class Splitter
+{
+   public:
     Splitter(std::string_view sequence_, char delimiter_)
         : sequence(sequence_), delimiter(delimiter_), currentStart(0), currentEnd(0) {}
 
-    std::string_view getNext() {
+    std::string_view getNext()
+    {
         if (reachedEnd()) {
             throw std::out_of_range("Reached end of sequence");
         }
@@ -99,7 +101,8 @@ public:
         return token;
     }
 
-    std::string_view getNext(size_t& pos) {
+    std::string_view getNext(size_t& pos)
+    {
         if (reachedEnd()) {
             throw std::out_of_range("Reached end of sequence");
         }
@@ -116,32 +119,33 @@ public:
         return token;
     }
 
-    static Result<std::vector<std::string>,std::string> getAll(std::string_view sequence_, char delimiter_){
-        Splitter splitter(sequence_,delimiter_);
+    static Result<std::vector<std::string>, std::string> getAll(std::string_view sequence_, char delimiter_)
+    {
+        Splitter splitter(sequence_, delimiter_);
         std::vector<std::string> substrings;
-        try{
-            while(splitter.reachedEnd()==false){
+        try {
+            while (splitter.reachedEnd() == false) {
                 std::string_view next = splitter.getNext();
-                substrings.emplace_back(next,0,next.size());
+                substrings.emplace_back(next, 0, next.size());
             }
+        } catch (std::exception& e) {
+            return { .ok = std::nullopt, .error = e.what() };
         }
-        catch(std::exception& e){
-            return {.result=std::nullopt,.error=e.what()};
-        }
-        return {.result=std::move(substrings),.error=std::nullopt};
+        return { .ok = std::move(substrings), .error = std::nullopt };
     }
 
-
-    bool reachedEnd() const {
+    bool reachedEnd() const
+    {
         return sequence.empty() || currentStart >= sequence.size();
     }
 
-    void reset() {
+    void reset()
+    {
         currentStart = 0;
         currentEnd = 0;
     }
 
-private:
+   private:
     std::string_view sequence;
     const char delimiter;
     size_t currentStart;
@@ -149,7 +153,5 @@ private:
 };
 
 } // namespace string_utils
-
-
 
 #endif

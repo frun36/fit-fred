@@ -114,7 +114,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
     
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
-        uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 9 : 0;
+        uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 10 : 0;
         isConnected[pmIdx+baseIdx] = true;
         {
             auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));

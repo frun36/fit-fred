@@ -43,7 +43,7 @@ class FitData
     void parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTable);
 
     std::list<std::string> constructStatusParametersList(std::string_view boardName);
-    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main = nullptr);
+    std::shared_ptr<Board> constructBoardFromTemplate(std::string name, uint32_t address, bool isConnected, std::shared_ptr<Board> templateBoard, std::shared_ptr<Board> main = nullptr);
 
     bool checkEnvironment();
 

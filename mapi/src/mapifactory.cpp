@@ -26,6 +26,10 @@ void MapiFactory::generateObjects()
     std::vector<std::shared_ptr<Board>> pms;
     for (auto [boardName, board] : boardsData.getBoards()) {
         string section;
+        if(board->isConnected() == false){
+            continue;
+        }
+
         if (boardName.find("TCM") != std::string::npos) {
             section = "TCM";
             tcm = board;
@@ -55,4 +59,6 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), m_resetError.get());
     m_setPhaseDelay = std::make_unique<SetPhaseDelay>(tcm);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
+    m_saveConfiguration = std::make_unique<ConfigurationDatabaseBroker>(boardsData.getBoards());
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/CONFIGURATION_DB_BROKER"), m_saveConfiguration.get());
 }

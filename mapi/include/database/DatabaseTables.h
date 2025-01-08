@@ -94,6 +94,9 @@ class Configurations
     static const std::string TableName;
 
     static const Column ConfigurationName;
+    static const Column Author;
+    static const Column Date;
+    static const Column Comment;
 };
 
 class ConfigurationParameters

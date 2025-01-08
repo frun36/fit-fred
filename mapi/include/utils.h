@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <functional>
 
 template <typename IntegerType, typename RawType>
 RawType twosComplementEncode(IntegerType value, uint32_t bitsNumber)
@@ -44,11 +45,16 @@ IntegerType twosComplementDecode(RawType code, uint32_t bitsNumber)
     }
 }
 
-// constexpr uint32_t getBitField(uint32_t word, uint8_t first, uint8_t last)
-// {
-//     if((last - first + 1u) == 32u) return word;
-//     return static_cast<uint32_t>( (word >> first) & ( (1u << (last - first + 1u)) - 1u));
-// }
+template <typename OkType, typename ErrorType>
+struct Result {
+    std::optional<OkType> ok;
+    std::optional<ErrorType> error;
+
+    bool isOk()
+    {
+        return !error.has_value();
+    }
+};
 
 template <typename WordType>
 WordType getBitField(WordType word, uint8_t first, uint8_t length)
@@ -70,8 +76,82 @@ std::string concatenate(Args... args)
     (res.append(args), ...);
     return res;
 }
+
+class Splitter
+{
+   public:
+    Splitter(std::string_view sequence_, char delimiter_)
+        : sequence(sequence_), delimiter(delimiter_), currentStart(0), currentEnd(0) {}
+
+    std::string_view getNext()
+    {
+        if (reachedEnd()) {
+            throw std::out_of_range("Reached end of sequence");
+        }
+
+        size_t pos = sequence.find(delimiter, currentStart);
+        size_t tokenEnd = (pos == std::string::npos) ? sequence.size() : pos;
+        std::string_view token = sequence.substr(currentStart, tokenEnd - currentStart);
+        if (pos == std::string::npos) {
+            currentStart = sequence.size();
+        } else {
+            currentStart = pos + 1;
+        }
+
+        return token;
+    }
+
+    std::string_view getNext(size_t& pos)
+    {
+        if (reachedEnd()) {
+            throw std::out_of_range("Reached end of sequence");
+        }
+
+        pos = sequence.find(delimiter, currentStart);
+        size_t tokenEnd = (pos == std::string::npos) ? sequence.size() : pos;
+        std::string_view token = sequence.substr(currentStart, tokenEnd - currentStart);
+        if (pos == std::string::npos) {
+            currentStart = sequence.size();
+        } else {
+            currentStart = pos + 1;
+        }
+
+        return token;
+    }
+
+    static Result<std::vector<std::string>, std::string> getAll(std::string_view sequence_, char delimiter_)
+    {
+        Splitter splitter(sequence_, delimiter_);
+        std::vector<std::string> substrings;
+        try {
+            while (splitter.reachedEnd() == false) {
+                std::string_view next = splitter.getNext();
+                substrings.emplace_back(next, 0, next.size());
+            }
+        } catch (std::exception& e) {
+            return { .ok = std::nullopt, .error = e.what() };
+        }
+        return { .ok = std::move(substrings), .error = std::nullopt };
+    }
+
+    bool reachedEnd() const
+    {
+        return sequence.empty() || currentStart >= sequence.size();
+    }
+
+    void reset()
+    {
+        currentStart = 0;
+        currentEnd = 0;
+    }
+
+   private:
+    std::string_view sequence;
+    const char delimiter;
+    size_t currentStart;
+    size_t currentEnd;
+};
+
 } // namespace string_utils
-
-
 
 #endif

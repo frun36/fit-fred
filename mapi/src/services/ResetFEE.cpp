@@ -132,14 +132,14 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
         }
     }
 
-    std::string clearNotConnected;
+    uint32_t currentMask = spiMask.getElectronicValue();
     for(int idx = 0; idx < 20; idx++){
         if(isConnected[idx] == false){
-            clearNotConnected += seqMaskPMLink(idx,false) + "\n";
+            currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
         }
     }
     {
-        auto parsedResponse = processSequenceThroughHandler(m_TCM, clearNotConnected);
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }

@@ -146,7 +146,7 @@ impl Configuration {
 
         writeln!(
             buff,
-            "INSERT INTO configurations (configuration_name, author) VALUES ('{}', '{}');",
+            "INSERT INTO configurations (configuration_name, author, comments) VALUES ('{}', '{}', 'Control Server configuration, parsed with configuration-parser');",
             self.name, author
         )?;
         writeln!(buff)?;

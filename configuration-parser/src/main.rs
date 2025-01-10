@@ -18,13 +18,13 @@ mod error;
 #[command(
     name = "Configuration parser",
     version = "1.0",
-    about = "Parses .cfg files from Control Server into SQL INSERT statements for the FRED DB"
+    about = "Parses configuration files from Control Server into SQL INSERT statements for the FRED DB"
 )]
 struct Cli {
     #[arg(
         short,
         long,
-        help = "All .cfg files from this directory will be parsed"
+        help = "All files from this directory will be parsed"
     )]
     input_dir: String,
 

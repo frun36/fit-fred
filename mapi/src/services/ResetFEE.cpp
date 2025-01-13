@@ -108,24 +108,40 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
 {
+    bool isConnected[20] = {false};
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
-
+    Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
+    
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
+        uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 10 : 0;
+        isConnected[pmIdx+baseIdx] = true;
         {
-            auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, true));
+            auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));
             if (parsedResponse.errors.empty() == false) {
                 return parsedResponse;
             }
         }
-
         {
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
             if (parsedResponse.errors.empty() == false) {
-                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
-            } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFF) {
-                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx, false));
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
+            } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFFFFF) {
+                (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
             }
+        }
+    }
+
+    uint32_t currentMask = spiMask.getElectronicValue();
+    for(int idx = 0; idx < 20; idx++){
+        if(isConnected[idx] == false){
+            currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
+        }
+    }
+    {
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
+        if (parsedResponse.errors.empty() == false) {
+            return parsedResponse;
         }
     }
 
@@ -233,10 +249,6 @@ std::string ResetFEE::seqSetResetFinished()
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    if (spiMask.getPhysicalValueOptional() == std::nullopt) {
-        spiMask.storeValue(0x0, 0x0);
-    }
-
     uint32_t masked = static_cast<uint32_t>(spiMask.getPhysicalValue()) & (~(static_cast<uint32_t>(1u) << idx));
     masked |= static_cast<uint32_t>(mask) << idx;
 

@@ -217,3 +217,4 @@ BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::parseFifo(std
 
     return { fifo, {} };
 }
+

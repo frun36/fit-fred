@@ -69,6 +69,30 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address, cons
                 m_buffer.append(_READ_WORD_);
             }
         } break;
+
+        case Operation::BlockRead: 
+        {
+            m_buffer.append(_BLOCK_READ_PREFIX_);
+            m_buffer.append(address);
+            m_buffer.append(wordToHex(data[0]));
+            m_buffer.append(_FRAME_POSTFIX_);
+            for(uint32_t idx = 0; idx < data[0]; idx++){
+                m_buffer.append(_READ_WORD_);
+            }
+        } 
+        break;
+
+        case Operation::BlockReadNonIncrement:
+        {
+            m_buffer.append(_BLOCK_READ_NON_INC_PREFIX_);
+            m_buffer.append(address);
+            m_buffer.append(wordToHex(data[0]));
+            m_buffer.append(_FRAME_POSTFIX_);
+            for(uint32_t idx = 0; idx < data[0]; idx++){
+                m_buffer.append(_READ_WORD_);
+            } 
+        }
+        break;
     }
 
     return *this;

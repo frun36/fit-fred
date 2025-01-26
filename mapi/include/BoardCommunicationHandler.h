@@ -74,6 +74,13 @@ class BoardCommunicationHandler
         static const FifoResponse EmptyFifoResponse;
     };
 
+    struct BlockResponse {
+        std::vector<uint32_t> content;
+        std::optional<ErrorReport> errors;
+
+        bool isError() const { return errors.has_value(); }
+    };
+
     SwtSequence processMessageFromWinCC(std::string, bool = true);
     virtual ParsedResponse processMessageFromALF(std::string);
 

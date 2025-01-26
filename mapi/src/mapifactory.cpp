@@ -61,4 +61,7 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
     m_saveConfiguration = std::make_unique<ConfigurationDatabaseBroker>(boardsData.getBoards());
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/CONFIGURATION_DB_BROKER"), m_saveConfiguration.get());
+
+    m_blockReadTest = std::make_unique<BlockReadTest>();
+    m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(),"/TCM/TCM0/BLOCK_READ_TEST"), m_blockReadTest.get());
 }

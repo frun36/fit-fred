@@ -12,6 +12,7 @@
 #include "services/SetPhaseDelay.h"
 #include "services/CounterRates.h"
 #include "services/ConfigurationDatabaseBroker.h"
+#include "services/BlockReadTest.h"
 #include <exception>
 #include <stdexcept>
 #include <string>
@@ -34,6 +35,7 @@ class MapiFactory
     std::unique_ptr<ResetErrors> m_resetError;
     std::unique_ptr<SetPhaseDelay> m_setPhaseDelay;
     std::unique_ptr<ConfigurationDatabaseBroker> m_saveConfiguration;
+    std::unique_ptr<BlockReadTest> m_blockReadTest;
     
     void generateObjects();
 

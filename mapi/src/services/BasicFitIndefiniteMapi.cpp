@@ -77,5 +77,5 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
         blockResponse.content.emplace_back(line.frame.data);
     }
 
-    return std::move(blockResponse);
+    return {std::move(blockResponse.content),{}};
 }

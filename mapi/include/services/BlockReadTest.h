@@ -7,6 +7,9 @@ class BlockReadTest: public BasicFitIndefiniteMapi
     {
         bool status = true;
         auto request = waitForRequest(status);
+        if(!status){
+            return;
+        }
         auto data = Utility::splitString2Num(request,",");
         uint32_t address = data[0];
         uint32_t wordsNum = data[1];

@@ -52,7 +52,7 @@ class BlockReadTest: public BasicFitIndefiniteMapi
         {
             case true:
                 sequence.addOperation(SwtSequence::Operation::Read, baseAddress, &SwtSequence::maxBlockReadSize, true);
-                baseAddress += SwtSequence::maxBlockReadSize;
+                baseAddress++;
                 break;
             default:
                 sequence.addOperation(SwtSequence::Operation::Read, baseAddress, &SwtSequence::maxBlockReadSize, true);

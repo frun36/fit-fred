@@ -75,6 +75,6 @@ class BlockReadTest: public BasicFitIndefiniteMapi
             blockResponse.content.emplace_back(line.frame.data);
         }
 
-        return std::move(blockResponse);
+        return blockResponse;
     }
 };

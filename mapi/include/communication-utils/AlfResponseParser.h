@@ -35,7 +35,7 @@ class AlfResponseParser
        public:
         bool operator!=(const iterator& itr);
         iterator& operator++();
-        iterator operator++(int) const;
+        //iterator operator++(int) const;
         Line operator*() const;
 
         explicit iterator(std::string_view sequence);
@@ -62,14 +62,48 @@ class AlfResponseParser
 
 inline uint8_t charToHex(char ch)
 {
-    if (ch >= '0' && ch <= '9')
-        return static_cast<uint8_t>(ch - '0');
-    else if (ch >= 'A' && ch <= 'F')
-        return static_cast<uint8_t>(ch - 'A' + 10);
-    else if (ch >= 'a' && ch <= 'f')
-        return static_cast<uint8_t>(ch - 'a' + 10);
-    else
+     switch (ch) {
+    case '0':
+      return 0;
+    case '1':
+      return 1;
+    case '2':
+      return 2;
+    case '3':
+      return 3;
+    case '4':
+      return 4;
+    case '5':
+      return 5;
+    case '6':
+      return 6;
+    case '7':
+      return 7;
+    case '8':
+      return 8;
+    case '9':
+      return 9;
+    case 'A':
+    case 'a':
+      return 10;
+    case 'B':
+    case 'b':
+      return 11;
+    case 'C':
+    case 'c':
+      return 12;
+    case 'D':
+    case 'd':
+      return 13;
+    case 'E':
+    case 'e':
+      return 14;
+    case 'F':
+    case 'f':
+      return 15;
+    default:
         throw std::invalid_argument("Invalid hexadecimal character");
+     }
 }
 
 inline uint8_t stringToByte(char c1, char c2)

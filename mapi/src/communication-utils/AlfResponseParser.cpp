@@ -2,9 +2,10 @@
 #include <cstring>
 #include <iostream>
 
-static constexpr auto SUCCESS_STR = "success";
-static constexpr auto SUCCESS_STR_LEN = 7; // or sizeof("success") - 1
-static constexpr auto FAILURE_STR_LEN = sizeof("failure\n")-1; // or sizeof("success") - 1
+static constexpr auto SUCCESS_STR = "success\n";
+static constexpr auto FAILURE_STR = "failure\n";
+static constexpr auto SUCCESS_STR_LEN = sizeof(SUCCESS_STR)-1; // or sizeof("success") - 1
+static constexpr auto FAILURE_STR_LEN = sizeof(FAILURE_STR)-1; // or sizeof("success") - 1
 
 bool AlfResponseParser::isSuccess() const
 {
@@ -107,13 +108,13 @@ bool AlfResponseParser::iterator::operator!=(const iterator& itr)
 
 AlfResponseParser::iterator AlfResponseParser::begin()
 {
-    if (m_sequence == "success\n" || m_sequence == "failure\n") {
+    if (m_sequence == SUCCESS_STR || m_sequence == FAILURE_STR) {
         return end();
     }
     if (isSuccess())
-        return iterator(m_sequence.substr(SUCCESS_STR_LEN+1));
+        return iterator(m_sequence.substr(SUCCESS_STR_LEN));
     else
-        return iterator(m_sequence.substr(FAILURE_STR_LEN+1));
+        return iterator(m_sequence.substr(FAILURE_STR_LEN));
 }
 
 AlfResponseParser::iterator AlfResponseParser::end()

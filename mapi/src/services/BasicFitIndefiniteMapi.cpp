@@ -70,12 +70,15 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
     
     BoardCommunicationHandler::BlockResponse blockResponse;
     response.reserve(words);
+    blockResponse.content.resize(words); // much faster than using reserve + emplace_back
+    uint32_t idx = 0;
     for(auto line: parser){
         if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
             continue;
         }
-        blockResponse.content.emplace_back(line.frame.data);
+        blockResponse.content[idx++] = line.frame.data;
     }
+    blockResponse.content.resize(idx);
 
     return blockResponse;
 }

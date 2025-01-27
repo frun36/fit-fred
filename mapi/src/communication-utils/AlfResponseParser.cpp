@@ -14,9 +14,10 @@ bool AlfResponseParser::isSuccess() const
 
 AlfResponseParser::SwtFrame::SwtFrame(std::string_view src)
 {
-    data = (static_cast<uint32_t>(stringToByte(src[11], src[12])) << 24) + (static_cast<uint32_t>(stringToByte(src[13], src[14])) << 16) + (static_cast<uint32_t>(stringToByte(src[15], src[16])) << 8) + static_cast<uint32_t>(stringToByte(src[17], src[18]));
-    address = (static_cast<uint32_t>(stringToByte(src[3], src[4])) << 24) + (static_cast<uint32_t>(stringToByte(src[5], src[6])) << 16) + (static_cast<uint32_t>(stringToByte(src[7], src[8])) << 8) + static_cast<uint32_t>(stringToByte(src[9], src[10]));
-    prefix = (static_cast<uint16_t>(stringToByte('0', src[0])) << 8) + static_cast<uint16_t>(stringToByte(src[1], src[2]));
+    const char* s = src.data(); // faster that indexing into string_view (no check)
+    data = (static_cast<uint32_t>(stringToByte(s + 11)) << 24) + (static_cast<uint32_t>(stringToByte(s + 13)) << 16) + (static_cast<uint32_t>(stringToByte(s + 15)) << 8) + static_cast<uint32_t>(stringToByte(s + 17));
+    address = (static_cast<uint32_t>(stringToByte(s + 3)) << 24) + (static_cast<uint32_t>(stringToByte(s + 5)) << 16) + (static_cast<uint32_t>(stringToByte(s + 7)) << 8) + static_cast<uint32_t>(stringToByte(s + 9));
+    prefix = (static_cast<uint16_t>(stringToByte('0', s[0])) << 8) + static_cast<uint16_t>(stringToByte(s + 1));
 }
 
 AlfResponseParser::Line::Line(std::string_view hex, int64_t len) : length(len)
@@ -43,30 +44,14 @@ AlfResponseParser::iterator::iterator(std::string_view sequence) : m_sequence(se
 
 int64_t AlfResponseParser::iterator::getLineLen() const
 {
-    if(m_sequence[1] == '\n'){
-        return 1;
-    }
+    const char* beg = m_sequence.begin();
+    const char* end = m_sequence.begin();
 
-    int64_t beg_ptr = 0;
-    int64_t end_ptr = 0;
-
-    for (int64_t pos = 0;; pos++) {
-
-        switch (m_sequence[pos]) {
-            case '\0':
-            case '\n': {
-                end_ptr = pos;
-            } break;
-
-            default:
-                continue;
-                break;
+    for (;; end++) {
+        if (*end == '\0' || *end == '\n') {
+            return (end - beg);
         }
-
-        break;
     }
-
-    return (end_ptr - beg_ptr);
 }
 
 AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()

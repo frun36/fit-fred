@@ -4,8 +4,8 @@
 
 static constexpr auto SUCCESS_STR = "success\n";
 static constexpr auto FAILURE_STR = "failure\n";
-static constexpr auto SUCCESS_STR_LEN = sizeof(SUCCESS_STR)-1; // or sizeof("success") - 1
-static constexpr auto FAILURE_STR_LEN = sizeof(FAILURE_STR)-1; // or sizeof("success") - 1
+static constexpr auto SUCCESS_STR_LEN = sizeof(SUCCESS_STR); // or sizeof("success") - 1
+static constexpr auto FAILURE_STR_LEN = sizeof(FAILURE_STR); // or sizeof("success") - 1
 
 bool AlfResponseParser::isSuccess() const
 {

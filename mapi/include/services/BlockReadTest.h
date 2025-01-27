@@ -33,10 +33,11 @@ class BlockReadTest: public BasicFitIndefiniteMapi
         }
         
         std::string responseStr = "Words: " + std::to_string(response.content.size()) + "\n";
+        Print::PrintData(responseStr);
         for(auto word: response.content){
             responseStr += std::to_string(word) + "\n";
         }
-        Print::PrintData(responseStr);
+       
         publishAnswer(responseStr);
     }
 

@@ -50,9 +50,14 @@ struct Result {
     std::optional<OkType> ok;
     std::optional<ErrorType> error;
 
-    bool isOk()
+    bool isOk() const
     {
         return !error.has_value();
+    }
+
+    bool isError() const
+    {
+        return error.has_value();
     }
 };
 

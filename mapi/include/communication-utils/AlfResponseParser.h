@@ -4,7 +4,6 @@
 #include <list>
 #include <stdexcept>
 #include <algorithm>
-#include <optional>
 #include <cstring>
 #include <string_view>
 
@@ -39,12 +38,13 @@ class AlfResponseParser
         Line operator*() const;
 
         explicit iterator(std::string_view sequence);
+        ~iterator() { delete m_currentLine; }
 
        private:
         int64_t getLineLen() const;
 
         std::string_view m_sequence;
-        std::optional<Line> m_currentLine;
+        Line* m_currentLine = nullptr; // proved faster than std::optional or std::unique_ptr
     };
 
     AlfResponseParser(std::string_view response) : m_sequence(response) {}

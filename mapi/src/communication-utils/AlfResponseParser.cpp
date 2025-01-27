@@ -36,9 +36,9 @@ AlfResponseParser::Line::Line(std::string_view hex, int64_t len) : length(len)
 AlfResponseParser::iterator::iterator(std::string_view sequence) : m_sequence(sequence)
 {
     if (m_sequence.at(0) == '\0' || m_sequence.at(0) == '\n') {
-        m_currentLine = std::nullopt;
+        m_currentLine = nullptr;
     } else {
-        m_currentLine = Line(m_sequence, getLineLen());
+        m_currentLine = new Line(m_sequence, getLineLen());
     }
 }
 
@@ -57,17 +57,21 @@ int64_t AlfResponseParser::iterator::getLineLen() const
 AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
 {
     if (m_sequence.at(0) == '\0') {
-        throw std::runtime_error("Iterator points to end(), cannot increment");
+        throw std::runtime_error("Iterator points to end(), cannot increment iterator");
+    }
+    if (m_currentLine == nullptr) {
+        throw std::runtime_error("No current line present, cannot increment iterator");
     }
     if (m_sequence[m_currentLine->length] != '\0' && m_sequence[m_currentLine->length + 1] != '\0') {
         m_sequence.remove_prefix(m_currentLine->length + 1);
-        m_currentLine = Line(m_sequence, getLineLen());
+        *m_currentLine = Line(m_sequence, getLineLen());
         return *this;
     }
 
     uint32_t shift = (m_sequence[m_currentLine->length] == '\0') ? m_currentLine->length - 1 : m_currentLine->length;
     m_sequence.remove_prefix(shift);
-    m_currentLine = std::nullopt;
+    delete m_currentLine;
+    m_currentLine = nullptr;
     return *this;
 }
 
@@ -80,7 +84,7 @@ AlfResponseParser::iterator& AlfResponseParser::iterator::operator++()
 
 AlfResponseParser::Line AlfResponseParser::iterator::operator*() const
 {
-    if (m_currentLine == std::nullopt) {
+    if (m_currentLine == nullptr) {
         throw std::runtime_error("Iterator points to end(), cannot dereference");
     }
     return *m_currentLine;
@@ -96,10 +100,11 @@ AlfResponseParser::iterator AlfResponseParser::begin()
     if (m_sequence == SUCCESS_STR || m_sequence == FAILURE_STR) {
         return end();
     }
-    if (isSuccess())
+    if (isSuccess()) {
         return iterator(m_sequence.substr(SUCCESS_STR_LEN));
-    else
+    } else {
         return iterator(m_sequence.substr(FAILURE_STR_LEN));
+    }
 }
 
 AlfResponseParser::iterator AlfResponseParser::end()

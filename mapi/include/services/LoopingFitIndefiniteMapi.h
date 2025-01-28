@@ -46,6 +46,7 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     void addOrReplaceHandler(const string& prefix, RequestHandler handler);
     Result<string, string> executeSingleRequest(const string& req);
     RequestExecutionResult executeQueuedRequests(bool& running);
+    static std::string getRequestPrefix(const std::string& request);
 
    public:
     LoopingFitIndefiniteMapi(bool isDefaultStopped = false);

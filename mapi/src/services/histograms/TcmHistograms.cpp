@@ -6,9 +6,8 @@
 #include <numeric>
 #include <chrono>
 #include <cstdio>
-#include <cinttypes>
 
-TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_baseParam(tcm->at(tcm_parameters::HistogramsAll))
+TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 {
     if (!tcm->isTcm()) {
         throw runtime_error("TcmHistograms: board is not a TCM");
@@ -17,10 +16,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_basePara
     size_t totalBinCount;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
-        if (param.baseAddress + param.regBlockSize > m_baseParam.baseAddress + m_baseParam.regBlockSize) {
-            throw runtime_error("Invalid TCM histogram parameters - param " + param.name + " doesn't fit in base");
-        }
-        m_histograms.emplace_back(name, param.baseAddress - m_baseParam.baseAddress, param.regBlockSize);
+        m_histograms.emplace_back(name, param.baseAddress, param.regBlockSize);
         totalBinCount += param.regBlockSize;
     }
     sort(m_histograms.begin(), m_histograms.end());
@@ -50,7 +46,6 @@ void TcmHistograms::processExecution()
     }
 
     vector<vector<uint32_t>> histogramData = readHistograms();
-
     if (histogramData.empty()) {
         return;
     }
@@ -87,25 +82,64 @@ bool TcmHistograms::resetHistograms()
 
 bool TcmHistograms::setCounterId(uint32_t counterId)
 {
-    int64_t curr = m_handler.getBoard()->at(tcm_parameters::CorrelationCounterSelect).getElectronicValueOptional().value_or(-1);
+    int64_t curr = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(-1);
     if (curr == counterId) {
         return true;
     }
 
     auto parsedResponse = processSequenceThroughHandler(
-        m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCounterSelect, counterId));
+        m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCountersSelect, counterId));
 
     bool result = !parsedResponse.isError();
-    if (result) {
-        m_histograms[0].name = to_string(counterId);
-    }
     return result;
 }
 
 vector<vector<uint32_t>> TcmHistograms::readHistograms()
 {
-    // todo
-    return { {} };
+    if (m_histograms.size() < 2) {
+        printAndPublishError("Missing histogram parameter information");
+        return { {} };
+    }
+
+    int64_t selectedCounter = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(0);
+    m_histograms[0].name = to_string(selectedCounter);
+    bool selectableCounterEnabled = (selectedCounter != 0);
+
+    uint32_t startAddress = selectableCounterEnabled ? m_histograms[0].baseAddress : m_histograms[1].baseAddress;
+    uint32_t words = m_histograms.back().baseAddress + m_histograms.back().binCount - startAddress;
+
+    auto res = blockRead(startAddress, true, words); // single read with unnecessary words is allegedly faster than separate reads
+
+    if (res.isError()) {
+        printAndPublishError(res.errors->mess);
+        return { {} };
+    } else {
+        return parseHistogramData(res.content, startAddress);
+    }
+}
+
+vector<vector<uint32_t>> TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress)
+{
+    vector<vector<uint32_t>> result;
+
+    for (const auto& h : m_histograms) {
+        if (h.baseAddress < startAddress) {
+            result.emplace_back();
+            continue;
+        }
+
+        auto begin = data.begin() + (h.baseAddress - startAddress);
+        auto end = begin + h.binCount;
+
+        if (end > data.end()) {
+            printAndPublishError("Incomplete histogram readout - couldn't parse all bins");
+            return { {} };
+        }
+
+        result.emplace_back(begin, end);
+    }
+
+    return result;
 }
 
 const char* TcmHistograms::parseResponse(const vector<vector<uint32_t>>& histogramData, const string& requestResponse) const

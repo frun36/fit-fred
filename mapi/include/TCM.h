@@ -42,11 +42,10 @@ constexpr std::string_view ResetCounters{ "BOARD_STATUS_RESET_COUNTERS" };
 constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
 constexpr std::string_view CountersFifoLoad{ "COUNTERS_FIFO_LOAD" };
 
-constexpr std::string_view HistogramsAll{ "HISTOGRAMS_ALL" };
-constexpr std::string_view CorrelationCountersOther{ "CORRELATION_COUNTERS_OTHER" };
+constexpr std::string_view CorrelationCountersOther{ "CORRELATION_COUNTERS_SELECTABLE" };
 constexpr std::string_view CorrelationCountersOrA{ "CORRELATION_COUNTERS_OR_A" };
 constexpr std::string_view CorrelationCountersOrC{ "CORRELATION_COUNTERS_OR_C" };
-constexpr std::string_view CorrelationCounterSelect{ "MODE_CORRELATION_COUNTER_SELECT" };
+constexpr std::string_view CorrelationCountersSelect{ "MODE_CORRELATION_COUNTER_SELECT" };
 constexpr std::string_view ResetHistograms{ "MODE_RESET_PER_BC_TRIGGER_COUNTER" };
 
 inline std::vector<std::string> getAllCounters()

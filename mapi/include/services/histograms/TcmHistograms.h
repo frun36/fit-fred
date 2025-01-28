@@ -8,20 +8,19 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
    private:
     struct Histogram {
         string name;
-        uint32_t relativeAddress;
+        uint32_t baseAddress;
         uint32_t binCount;
 
-        Histogram(string name, uint32_t relativeAddress, uint32_t binCount)
-            : name(name), relativeAddress(relativeAddress), binCount(binCount) {}
+        Histogram(string name, uint32_t baseAddress, uint32_t binCount)
+            : name(name), baseAddress(baseAddress), binCount(binCount) {}
 
         bool operator<(const Histogram& o)
         {
-            return relativeAddress < o.relativeAddress;
+            return baseAddress < o.baseAddress;
         }
     };
 
     BoardCommunicationHandler m_handler;
-    Board::ParameterInfo m_baseParam;
     vector<Histogram> m_histograms;
     bool m_doReadout = false;
     uint32_t m_readId;
@@ -35,6 +34,9 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
     bool resetHistograms();
 
     vector<vector<uint32_t>> readHistograms();
+    vector<vector<uint32_t>> parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
+    
+    // Assumes data is formatted properly - needs to be ensured after read
     const char* parseResponse(const vector<vector<uint32_t>>& data, const string& requestResponse) const;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;

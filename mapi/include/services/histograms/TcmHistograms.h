@@ -1,15 +1,15 @@
 #include "services/LoopingFitIndefiniteMapi.h"
 #include "Board.h"
 #include "BoardCommunicationHandler.h"
-#include <set>
+#include <vector>
 
 class TcmHistograms : public LoopingFitIndefiniteMapi
 {
    private:
     struct Histogram {
-        const string name;
-        const uint32_t relativeAddress;
-        const uint32_t binCount;
+        string name;
+        uint32_t relativeAddress;
+        uint32_t binCount;
 
         Histogram(string name, uint32_t relativeAddress, uint32_t binCount)
             : name(name), relativeAddress(relativeAddress), binCount(binCount) {}
@@ -22,12 +22,12 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
 
     BoardCommunicationHandler m_handler;
     Board::ParameterInfo m_baseParam;
-    set<Histogram> m_histograms;
+    vector<Histogram> m_histograms;
     bool m_doReadout = false;
     uint32_t m_readId;
 
-    static constexpr uint32_t ResponseBufferSize = 16384;
-    char m_responseBuffer[ResponseBufferSize] = {};
+    char* m_responseBuffer = nullptr;
+    size_t m_responseBufferSize;
 
     bool handleCounterRequest(const string& request);
 
@@ -35,11 +35,13 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
     bool resetHistograms();
 
     vector<vector<uint32_t>> readHistograms();
-    string parseResponse(const vector<vector<uint32_t>>&& data) const;
+    const char* parseResponse(const vector<vector<uint32_t>>& data, const string& requestResponse) const;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;
    public:
     TcmHistograms(shared_ptr<Board> tcm);
 
     void processExecution() override;
+
+    ~TcmHistograms() { delete[] m_responseBuffer; }
 };

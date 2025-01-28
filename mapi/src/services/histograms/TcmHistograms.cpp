@@ -1,11 +1,12 @@
 #include "services/histograms/TcmHistograms.h"
 #include "TCM.h"
-#include "TcmHistograms.h"
 #include "utils.h"
 #include <tuple>
 #include <cctype>
 #include <numeric>
 #include <chrono>
+#include <cstdio>
+#include <cinttypes>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_baseParam(tcm->at(tcm_parameters::HistogramsAll))
 {
@@ -13,13 +14,18 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_basePara
         throw runtime_error("TcmHistograms: board is not a TCM");
     }
 
+    size_t totalBinCount;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
         if (param.baseAddress + param.regBlockSize > m_baseParam.baseAddress + m_baseParam.regBlockSize) {
             throw runtime_error("Invalid TCM histogram parameters - param " + param.name + " doesn't fit in base");
         }
-        m_histograms.emplace(name, param.baseAddress - m_baseParam.baseAddress, param.regBlockSize);
+        m_histograms.emplace_back(name, param.baseAddress - m_baseParam.baseAddress, param.regBlockSize);
+        totalBinCount += param.regBlockSize;
     }
+    sort(m_histograms.begin(), m_histograms.end());
+    m_responseBufferSize = 5 * totalBinCount + 256; // 4 hex digits + comma, 256B for additional info
+    m_responseBuffer = new char[m_responseBufferSize];
 
     addOrReplaceHandler("RESET", [this](string) {
         return resetHistograms();
@@ -38,10 +44,18 @@ void TcmHistograms::processExecution()
         return;
     }
 
-    chrono::system_clock::time_point startTime = chrono::high_resolution_clock::now();
+    RequestExecutionResult requestResult = executeQueuedRequests(running);
+    if (requestResult.isError) {
+        printAndPublishError(requestResult);
+    }
 
-    vector<vector<uint32_t>> histograms = readHistograms();
-    publishAnswer(parseResponse(move(histograms)));
+    vector<vector<uint32_t>> histogramData = readHistograms();
+
+    if (histogramData.empty()) {
+        return;
+    }
+
+    publishAnswer(parseResponse(histogramData, (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult));
 }
 
 bool TcmHistograms::handleCounterRequest(const string& request)
@@ -80,30 +94,31 @@ bool TcmHistograms::setCounterId(uint32_t counterId)
 
     auto parsedResponse = processSequenceThroughHandler(
         m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCounterSelect, counterId));
-    return !parsedResponse.isError();
+
+    bool result = !parsedResponse.isError();
+    if (result) {
+        m_histograms[0].name = to_string(counterId);
+    }
+    return result;
 }
 
-vector<vector<uint32_t>> TcmHistograms::readHistograms() {
-    // todo
-    return {{}};
-}
-
-string TcmHistograms::parseResponse(const vector<vector<uint32_t>>&& histograms) const
+vector<vector<uint32_t>> TcmHistograms::readHistograms()
 {
-    uint32_t wordsRead = accumulate(
-        histograms.begin(),
-        histograms.end(),
-        0,
-        [](uint32_t sum, const auto& vec) {
-            return sum + vec.size();
+    // todo
+    return { {} };
+}
+
+const char* TcmHistograms::parseResponse(const vector<vector<uint32_t>>& histogramData, const string& requestResponse) const
+{
+    char* buffPos = m_responseBuffer;
+    buffPos += sprintf(buffPos, "%04X\n", 32);
+    for (size_t i = 0; i < m_histograms.size(); i++) {
+        buffPos += sprintf(buffPos, "%s", m_histograms[i].name.c_str());
+        for (uint32_t binVal : histogramData[i]) {
+            buffPos += sprintf(buffPos, ",%04X", binVal);
         }
-    );
-
-    if (wordsRead * 5 + 32 > ResponseBufferSize) {
-        throw runtime_error("Response may not fit inside buffer");
+        *buffPos++ = '\n';
     }
-
-    for (size_t i = 0; i < histograms.size(); i++) {
-        
-    }
+    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "%s", requestResponse.c_str()); // inserts '\0' as well, even if requestResponse is empty
+    return m_responseBuffer;
 }

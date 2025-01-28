@@ -2,16 +2,17 @@
 #include <unistd.h>
 #include <chrono>
 #include <Alfred/print.h>
+#include "utils.h"
 
 LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_stopped(isDefaultStopped)
 {
-    addHandler("START", [this]() {
+    addOrReplaceHandler("START", [this](std::string) {
         Print::PrintInfo(name, "Service started");
         m_stopped = false;
         return true;
     });
 
-    addHandler("STOP", [this]() {
+    addOrReplaceHandler("STOP", [this](std::string) {
         Print::PrintInfo(name, "Service stopped");
         m_stopped = true;
         return true;
@@ -20,9 +21,9 @@ LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_st
     m_startTime = std::chrono::high_resolution_clock::now();
 }
 
-bool LoopingFitIndefiniteMapi::addHandler(const std::string& request, RequestHandler handler)
+void LoopingFitIndefiniteMapi::addOrReplaceHandler(const std::string& prefix, RequestHandler handler)
 {
-    return m_requestHandlers.insert({ request, handler }).second;
+    m_requestHandlers[prefix] = handler;
 }
 
 void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& running)
@@ -47,8 +48,9 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
             return;
         }
 
-        if (request == "START") {
-            m_requestHandlers["START"]();
+        std::string prefix = getRequestPrefix(request);
+        if (prefix == "START") {
+            m_requestHandlers["START"](request);
         } else {
             printAndPublishError("Unexpected request received while stopped: '" + request + "'");
         }
@@ -73,13 +75,14 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
     }
 
     for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
-        auto handlerPairIt = m_requestHandlers.find(*it);
+        std::string prefix = getRequestPrefix(*it);
+        auto handlerPairIt = m_requestHandlers.find(prefix);
         if (handlerPairIt == m_requestHandlers.end()) {
             return RequestExecutionResult(requests, it, true, "Request '" + *it + "' is unexpected");
         }
 
         auto handler = handlerPairIt->second;
-        if (!handler()) {
+        if (!handler(*it)) {
             return RequestExecutionResult(requests, it, true, "Execution of '" + *it + "' failed");
         }
     }
@@ -111,4 +114,9 @@ LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
 bool LoopingFitIndefiniteMapi::RequestExecutionResult::isEmpty() const
 {
     return executed.empty() && skipped.empty();
+}
+
+std::string LoopingFitIndefiniteMapi::getRequestPrefix(const std::string& request) {
+    string_utils::Splitter s(request, ',');
+    return s.reachedEnd() ? "" : s.getNext().data();
 }

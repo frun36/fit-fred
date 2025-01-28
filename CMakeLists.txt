@@ -6,7 +6,7 @@ project(FIT-FREDServer)
 
 enable_testing()
 
-add_definitions(-DFIT_UNIT_TEST)
+# add_definitions(-DFIT_UNIT_TEST)
 add_compile_options(-g -Wall -Wextra)
 
 include_directories(

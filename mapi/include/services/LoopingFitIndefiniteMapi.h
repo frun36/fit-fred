@@ -2,7 +2,7 @@
 
 #include "services/BasicFitIndefiniteMapi.h"
 
-using RequestHandler = std::function<bool(void)>;
+using RequestHandler = std::function<bool(std::string)>;
 
 class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
 {
@@ -34,8 +34,9 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
         bool isEmpty() const;
     };
 
-    bool addHandler(const std::string& request, RequestHandler handler);
+    void addOrReplaceHandler(const std::string& prefix, RequestHandler handler);
     RequestExecutionResult executeQueuedRequests(bool& running);
+    static std::string getRequestPrefix(const std::string& request);
 
    public:
     LoopingFitIndefiniteMapi(bool isDefaultStopped = false);

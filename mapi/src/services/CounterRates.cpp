@@ -15,7 +15,7 @@ CounterRates::CounterRates(shared_ptr<Board> board)
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
-    addHandler("RESET", [this]() {
+    addOrReplaceHandler("RESET", [this](string) {
         bool result = resetCounters();
         if (result) {
             Print::PrintInfo(name, "Successfully reset counters");

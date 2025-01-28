@@ -1,9 +1,9 @@
-#include "services/BasicFitIndefiniteMapi.h"
+#include "services/LoopingFitIndefiniteMapi.h"
 #include "Board.h"
 #include "BoardCommunicationHandler.h"
 #include <set>
 
-class TcmHistograms : public BasicFitIndefiniteMapi
+class TcmHistograms : public LoopingFitIndefiniteMapi
 {
    private:
     struct Histogram {
@@ -24,16 +24,20 @@ class TcmHistograms : public BasicFitIndefiniteMapi
     Board::ParameterInfo m_baseParam;
     set<Histogram> m_histograms;
     bool m_doReadout = false;
+    uint32_t m_readId;
 
-    void handleRequest(const string& request);
+    static constexpr uint32_t ResponseBufferSize = 16384;
+    char m_responseBuffer[ResponseBufferSize] = {};
+
+    bool handleCounterRequest(const string& request);
 
     bool setCounterId(uint32_t counterId);
-    bool startHistogramming();
-    bool stopHistogramming();
     bool resetHistograms();
 
     vector<vector<uint32_t>> readHistograms();
-    string parseResponse(vector<vector<uint32_t>> data) const;
+    string parseResponse(const vector<vector<uint32_t>>&& data) const;
+
+    static constexpr useconds_t ReadoutInterval = 1'000'000;
    public:
     TcmHistograms(shared_ptr<Board> tcm);
 

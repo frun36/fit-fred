@@ -5,6 +5,7 @@
 #include <tuple>
 #include <cctype>
 #include <numeric>
+#include <chrono>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_baseParam(tcm->at(tcm_parameters::HistogramsAll))
 {
@@ -19,91 +20,48 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_basePara
         }
         m_histograms.emplace(name, param.baseAddress - m_baseParam.baseAddress, param.regBlockSize);
     }
+
+    addOrReplaceHandler("RESET", [this](string) {
+        return resetHistograms();
+    });
+
+    addOrReplaceHandler("COUNTER", [this](string request) {
+        return handleCounterRequest(request);
+    });
 }
 
 void TcmHistograms::processExecution()
 {
     bool running;
-    string request;
-    if (!m_doReadout) {
-        request = waitForRequest(running);
-    } else {
-        if (isRequestAvailable(running)) {
-            request = getRequest();
-        }
-    }
-
-    if (!request.empty()) {
-        handleRequest(request);
-    }
-
-    if (!m_doReadout) {
+    handleSleepAndWake(ReadoutInterval, running);
+    if (!running) {
         return;
     }
 
     chrono::system_clock::time_point startTime = chrono::high_resolution_clock::now();
 
     vector<vector<uint32_t>> histograms = readHistograms();
-    uint32_t wordsRead = accumulate(
-        histograms.begin(),
-        histograms.end(),
-        0,
-        [](uint32_t sum, const auto& vec) {
-            return sum + vec.size();
-        }
-    );
-
-    string response;
-    response.reserve(wordsRead * 9 + 64); // 8 hex chars, comma, some additional space for headers/names
-
+    publishAnswer(parseResponse(move(histograms)));
 }
 
-void TcmHistograms::handleRequest(const string& request)
+bool TcmHistograms::handleCounterRequest(const string& request)
 {
-    if (request == "STOP") {
-        if (stopHistogramming()) {
-            return;
-        } else {
-            throw runtime_error("Failed to stop histogramming");
-        }
-    } else if (request == "RESET") {
-        if (resetHistograms()) {
-            return;
-        } else {
-            throw runtime_error("Failed to reset histograms");
-        }
-    }
-
     auto splitResult = string_utils::Splitter::getAll(request, ',');
     if (splitResult.isError()) {
-        throw runtime_error("Failed to parse message");
+        return false;
     }
 
     const std::vector<std::string>& params = splitResult.ok.value();
-    if (params.size() != 2 || params[0] != "READ" || !std::all_of(params[1].begin(), params[1].end(), ::isdigit)) {
-        throw runtime_error("Read command must be two comma separated values - READ,[counter_id]");
+    if (params.size() != 2 || params[0] != "COUNTER" || !std::all_of(params[1].begin(), params[1].end(), ::isdigit)) {
+        return false;
     }
 
     uint32_t counterId = std::atoi(params[1].c_str());
     if (counterId > 15) {
-        throw runtime_error("Counter ID must be either 0 (none) or between 1 and 15");
+        return false;
     }
 
-    if (!(setCounterId(counterId) && startHistogramming())) {
-        throw runtime_error("Failed to update counter ID and start histogramming");
-    }
-}
-
-bool TcmHistograms::startHistogramming()
-{
-    m_doReadout = true;
-    return true;
-}
-
-bool TcmHistograms::stopHistogramming()
-{
-    m_doReadout = false;
-    return true;
+    return setCounterId(counterId);
 }
 
 bool TcmHistograms::resetHistograms()
@@ -130,7 +88,22 @@ vector<vector<uint32_t>> TcmHistograms::readHistograms() {
     return {{}};
 }
 
-string TcmHistograms::parseResponse(vector<vector<uint32_t>> data) const
+string TcmHistograms::parseResponse(const vector<vector<uint32_t>>&& histograms) const
 {
-    return string();
+    uint32_t wordsRead = accumulate(
+        histograms.begin(),
+        histograms.end(),
+        0,
+        [](uint32_t sum, const auto& vec) {
+            return sum + vec.size();
+        }
+    );
+
+    if (wordsRead * 5 + 32 > ResponseBufferSize) {
+        throw runtime_error("Response may not fit inside buffer");
+    }
+
+    for (size_t i = 0; i < histograms.size(); i++) {
+        
+    }
 }

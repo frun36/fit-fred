@@ -20,7 +20,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
         totalBinCount += param.regBlockSize;
     }
     sort(m_histograms.begin(), m_histograms.end());
-    m_responseBufferSize = 5 * totalBinCount + 256; // 4 hex digits + comma, 256B for additional info
+    m_responseBufferSize = 9 * totalBinCount + 256; // 8 hex digits + comma, 256B for additional info
     m_responseBuffer = new char[m_responseBufferSize];
 
     addOrReplaceHandler("RESET", [this](string) {
@@ -45,12 +45,13 @@ void TcmHistograms::processExecution()
         printAndPublishError(requestResult);
     }
 
-    vector<vector<uint32_t>> histogramData = readHistograms();
-    if (histogramData.empty()) {
+    if (!readHistograms()) {
         return;
     }
 
-    publishAnswer(parseResponse(histogramData, (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult));
+    string requestResultString = (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult;
+    publishAnswer(parseResponse(requestResultString));
+    m_readId++;
 }
 
 bool TcmHistograms::handleCounterRequest(const string& request)
@@ -94,11 +95,11 @@ bool TcmHistograms::setCounterId(uint32_t counterId)
     return result;
 }
 
-vector<vector<uint32_t>> TcmHistograms::readHistograms()
+bool TcmHistograms::readHistograms()
 {
     if (m_histograms.size() < 2) {
         printAndPublishError("Missing histogram parameter information");
-        return { {} };
+        return false;
     }
 
     int64_t selectedCounter = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(0);
@@ -112,19 +113,17 @@ vector<vector<uint32_t>> TcmHistograms::readHistograms()
 
     if (res.isError()) {
         printAndPublishError(res.errors->mess);
-        return { {} };
+        return false;
     } else {
         return parseHistogramData(res.content, startAddress);
     }
 }
 
-vector<vector<uint32_t>> TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress)
+bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress)
 {
-    vector<vector<uint32_t>> result;
-
-    for (const auto& h : m_histograms) {
+    for (auto& h : m_histograms) {
         if (h.baseAddress < startAddress) {
-            result.emplace_back();
+            h.data.clear();
             continue;
         }
 
@@ -133,23 +132,24 @@ vector<vector<uint32_t>> TcmHistograms::parseHistogramData(const vector<uint32_t
 
         if (end > data.end()) {
             printAndPublishError("Incomplete histogram readout - couldn't parse all bins");
-            return { {} };
+            return false;
         }
 
-        result.emplace_back(begin, end);
+        h.data.resize(end - begin);
+        copy(begin, end, h.data.begin());
     }
 
-    return result;
+    return true;
 }
 
-const char* TcmHistograms::parseResponse(const vector<vector<uint32_t>>& histogramData, const string& requestResponse) const
+const char* TcmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%04X\n", 32);
-    for (size_t i = 0; i < m_histograms.size(); i++) {
-        buffPos += sprintf(buffPos, "%s", m_histograms[i].name.c_str());
-        for (uint32_t binVal : histogramData[i]) {
-            buffPos += sprintf(buffPos, ",%04X", binVal);
+    buffPos += sprintf(buffPos, "%08X\n", m_readId);
+    for (const auto& h : m_histograms) {
+        buffPos += sprintf(buffPos, "%s", h.name.c_str());
+        for (uint32_t binVal : h.data) {
+            buffPos += sprintf(buffPos, ",%X", binVal);
         }
         *buffPos++ = '\n';
     }

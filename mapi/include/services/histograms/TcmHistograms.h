@@ -10,9 +10,13 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
         string name;
         uint32_t baseAddress;
         uint32_t binCount;
+        vector<uint32_t> data;
 
         Histogram(string name, uint32_t baseAddress, uint32_t binCount)
-            : name(name), baseAddress(baseAddress), binCount(binCount) {}
+            : name(name), baseAddress(baseAddress), binCount(binCount)
+        {
+            data.reserve(binCount);
+        }
 
         bool operator<(const Histogram& o)
         {
@@ -23,7 +27,7 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
     BoardCommunicationHandler m_handler;
     vector<Histogram> m_histograms;
     bool m_doReadout = false;
-    uint32_t m_readId;
+    uint32_t m_readId = 0;
 
     char* m_responseBuffer = nullptr;
     size_t m_responseBufferSize;
@@ -33,13 +37,14 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
     bool setCounterId(uint32_t counterId);
     bool resetHistograms();
 
-    vector<vector<uint32_t>> readHistograms();
-    vector<vector<uint32_t>> parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
-    
+    bool readHistograms();
+    bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
+
     // Assumes data is formatted properly - needs to be ensured after read
-    const char* parseResponse(const vector<vector<uint32_t>>& data, const string& requestResponse) const;
+    const char* parseResponse(const string& requestResponse) const;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;
+
    public:
     TcmHistograms(shared_ptr<Board> tcm);
 

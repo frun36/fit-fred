@@ -18,6 +18,7 @@ struct Column {
     const std::string name;
 };
 
+
 namespace boolean
 {
 extern const std::string True;
@@ -35,9 +36,13 @@ namespace equation
 Equation parseEquation(std::string equation);
 }
 
+
 class BoardTypes
 {
    public:
+    static const Column board_type_id;
+    static const Column board_type_id;
+
     static const std::string TypeTCM;
     static const std::string TypePM;
 };

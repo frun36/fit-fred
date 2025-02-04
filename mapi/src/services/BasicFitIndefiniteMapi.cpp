@@ -58,7 +58,7 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
             sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &offset, true);
             break;
         default:
-            sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &SwtSequence::maxBlockReadSize, true);
+            sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &offset, true);
             break;
     }
 

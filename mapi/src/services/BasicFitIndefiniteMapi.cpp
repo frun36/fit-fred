@@ -69,7 +69,6 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
     }
     
     BoardCommunicationHandler::BlockResponse blockResponse;
-    response.reserve(words);
     blockResponse.content.resize(words); // much faster than using reserve + emplace_back
     uint32_t idx = 0;
     for(auto line: parser){

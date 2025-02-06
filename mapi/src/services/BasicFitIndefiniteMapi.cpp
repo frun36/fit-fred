@@ -75,9 +75,14 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
         if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
             continue;
         }
+        if(idx >= words){
+            return {{}, BoardCommunicationHandler::ErrorReport{ "SEQUENCE", "Received response contains too many SWT frames" }};
+        }
         blockResponse.content[idx++] = line.frame.data;
     }
-    blockResponse.content.resize(idx);
+    if(idx < words){
+        return {{}, BoardCommunicationHandler::ErrorReport{"SEQUENCE", "Received incomplete response; received " + std::to_string(idx)  + " words, expected " + std::to_string(words)}};
+    }
 
     return blockResponse;
 }

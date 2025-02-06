@@ -16,7 +16,7 @@ constexpr std::string_view Ch02CtrTrg{ "CH02_CTR_TRG" };
 constexpr std::string_view Ch03CtrCfd{ "CH03_CTR_CFD" };
 constexpr std::string_view Ch03CtrTrg{ "CH03_CTR_TRG" };
 constexpr std::string_view Ch04CtrCfd{ "CH04_CTR_CFD" };
-constexpr std::string_view Ch04CtrTrg{ "CH04_CTR_TRG" };
+constexpr std::string__view Ch04CtrTrg{ "CH04_CTR_TRG" };
 constexpr std::string_view Ch05CtrCfd{ "CH05_CTR_CFD" };
 constexpr std::string_view Ch05CtrTrg{ "CH05_CTR_TRG" };
 constexpr std::string_view Ch06CtrCfd{ "CH06_CTR_CFD" };
@@ -55,5 +55,11 @@ inline std::vector<std::string> getAllCounters()
         std::string{ Ch12CtrCfd }, std::string{ Ch12CtrTrg }
     };
 }
+
+constexpr std::string_view ResetHistograms { "HIST_RESET" };
+constexpr std::string_view HistogrammingOn { "HIST_ON" };
+constexpr std::string_view CurrentAddressInHistogramData { "CURRENT_ADDRESS_IN_HISTOGRAM_DATA" };
+constexpr std::string_view HistogramDataReadout { "HISTOGRAM_DATA_READOUT" };
+
 } // namespace pm_parameters
 #endif

@@ -49,8 +49,8 @@ Parameters::Row::Row(const std::vector<MultiBase*>& row)
     isSigned = Parameters::IsSigned.parse(row[Parameters::IsSigned.idx]);
     isReadOnly = Parameters::IsSigned.parse(row[Parameters::IsReadOnly.idx]);
     isFifo = Parameters::IsFifo.parse(row[Parameters::IsReadOnly.idx]);
-    eqElectronicToPhysic = Parameters::EqElectronicToPhysic.parseNullable(row[Parameters::EqElectronicToPhysic.idx]);
-    eqPhysicToElectronic = Parameters::EqPhysicToElectronic.parseNullable(row[Parameters::EqPhysicToElectronic.idx]);
+    eqElectronicToPhysic = Parameters::EqElectronicToPhysic.parse(row[Parameters::EqElectronicToPhysic.idx]);
+    eqPhysicToElectronic = Parameters::EqPhysicToElectronic.parse(row[Parameters::EqPhysicToElectronic.idx]);
     refreshType = Parameters::RefreshType.parseNullable(row[Parameters::RefreshType.idx]);
 }
 

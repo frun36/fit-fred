@@ -44,14 +44,14 @@ Parameters::Row::Row(const std::vector<MultiBase*>& row)
     startBit = Parameters::StartBit.parse(row[Parameters::StartBit.idx]);
     endBit = Parameters::EndBit.parse(row[Parameters::EndBit.idx]);
     regBlockSize = Parameters::RegBlockSize.parse(row[Parameters::RegBlockSize.idx]);
-    minValue = Parameters::MinValue.parse(row[Parameters::MinValue.idx]);
-    maxValue = Parameters::MaxValue.parse(row[Parameters::MaxValue.idx]);
+    minValue = Parameters::MinValue.parseNullable(row[Parameters::MinValue.idx]);
+    maxValue = Parameters::MaxValue.parseNullable(row[Parameters::MaxValue.idx]);
     isSigned = Parameters::IsSigned.parse(row[Parameters::IsSigned.idx]);
     isReadOnly = Parameters::IsSigned.parse(row[Parameters::IsReadOnly.idx]);
     isFifo = Parameters::IsFifo.parse(row[Parameters::IsReadOnly.idx]);
-    eqElectronicToPhysic = Parameters::EqElectronicToPhysic.parse(row[Parameters::EqElectronicToPhysic.idx]);
-    eqPhysicToElectronic = Parameters::EqPhysicToElectronic.parse(row[Parameters::EqPhysicToElectronic.idx]);
-    refreshType = Parameters::RefreshType.parse(row[Parameters::RefreshType.idx]);
+    eqElectronicToPhysic = Parameters::EqElectronicToPhysic.parseNullable(row[Parameters::EqElectronicToPhysic.idx]);
+    eqPhysicToElectronic = Parameters::EqPhysicToElectronic.parseNullable(row[Parameters::EqPhysicToElectronic.idx]);
+    refreshType = Parameters::RefreshType.parseNullable(row[Parameters::RefreshType.idx]);
 }
 
 

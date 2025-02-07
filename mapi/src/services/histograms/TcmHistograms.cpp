@@ -1,10 +1,7 @@
 #include "services/histograms/TcmHistograms.h"
 #include "TCM.h"
 #include "utils.h"
-#include <tuple>
 #include <cctype>
-#include <numeric>
-#include <chrono>
 #include <cstdio>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
@@ -13,7 +10,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
         throw runtime_error("TcmHistograms: board is not a TCM");
     }
 
-    size_t totalBinCount;
+    size_t totalBinCount = 0;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
         m_histograms.emplace_back(name, param.baseAddress, param.regBlockSize);

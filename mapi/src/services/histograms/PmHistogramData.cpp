@@ -17,7 +17,8 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() con
                 continue;
             }
 
-            // extend previous readout if regblocks are connected (doesn't take into account the auto-skipped region inbetween channel data blocks)
+            // extend previous readout if regblocks are connected
+            // (doesn't take into account the auto-skipped region inbetween channel data blocks)
             OperationInfo& lastRequest = requests.back();
             if (currBaseAddress == lastRequest.baseAddress + lastRequest.regblockSize) {
                 lastRequest.regblockSize += block.regblockSize;
@@ -26,6 +27,7 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() con
             }
         }
     }
+    return requests;
 }
 
 void PmHistogramData::selectHistograms(std::vector<std::string> names)
@@ -41,7 +43,6 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
 {
     // assumes we are inside a single channel
     uint32_t chIdx = baseAddress / ChannelBaseAddress;
-    uint32_t relativeAddress = baseAddress % ChannelBaseAddress;
 
     std::vector<BinBlock>& blocks = m_channelBlocks[chIdx];
     // we know the result from a single operation is a contiguous block of data

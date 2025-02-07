@@ -3,6 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Enforce the C++20 standard
 
 project(FIT-FREDServer)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 enable_testing()
 
@@ -121,4 +122,5 @@ create_test(CounterRates
 #     mapi/src/EnvironmentVariables.cpp 
 #     ${MOCKS}
 # )
+
 

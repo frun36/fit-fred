@@ -1,7 +1,6 @@
 #ifndef PM_PARAMETERS
 #define PM_PARAMETERS
 #include <string_view>
-#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -16,7 +15,7 @@ constexpr std::string_view Ch02CtrTrg{ "CH02_CTR_TRG" };
 constexpr std::string_view Ch03CtrCfd{ "CH03_CTR_CFD" };
 constexpr std::string_view Ch03CtrTrg{ "CH03_CTR_TRG" };
 constexpr std::string_view Ch04CtrCfd{ "CH04_CTR_CFD" };
-constexpr std::string__view Ch04CtrTrg{ "CH04_CTR_TRG" };
+constexpr std::string_view Ch04CtrTrg{ "CH04_CTR_TRG" };
 constexpr std::string_view Ch05CtrCfd{ "CH05_CTR_CFD" };
 constexpr std::string_view Ch05CtrTrg{ "CH05_CTR_TRG" };
 constexpr std::string_view Ch06CtrCfd{ "CH06_CTR_CFD" };

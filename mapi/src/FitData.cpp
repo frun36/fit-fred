@@ -28,7 +28,7 @@ FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 
         this->index = std::stoi(name.substr(3, 1));
     }
-    isConnected = db_tables::boolean::parse(dbRow[db_tables::ConnectedDevices::IsConnected.idx]);
+    isConnected = db_tables::ConnectedDevices::IsConnected.parse(dbRow[db_tables::ConnectedDevices::IsConnected.idx]);
 }
 
 FitData::FitData() : m_ready(false)
@@ -175,54 +175,39 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
 
 Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
 {
-    Equation electronicToPhysic = (dbRow[db_tables::Parameters::EqElectronicToPhysic.idx] == NULL) ? Equation::Empty()
-                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqElectronicToPhysic.idx]->getString());
+    db_tables::Parameters::Row row(dbRow);
+    Board::ParameterInfo::RefreshType refreshType = row.refreshType.has_value() ? Board::ParameterInfo::RefreshType::SYNC : Board::ParameterInfo::RefreshType::NOT;
 
-    Equation physicToElectronic = (dbRow[db_tables::Parameters::EqPhysicToElectronic.idx] == NULL) ? Equation::Empty()
-                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqPhysicToElectronic.idx]->getString());
-
-    Board::ParameterInfo::RefreshType refreshType = Board::ParameterInfo::RefreshType::NOT;
-
-    if (dbRow[db_tables::Parameters::RefreshType.idx] != NULL) {
-
-        if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshCNT) {
-            refreshType = Board::ParameterInfo::RefreshType::CNT;
-        } else if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshSYNC) {
-            refreshType = Board::ParameterInfo::RefreshType::SYNC;
-        }
-    }
-
-    Board::ParameterInfo::ValueEncoding encoding = db_tables::boolean::parse(dbRow[db_tables::Parameters::IsSigned.idx]) ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
-    uint32_t startBit = dbRow[db_tables::Parameters::StartBit.idx]->getInt();
-    uint32_t bitLength = dbRow[db_tables::Parameters::EndBit.idx]->getInt() - startBit + 1;
+    Board::ParameterInfo::ValueEncoding encoding = row.isSigned ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
+    uint32_t bitLength = row.endBit - row.startBit + 1;
 
     int64_t max = 0;
     int64_t min = 0;
-    if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
+    if (row.minValue.has_value() == false) {
         min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : -(1ull << (bitLength - 1));
     } else {
-        min = static_cast<int64_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble());
+        min = row.minValue.value();
     }
 
-    if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
+    if (row.maxValue.has_value() == false) {
         max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1ull << bitLength) - 1) : ((1ull << (bitLength - 1)) - 1);
     } else {
-        max = static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
+        max = row.maxValue.value();
     }
 
     return {
         dbRow[db_tables::Parameters::Name.idx]->getString(),
-        db_tables::hex::parse(dbRow[db_tables::Parameters::BaseAddress.idx]),
-        startBit,
+        row.baseAddress,
+        row.startBit,
         bitLength,
-        static_cast<uint8_t>(dbRow[db_tables::Parameters::RegBlockSize.idx]->getInt()),
+        row.regBlockSize,
         encoding,
         min,
         max,
-        electronicToPhysic,
-        physicToElectronic,
-        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsFifo.idx]),
-        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsReadOnly.idx]),
+        row.eqElectronicToPhysic,
+        row.eqPhysicToElectronic,
+        row.isFifo,
+        row.isReadOnly,
         refreshType
     };
 }
@@ -241,14 +226,14 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
 {
     m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
-        std::string name = row[db_tables::Environment::Name.idx]->getString();
-        Equation equation = db_tables::equation::parseEquation(row[db_tables::Environment::Equation.idx]->getString());
-        Print::PrintVerbose("Parsing " + name);
-        Print::PrintVerbose("Equation: " + equation.equation);
+        db_tables::Environment::Row parsedRow(row);
+        
+        Print::PrintVerbose("Parsing " + parsedRow.name);
+        Print::PrintVerbose("Equation: " + parsedRow.equation.equation);
         m_environmentalVariables->emplace(
-            EnvironmentVariables::Variable(name, equation));
-        if (equation.variables.empty()) {
-            m_environmentalVariables->updateVariable(name);
+            EnvironmentVariables::Variable(parsedRow.name, parsedRow.equation));
+        if (parsedRow.equation.variables.empty()) {
+            m_environmentalVariables->updateVariable(parsedRow.name);
         }
     }
     for (auto& row : settingsTable) {

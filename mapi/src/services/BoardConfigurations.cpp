@@ -21,18 +21,13 @@ BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationIn
     optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble()) {
-            throw runtime_error(string_utils::concatenate(configurationName, ": invalid CONFIGURATIONS data row"));
-        }
-
-        string parameterName = row[0]->getString();
-        int64_t parameterValue = static_cast<int64_t>(row[1]->getDouble());
-        if (parameterName == tcm_parameters::DelayA) {
-            delayA = parameterValue;
-        } else if (parameterName == tcm_parameters::DelayC) {
-            delayC = parameterValue;
+        db_tables::ConfigurationParameters::Row parsedRow(row);
+        if (parsedRow.parameterName == tcm_parameters::DelayA) {
+            delayA = parsedRow.parameterValue;
+        } else if (parsedRow.parameterName == tcm_parameters::DelayC) {
+            delayC = parsedRow.parameterValue;
         } else {
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parameterName, parameterValue));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parsedRow.parameterName, parsedRow.parameterValue));
         }
     }
 

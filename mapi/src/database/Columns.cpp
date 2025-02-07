@@ -1,26 +1,40 @@
-#include"DatabaseUtils.h"
+#include"database/Columns.h"
 
-namespace db_utils
+namespace db_tables
 {
-
+    
 namespace parsers
 {
-bool parseBoolean(MultiBase* field)
+bool booleanParser(MultiBase* data)
 {
-    return (field->getString() == "T");
+    return (data->getString() == "T");
 }
 
-uint32_t parseHex(MultiBase* field)
+uint32_t hexParser(MultiBase* data)
 {
     std::stringstream ss;
-    ss << field->getString();
-    std::string hex(field->getString());
+    ss << data->getString();
     uint32_t word = 0;
     ss >> std::hex >> word;
     return word;
 }
 
-Equation parseEquation(MultiBase* field)
+int64_t integerParser(MultiBase* data)
+{
+    return data->getDouble();
+}
+
+uint32_t unsignedParser(MultiBase* data)
+{
+    return data->getDouble(); 
+}
+
+std::string stringParser(MultiBase* data)
+{
+    return data->getString();
+}
+
+Equation equationParser(MultiBase* field)
 {
     std::string equation = field->getString();
     Equation parsed;
@@ -36,13 +50,7 @@ Equation parseEquation(MultiBase* field)
     equation.erase(std::remove(equation.begin(), equation.end(), '{'), equation.end());
     equation.erase(std::remove(equation.begin(), equation.end(), '}'), equation.end());
     parsed.equation = std::move(equation);
-    return parsed;
-}
-
-std::string parseString(MultiBase* field)
-{
-    return field->getString();
+    return parsed;    
 }
 }
-
-}
+};

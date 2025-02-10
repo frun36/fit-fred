@@ -115,3 +115,14 @@ bool PmHistograms::readHistograms()
 
     return true;
 }
+
+const char* PmHistograms::parseResponse(string requestResultResponse) {
+    char* buffPos = m_responseBuffer;
+    for (size_t chIdx = 0; chIdx < 12; chIdx++) {
+        auto [it, end] = data.getBeginEndIterators("ADC0", chIdx);
+        buffPos += sprintf(buffPos, "CH%2zdADC0,", chIdx + 1);
+        for ( ; it != end; ++it) {
+            buffPos += sprintf(buffPos, "%X,", *it);
+        }
+    }
+}

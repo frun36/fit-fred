@@ -1,0 +1,182 @@
+[
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/Utils-Test.dir/Utils/UtilsTest.cpp.o -c /home/frun/agh/cern/fit-fred/test/Utils/UtilsTest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/Utils/UtilsTest.cpp",
+  "output": "CMakeFiles/Utils-Test.dir/Utils/UtilsTest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/AlfResponseParser-Test.dir/AlfResponseParser/ParsingTest.cpp.o -c /home/frun/agh/cern/fit-fred/test/AlfResponseParser/ParsingTest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/AlfResponseParser/ParsingTest.cpp",
+  "output": "CMakeFiles/AlfResponseParser-Test.dir/AlfResponseParser/ParsingTest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/AlfResponseParser-Test.dir/mapi/src/communication-utils/AlfResponseParser.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/AlfResponseParser.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/AlfResponseParser.cpp",
+  "output": "CMakeFiles/AlfResponseParser-Test.dir/mapi/src/communication-utils/AlfResponseParser.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/SwtSequence-Test.dir/SwtSequence/SwtSequenceTest.cpp.o -c /home/frun/agh/cern/fit-fred/test/SwtSequence/SwtSequenceTest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/SwtSequence/SwtSequenceTest.cpp",
+  "output": "CMakeFiles/SwtSequence-Test.dir/SwtSequence/SwtSequenceTest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/SwtSequence-Test.dir/mapi/src/communication-utils/SwtSequence.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/SwtSequence.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/SwtSequence.cpp",
+  "output": "CMakeFiles/SwtSequence-Test.dir/mapi/src/communication-utils/SwtSequence.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/WinCCMessage/WinCCMessageTest.cpp.o -c /home/frun/agh/cern/fit-fred/test/WinCCMessage/WinCCMessageTest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/WinCCMessage/WinCCMessageTest.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/WinCCMessage/WinCCMessageTest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/mapi/src/communication-utils/WinCCRequest.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/WinCCRequest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/WinCCRequest.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/mapi/src/communication-utils/WinCCRequest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/core/src/Alfred/print.cpp.o -c /home/frun/agh/cern/fit-fred/core/src/Alfred/print.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/core/src/Alfred/print.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/core/src/Alfred/print.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/mocks/src/databaseinterface.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/databaseinterface.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/databaseinterface.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/mocks/src/databaseinterface.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/mocks/src/mapi.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/mapi.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/mapi.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/mocks/src/mapi.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/WinCCMessage-Test.dir/mocks/src/utility.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/utility.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/utility.cpp",
+  "output": "CMakeFiles/WinCCMessage-Test.dir/mocks/src/utility.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/GbtErrorReports-Test.dir/GbtErrorReport/GbtErrors.cpp.o -c /home/frun/agh/cern/fit-fred/test/GbtErrorReport/GbtErrors.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/GbtErrorReport/GbtErrors.cpp",
+  "output": "CMakeFiles/GbtErrorReports-Test.dir/GbtErrorReport/GbtErrors.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/GbtErrorReports-Test.dir/mapi/src/gbtInterfaceUtils.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/gbtInterfaceUtils.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/gbtInterfaceUtils.cpp",
+  "output": "CMakeFiles/GbtErrorReports-Test.dir/mapi/src/gbtInterfaceUtils.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/CounterRates/CounterRatesTest.cpp.o -c /home/frun/agh/cern/fit-fred/test/CounterRates/CounterRatesTest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/CounterRates/CounterRatesTest.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/CounterRates/CounterRatesTest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/services/CounterRates.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/services/CounterRates.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/services/CounterRates.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/services/CounterRates.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/BoardCommunicationHandler.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/BoardCommunicationHandler.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/BoardCommunicationHandler.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/BoardCommunicationHandler.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/Equation.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/Equation.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/Equation.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/Equation.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/Board.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/Board.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/Board.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/Board.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/SwtSequence.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/SwtSequence.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/SwtSequence.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/SwtSequence.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/AlfResponseParser.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/AlfResponseParser.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/AlfResponseParser.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/AlfResponseParser.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/WinCCRequest.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/communication-utils/WinCCRequest.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/communication-utils/WinCCRequest.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/communication-utils/WinCCRequest.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mapi/src/EnvironmentVariables.cpp.o -c /home/frun/agh/cern/fit-fred/mapi/src/EnvironmentVariables.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/mapi/src/EnvironmentVariables.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mapi/src/EnvironmentVariables.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/core/src/Alfred/print.cpp.o -c /home/frun/agh/cern/fit-fred/core/src/Alfred/print.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/core/src/Alfred/print.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/core/src/Alfred/print.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mocks/src/databaseinterface.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/databaseinterface.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/databaseinterface.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mocks/src/databaseinterface.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mocks/src/mapi.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/mapi.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/mapi.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mocks/src/mapi.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -std=gnu++17 -g -Wall -Wextra -o CMakeFiles/CounterRates-Test.dir/mocks/src/utility.cpp.o -c /home/frun/agh/cern/fit-fred/test/mocks/src/utility.cpp",
+  "file": "/home/frun/agh/cern/fit-fred/test/mocks/src/utility.cpp",
+  "output": "CMakeFiles/CounterRates-Test.dir/mocks/src/utility.cpp.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -I/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -I/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -std=c++17 -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -g -Wall -Wextra -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -std=c++17 -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -g -Wall -Wextra -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -I/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -I/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -std=c++17 -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -g -Wall -Wextra -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -I/home/frun/agh/cern/fit-fred/mapi/include -I/home/frun/agh/cern/fit-fred/core/include -I/home/frun/agh/cern/fit-fred/core/include/FREDServer -I/home/frun/agh/cern/fit-fred/core/include/occi -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/include -isystem /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest -std=c++17 -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -g -Wall -Wextra -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/home/frun/agh/cern/fit-fred/test/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+}
+]

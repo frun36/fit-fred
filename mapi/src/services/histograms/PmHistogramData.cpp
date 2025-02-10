@@ -1,4 +1,5 @@
 #include "services/histograms/PmHistogramData.h"
+#include <algorithm>
 
 std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() const
 {
@@ -61,20 +62,19 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
     return currDataIdx == data.size();
 }
 
-BinIterator PmHistogramData::getBinIterator(std::string histogramName, uint32_t channelIdx) const
+std::pair<BinIterator, BinIterator> PmHistogramData::getBeginEndIterators(std::string histogramName, uint32_t channelIdx) const
 {
-    std::vector<BinIterator::BinBlockView> binBlocks;
+    std::vector<std::vector<BinBlock>::const_iterator> blockIterators;
 
     const std::vector<BinBlock>& channelBlocks = m_channelBlocks[channelIdx];
-    for (const auto& block : channelBlocks) {
-        if (block.histogramName == histogramName) {
-            binBlocks.emplace_back(
-                block.data,
-                block.isNegativeDirection,
-                block.isNegativeDirection ? block.startBin - block.regblockSize * block.binsPerRegister : block.startBin);
+    for (auto it = channelBlocks.begin(); it < channelBlocks.end(); it++) {
+        if (it->histogramName == histogramName) {
+            blockIterators.emplace_back(it);
         }
     }
 
-    std::sort(binBlocks.begin(), binBlocks.end());
-    return BinIterator(std::move(binBlocks));
+    std::sort(blockIterators.begin(), blockIterators.end(), [](auto a, auto b) {
+        return a->startBlock < b->startBlock; // blocks are disjoint, no need to calculate actual smallest bin
+    });
+    return { BinIterator(std::move(blockIterators)), BinIterator({}) };
 }

@@ -1,4 +1,5 @@
 ./_deps
+.cache
 .vscode
 local-dcs/common-storage/output
 !local-dcs/common-storage/output/.gitkeep

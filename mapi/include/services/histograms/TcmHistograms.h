@@ -1,3 +1,5 @@
+#pragma once
+
 #include "services/LoopingFitIndefiniteMapi.h"
 #include "Board.h"
 #include "BoardCommunicationHandler.h"

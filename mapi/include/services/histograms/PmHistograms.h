@@ -8,7 +8,6 @@ class PmHistograms : public LoopingFitIndefiniteMapi
 {
    private:
     PmHistogramData data;
-    map<string, vector<const vector<uint32_t>&>> orderedHistogramData;
     BoardCommunicationHandler m_handler;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;

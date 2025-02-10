@@ -1,5 +1,28 @@
 #include "services/histograms/PmHistogramData.h"
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
+
+BlocksView PmHistogramData::createBlocksView()
+{
+    BlocksView view;
+    for (size_t chIdx = 0; chIdx < 12; chIdx++) {
+        for (const auto& block : m_channelBlocks[chIdx]) {
+            std::stringstream key;
+            key << "CH" << std::setw(2) << std::setfill('0') << chIdx + 1 << block.histogramName;
+            view[key.str()].push_back(&block);
+        }
+    }
+    for (auto& [key, blocks] : view) {
+        std::sort(
+            blocks.begin(),
+            blocks.end(),
+            [](const BinBlock* a, const BinBlock* b) {
+                return a->startBin < b->startBin; // blocks are disjoint - true min bin doesn't need to be calculated
+            });
+    }
+    return view;
+}
 
 std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() const
 {
@@ -45,7 +68,7 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
     // assumes we are inside a single channel
     uint32_t chIdx = baseAddress / ChannelBaseAddress;
 
-    std::vector<BinBlock>& blocks = m_channelBlocks[chIdx];
+    const std::vector<BinBlock>& blocks = m_channelBlocks[chIdx];
     // we know the result from a single operation is a contiguous block of data
     size_t currDataIdx = 0;
     for (auto& block : blocks) {
@@ -62,19 +85,3 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
     return currDataIdx == data.size();
 }
 
-std::pair<BinIterator, BinIterator> PmHistogramData::getBeginEndIterators(std::string histogramName, uint32_t channelIdx) const
-{
-    std::vector<std::vector<BinBlock>::const_iterator> blockIterators;
-
-    const std::vector<BinBlock>& channelBlocks = m_channelBlocks[channelIdx];
-    for (auto it = channelBlocks.begin(); it < channelBlocks.end(); it++) {
-        if (it->histogramName == histogramName) {
-            blockIterators.emplace_back(it);
-        }
-    }
-
-    std::sort(blockIterators.begin(), blockIterators.end(), [](auto a, auto b) {
-        return a->startBlock < b->startBlock; // blocks are disjoint, no need to calculate actual smallest bin
-    });
-    return { BinIterator(std::move(blockIterators)), BinIterator({}) };
-}

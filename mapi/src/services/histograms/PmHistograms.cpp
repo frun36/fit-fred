@@ -1,5 +1,7 @@
 #include "services/histograms/PmHistograms.h"
+#include <cstdio>
 #include "PM.h"
+#include "services/histograms/BinBlock.h"
 #include "utils.h"
 
 PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
@@ -116,13 +118,23 @@ bool PmHistograms::readHistograms()
     return true;
 }
 
-const char* PmHistograms::parseResponse(string requestResultResponse) {
+const char* PmHistograms::parseResponse(string requestResponse) {
     char* buffPos = m_responseBuffer;
-    for (size_t chIdx = 0; chIdx < 12; chIdx++) {
-        auto [it, end] = data.getBeginEndIterators("ADC0", chIdx);
-        buffPos += sprintf(buffPos, "CH%2zdADC0,", chIdx + 1);
-        for ( ; it != end; ++it) {
-            buffPos += sprintf(buffPos, "%X,", *it);
+    for (const auto &[name, blocks] : data.getData()) {
+        buffPos += sprintf(buffPos, "%s", name.c_str());
+        for (const BinBlock* block : blocks) {
+            if (block->isNegativeDirection) {
+                for (auto it = block->data.end() - 1; it >= block->data.begin(); it--) {
+                    buffPos += sprintf(buffPos, ",%X,%X", (*it) >> 16, (*it) & 0xFFFF);
+                }
+            } else {
+                for (auto it = block->data.begin(); it < block->data.end(); it++) {
+                    buffPos += sprintf(buffPos, ",%X,%X", (*it) & 0xFFFF, (*it) >> 16);
+                }
+            }
         }
+        buffPos += sprintf(buffPos, "\n");
     }
+    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "%s", requestResponse.c_str()); // inserts '\0' as well, even if requestResponse is empty
+    return m_responseBuffer;
 }

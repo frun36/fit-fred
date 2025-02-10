@@ -15,6 +15,7 @@ class PmHistograms : public LoopingFitIndefiniteMapi
     uint32_t m_fifoAddress;
 
     char* m_responseBuffer = nullptr;
+    size_t m_responseBufferSize = 0;
 
    public:
     PmHistograms(shared_ptr<Board> pm);

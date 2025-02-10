@@ -12,8 +12,8 @@ struct BinBlock {
     const uint32_t regblockSize;
     const bool isNegativeDirection;
 
-    bool readoutEnabled = false;
-    std::vector<uint32_t> data;
+    mutable bool readoutEnabled = false;
+    mutable std::vector<uint32_t> data;
 
     inline bool operator<(BinBlock other) const
     {

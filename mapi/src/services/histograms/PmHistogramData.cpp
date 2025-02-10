@@ -54,13 +54,17 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() con
     return requests;
 }
 
-void PmHistogramData::selectHistograms(std::vector<std::string> names)
+std::string PmHistogramData::selectHistograms(std::vector<std::string> names)
 {
+    std::string response;
     for (auto& channelBlocks : m_channelBlocks) {
         for (auto& bins : channelBlocks) {
             bins.readoutEnabled = (std::find(names.begin(), names.end(), bins.histogramName) != names.end());
+            if (bins.readoutEnabled)
+                response += bins.histogramName + "; ";
         }
     }
+    return response;
 }
 
 bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<uint32_t>& data)

@@ -14,33 +14,19 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
 
     m_fifoAddress = pm->at(pm_parameters::HistogramDataReadout).baseAddress;
 
-    addOrReplaceHandler("SELECT", [this](string request) {
-        auto splitResult = string_utils::Splitter::getAll(request, ',');
-        if (splitResult.isError()) {
-            return false;
-        }
-
-        vector<string>& names = splitResult.ok.value();
-        names.erase(names.begin());
-        return selectHistograms(names);
+    addOrReplaceHandler("SELECT", [this](vector<string> arguments) -> Result<string, string> {
+        return selectHistograms(arguments);
     });
 
-    addOrReplaceHandler("RESET", [this](string) {
+    addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
         return resetHistograms();
     });
 
-    addOrReplaceHandler("HISTOGRAMMING", [this](string request) {
-        auto splitResult = string_utils::Splitter::getAll(request, ',');
-        if (splitResult.isError()) {
-            return false;
+    addOrReplaceHandler("HISTOGRAMMING", [this](vector<string> arguments) -> Result<string, string> {
+        if (arguments.size() != 1 || (arguments[0] != "0" && arguments[1] != "1")) {
+            return { .ok = nullopt, .error = "HISTOGRAMMING command takes exactly one argument: 0 or 1" };
         }
-
-        vector<string>& params = splitResult.ok.value();
-        if (params.size() != 2) {
-            return false;
-        }
-
-        return switchHistogramming(params[1] == "1");
+        return switchHistogramming(arguments[0] == "1");
     });
 }
 
@@ -66,26 +52,32 @@ void PmHistograms::processExecution()
     m_readId++;
 }
 
-bool PmHistograms::selectHistograms(const vector<string>& names)
+Result<string, string> PmHistograms::selectHistograms(const vector<string>& names)
 {
-    data.selectHistograms(names);
-    return true;
+    string selected = data.selectHistograms(names);
+    return { .ok = "Successfully selected histograms: " + selected, .error = nullopt };
 }
 
-bool PmHistograms::resetHistograms()
+Result<string, string> PmHistograms::resetHistograms()
 {
     auto parsedResponse =
         processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(pm_parameters::ResetHistograms, 1), false);
-    return !parsedResponse.isError();
+    if (parsedResponse.isError()) {
+        return { .ok = nullopt, .error = "Failed to set reset flag:\n" + parsedResponse.getError() };
+    }
+    return { .ok = "Successfully reset PM histograms", .error = nullopt };
 }
 
-bool PmHistograms::switchHistogramming(bool on)
+Result<string, string> PmHistograms::switchHistogramming(bool on)
 {
     auto parsedResponse =
         processSequenceThroughHandler(
             m_handler,
             WinCCRequest::writeRequest(pm_parameters::HistogrammingOn, static_cast<uint32_t>(on)));
-    return !parsedResponse.isError();
+    if (parsedResponse.isError()) {
+        return { .ok = nullopt, .error = "Failed to set histogramming flag:\n" + parsedResponse.getError() };
+    }
+    return { .ok = "Successfully " + (on ? string("enabled") : string("disabled")) + " PM histogramming", .error = nullopt };
 }
 
 bool PmHistograms::readHistograms()
@@ -120,9 +112,13 @@ bool PmHistograms::readHistograms()
 
 const char* PmHistograms::parseResponse(string requestResponse) {
     char* buffPos = m_responseBuffer;
+    buffPos += sprintf(buffPos, "%X\n", m_readId);
     for (const auto &[name, blocks] : data.getData()) {
         buffPos += sprintf(buffPos, "%s", name.c_str());
         for (const BinBlock* block : blocks) {
+            if (!block->readoutEnabled) {
+                continue;
+            }
             if (block->isNegativeDirection) {
                 for (auto it = block->data.end() - 1; it >= block->data.begin(); it--) {
                     buffPos += sprintf(buffPos, ",%X,%X", (*it) >> 16, (*it) & 0xFFFF);

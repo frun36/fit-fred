@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <cctype>
 #include <cstdio>
+#include <sstream>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 {
@@ -20,12 +21,22 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
     m_responseBufferSize = 9 * totalBinCount + 256; // 8 hex digits + comma, 256B for additional info
     m_responseBuffer = new char[m_responseBufferSize];
 
-    addOrReplaceHandler("RESET", [this](string) {
+    addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
         return resetHistograms();
     });
 
-    addOrReplaceHandler("COUNTER", [this](string request) {
-        return handleCounterRequest(request);
+    addOrReplaceHandler("COUNTER", [this](vector<string> arguments) -> Result<string, string> {
+        if (arguments.size() != 1 || arguments[0].empty()) {
+            return { .ok = nullopt, .error = "COUNTER takes exactly one argument (0 - disabled, 1-15 - counter number)" };
+        }
+        int counterId;
+        istringstream iss(arguments[0]);
+
+        if (!(iss >> counterId) || !(iss.eof()) || counterId < 0 || counterId > 15) {
+            return { .ok = nullopt, .error = "Counter id must be in range: 0 - disabled, 1-15 - counter number" };
+        }
+
+        return setCounterId(counterId);
     });
 }
 
@@ -51,45 +62,30 @@ void TcmHistograms::processExecution()
     m_readId++;
 }
 
-bool TcmHistograms::handleCounterRequest(const string& request)
-{
-    auto splitResult = string_utils::Splitter::getAll(request, ',');
-    if (splitResult.isError()) {
-        return false;
-    }
-
-    const std::vector<std::string>& params = splitResult.ok.value();
-    if (params.size() != 2 || params[0] != "COUNTER" || !std::all_of(params[1].begin(), params[1].end(), ::isdigit)) {
-        return false;
-    }
-
-    uint32_t counterId = std::atoi(params[1].c_str());
-    if (counterId > 15) {
-        return false;
-    }
-
-    return setCounterId(counterId);
-}
-
-bool TcmHistograms::resetHistograms()
+Result<string, string> TcmHistograms::resetHistograms()
 {
     auto parsedResponse = processSequenceThroughHandler(
         m_handler, WinCCRequest::writeRequest(tcm_parameters::ResetHistograms, 1), false);
-    return !parsedResponse.isError();
+    if (parsedResponse.isError()) {
+        return { .ok = nullopt, .error = "Failed to set reset flag:\n" + parsedResponse.getError() };
+    }
+    return { .ok = "Successfully reset TCM histograms", .error = nullopt };
 }
 
-bool TcmHistograms::setCounterId(uint32_t counterId)
+Result<string, string> TcmHistograms::setCounterId(uint32_t counterId)
 {
     int64_t curr = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(-1);
     if (curr == counterId) {
-        return true;
+        return { .ok = "Counter " + to_string(counterId) + " already selected", .error = nullopt };
     }
 
     auto parsedResponse = processSequenceThroughHandler(
         m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCountersSelect, counterId));
 
-    bool result = !parsedResponse.isError();
-    return result;
+    if (parsedResponse.isError()) {
+        return { .ok = nullopt, .error = "Failed to write desired counter id:\n" + parsedResponse.getError() };
+    }
+    return { .ok = "Successfully selected counter id " + to_string(counterId), .error = nullopt };
 }
 
 bool TcmHistograms::readHistograms()

@@ -30,7 +30,7 @@ class PmHistogramData
 
     std::vector<OperationInfo> getOperations() const;
 
-    void selectHistograms(std::vector<std::string> names);
+    std::string selectHistograms(std::vector<std::string> names);
 
     bool storeReadoutData(uint32_t baseAddress, const std::vector<uint32_t>& data);
 

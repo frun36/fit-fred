@@ -34,10 +34,8 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
     char* m_responseBuffer = nullptr;
     size_t m_responseBufferSize;
 
-    bool handleCounterRequest(const string& request);
-
-    bool setCounterId(uint32_t counterId);
-    bool resetHistograms();
+    Result<string, string> setCounterId(uint32_t counterId);
+    Result<string, string> resetHistograms();
 
     bool readHistograms();
     bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);

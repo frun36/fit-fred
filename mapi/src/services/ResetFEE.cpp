@@ -145,11 +145,11 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
     for(int idx = 0; idx < 20; idx++){
         if(isConnected[idx] == false){
             currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
-             Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "A" : "C"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
+             Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
         } else if(~(static_cast<uint32_t>(1u) << idx) == 0){
-            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "A" : "C"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
+            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
         } else {
-            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "A" : "C"), std::to_string(idx >= 10 ? idx - 10: idx)," is connected"));
+            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is connected"));
         }
     }
     {

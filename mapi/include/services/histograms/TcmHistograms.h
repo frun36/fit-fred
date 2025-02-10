@@ -1,11 +1,11 @@
 #pragma once
 
-#include "services/LoopingFitIndefiniteMapi.h"
 #include "Board.h"
 #include "BoardCommunicationHandler.h"
+#include "services/histograms/BoardHistograms.h"
 #include <vector>
 
-class TcmHistograms : public LoopingFitIndefiniteMapi
+class TcmHistograms : public BoardHistograms
 {
    private:
     struct Histogram {
@@ -28,27 +28,21 @@ class TcmHistograms : public LoopingFitIndefiniteMapi
 
     BoardCommunicationHandler m_handler;
     vector<Histogram> m_histograms;
-    bool m_doReadout = false;
-    uint32_t m_readId = 0;
 
     char* m_responseBuffer = nullptr;
     size_t m_responseBufferSize;
 
     Result<string, string> setCounterId(uint32_t counterId);
-    Result<string, string> resetHistograms();
+    Result<string, string> resetHistograms() override;
 
-    bool readHistograms();
+    bool readHistograms() override;
     bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
 
     // Assumes data is formatted properly - needs to be ensured after read
-    const char* parseResponse(const string& requestResponse) const;
-
-    static constexpr useconds_t ReadoutInterval = 1'000'000;
+    const char* parseResponse(const string& requestResponse) const override;
 
    public:
     TcmHistograms(shared_ptr<Board> tcm);
-
-    void processExecution() override;
 
     ~TcmHistograms() { delete[] m_responseBuffer; }
 };

@@ -21,10 +21,6 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
     m_responseBufferSize = 9 * totalBinCount + 256; // 8 hex digits + comma, 256B for additional info
     m_responseBuffer = new char[m_responseBufferSize];
 
-    addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
-        return resetHistograms();
-    });
-
     addOrReplaceHandler("COUNTER", [this](vector<string> arguments) -> Result<string, string> {
         if (arguments.size() != 1 || arguments[0].empty()) {
             return { .ok = nullopt, .error = "COUNTER takes exactly one argument (0 - disabled, 1-15 - counter number)" };
@@ -38,28 +34,6 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 
         return setCounterId(counterId);
     });
-}
-
-void TcmHistograms::processExecution()
-{
-    bool running;
-    handleSleepAndWake(ReadoutInterval, running);
-    if (!running) {
-        return;
-    }
-
-    RequestExecutionResult requestResult = executeQueuedRequests(running);
-    if (requestResult.isError) {
-        printAndPublishError(requestResult);
-    }
-
-    if (!readHistograms()) {
-        return;
-    }
-
-    string requestResultString = (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult;
-    publishAnswer(parseResponse(requestResultString));
-    m_readId++;
 }
 
 Result<string, string> TcmHistograms::resetHistograms()

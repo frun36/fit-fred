@@ -10,16 +10,12 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
         throw runtime_error("PmHistograms: board is a TCM");
     }
 
-    // fetch histogram data from db
+    // fetch histogram data from db - todo
 
     m_fifoAddress = pm->at(pm_parameters::HistogramDataReadout).baseAddress;
 
     addOrReplaceHandler("SELECT", [this](vector<string> arguments) -> Result<string, string> {
         return selectHistograms(arguments);
-    });
-
-    addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
-        return resetHistograms();
     });
 
     addOrReplaceHandler("HISTOGRAMMING", [this](vector<string> arguments) -> Result<string, string> {
@@ -43,28 +39,6 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
 
         return setBcIdFilter(counterId);
     });
-}
-
-void PmHistograms::processExecution()
-{
-    bool running;
-    handleSleepAndWake(ReadoutInterval, running);
-    if (!running) {
-        return;
-    }
-
-    RequestExecutionResult requestResult = executeQueuedRequests(running);
-    if (requestResult.isError) {
-        printAndPublishError(requestResult);
-    }
-
-    if (!readHistograms()) {
-        return;
-    }
-
-    string requestResultString = (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult;
-    publishAnswer(parseResponse(requestResultString));
-    m_readId++;
 }
 
 Result<string, string> PmHistograms::selectHistograms(const vector<string>& names)
@@ -160,10 +134,10 @@ bool PmHistograms::readHistograms()
     return true;
 }
 
-const char* PmHistograms::parseResponse(string requestResponse)
+const char* PmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%X\n", m_readId);
+    buffPos += sprintf(buffPos, "%08X\n", m_readId);
     for (const auto& [name, blocks] : data.getData()) {
         buffPos += sprintf(buffPos, "%s", name.c_str());
         for (const BinBlock* block : blocks) {

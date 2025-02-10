@@ -1,10 +1,10 @@
 #pragma once
 
-#include "services/LoopingFitIndefiniteMapi.h"
 #include "BoardCommunicationHandler.h"
+#include "services/histograms/BoardHistograms.h"
 #include "services/histograms/PmHistogramData.h"
 
-class PmHistograms : public LoopingFitIndefiniteMapi
+class PmHistograms : public BoardHistograms
 {
    private:
     PmHistogramData data;
@@ -22,11 +22,11 @@ class PmHistograms : public LoopingFitIndefiniteMapi
     void processExecution() override;
 
     Result<string, string> selectHistograms(const vector<string>& names);
-    Result<string, string> resetHistograms();
+    Result<string, string> resetHistograms() override;
     Result<string, string> switchHistogramming(bool on);
     Result<string, string> setBcIdFilter(int64_t bcId);
 
-    bool readHistograms();
+    bool readHistograms() override;
 
-    const char* parseResponse(string requestResultResponse);
+    const char* parseResponse(const string& requestResponse) const override;
 };

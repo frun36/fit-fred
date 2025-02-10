@@ -3,12 +3,13 @@
 #include "PM.h"
 #include "gbtInterfaceUtils.h"
 #include <thread>
-
+#include<unistd.h>
 void ResetFEE::processExecution()
 {
     bool running = true;
 
     if(m_initialized == false){
+        usleep(1e6); // wait for fred to start;
         auto response = updatePmSpiMask();
         if (response.errors.empty() == false) {
             printAndPublishError(response);

@@ -28,6 +28,21 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
         }
         return switchHistogramming(arguments[0] == "1");
     });
+
+    addOrReplaceHandler("BCID_FILTER", [this](vector<string> arguments) -> Result<string, string> {
+        int counterId;
+        istringstream iss(arguments.size() == 1 ? arguments[0] : "");
+
+        if (arguments[0] == "OFF") {
+            return setBcIdFilter(-1);
+        }
+
+        if (!(iss >> hex >> counterId) || !iss.eof()) {
+            return { .ok = nullopt, .error = "BCID_FILTER takes exactly one valid hexadecimal integer argument or the string \"OFF\"" };
+        }
+
+        return setBcIdFilter(counterId);
+    });
 }
 
 void PmHistograms::processExecution()
@@ -80,6 +95,41 @@ Result<string, string> PmHistograms::switchHistogramming(bool on)
     return { .ok = "Successfully " + (on ? string("enabled") : string("disabled")) + " PM histogramming", .error = nullopt };
 }
 
+Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
+{
+    if (bcId < 0) {
+        if (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValue() == 0) {
+            return { .ok = "BCID filter already disabled.", .error = nullopt };
+        }
+
+        auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeElectronicRequest(pm_parameters::BcIdFilterOn, 0));
+        if (parsedResponse.isError()) {
+            return { .ok = nullopt, .error = "Failed to reset BCID filter enabled flag:\n" + parsedResponse.getError() };
+        }
+        return { .ok = "Successfully disabled BCID filter", .error = nullopt };
+    }
+
+    bool alreadyEnabled = (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValue() == 1);
+    bool alreadySet = (m_handler.getBoard()->at(pm_parameters::BcIdToFilter).getElectronicValue() == bcId);
+
+    if (!alreadyEnabled) {
+        auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeElectronicRequest(pm_parameters::BcIdFilterOn, 1));
+        if (parsedResponse.isError()) {
+            return { .ok = nullopt, .error = "Failed to set BCID filter enabled flag:\n" + parsedResponse.getError() };
+        }
+    }
+
+    if (!alreadySet) {
+        auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeElectronicRequest(pm_parameters::BcIdToFilter, bcId));
+        if (parsedResponse.isError()) {
+            return { .ok = nullopt, .error = "Filtering is enabled, but failed to select BCID to filter:\n" + parsedResponse.getError() };
+        }
+    }
+
+    return { .ok = "BCID filter " + (alreadyEnabled ? string("was already enabled") : string("successfully enabled")) + ". BCID " + to_string(bcId) + (alreadySet ? string("was already set.") : string("successfully set.")),
+             .error = nullopt };
+}
+
 bool PmHistograms::readHistograms()
 {
     auto operations = data.getOperations();
@@ -110,10 +160,11 @@ bool PmHistograms::readHistograms()
     return true;
 }
 
-const char* PmHistograms::parseResponse(string requestResponse) {
+const char* PmHistograms::parseResponse(string requestResponse)
+{
     char* buffPos = m_responseBuffer;
     buffPos += sprintf(buffPos, "%X\n", m_readId);
-    for (const auto &[name, blocks] : data.getData()) {
+    for (const auto& [name, blocks] : data.getData()) {
         buffPos += sprintf(buffPos, "%s", name.c_str());
         for (const BinBlock* block : blocks) {
             if (!block->readoutEnabled) {

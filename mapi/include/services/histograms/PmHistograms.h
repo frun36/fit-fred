@@ -24,6 +24,7 @@ class PmHistograms : public LoopingFitIndefiniteMapi
     Result<string, string> selectHistograms(const vector<string>& names);
     Result<string, string> resetHistograms();
     Result<string, string> switchHistogramming(bool on);
+    Result<string, string> setBcIdFilter(int64_t bcId);
 
     bool readHistograms();
 

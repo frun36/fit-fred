@@ -55,6 +55,8 @@ inline std::vector<std::string> getAllCounters()
     };
 }
 
+constexpr std::string_view BcIdToFilter { "HIST_BCID_TO_FILTER" };
+constexpr std::string_view BcIdFilterOn { "HIST_BCID_FILTER_ON" };
 constexpr std::string_view ResetHistograms { "HIST_RESET" };
 constexpr std::string_view HistogrammingOn { "HIST_ON" };
 constexpr std::string_view CurrentAddressInHistogramData { "CURRENT_ADDRESS_IN_HISTOGRAM_DATA" };

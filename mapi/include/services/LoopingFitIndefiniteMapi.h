@@ -2,13 +2,13 @@
 
 #include "services/BasicFitIndefiniteMapi.h"
 
-using RequestHandler = std::function<bool(void)>;
+using RequestHandler = function<Result<string, string>(vector<string>)>;
 
 class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
 {
    private:
     bool m_stopped;
-    std::unordered_map<std::string, RequestHandler> m_requestHandlers;
+    unordered_map<string, RequestHandler> m_requestHandlers;
     chrono::system_clock::time_point m_startTime;
     useconds_t m_elapsed = 0;
 
@@ -17,24 +17,34 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     void handleSleepAndWake(useconds_t interval, bool& running);
 
     // Handling potential incoming requests
-    struct RequestExecutionResult {
-        const std::list<std::string> executed;
-        const std::list<std::string> skipped;
-        const std::string errorMsg;
-        const bool isError;
+    struct ParsedRequest {
+        const string prefix;
+        const vector<string> arguments;
+        const bool isMalformed;
 
-        RequestExecutionResult(const std::list<std::string>& requests,
-                               std::list<std::string>::const_iterator executedEnd,
+        ParsedRequest(string prefix, vector<string> arguments, bool isMalformed = false) : prefix(std::move(prefix)), arguments(std::move(arguments)), isMalformed(isMalformed) {}
+    };
+    static ParsedRequest parseRequest(const string& request);
+
+    struct RequestExecutionResult {
+        const list<string> executed;
+        const list<string> skipped;
+        const bool isError;
+        const string errorMsg;
+
+        RequestExecutionResult(const list<string>& requests,
+                               list<string>::const_iterator executedEnd,
                                bool isError = false,
-                               std::string errorMsg = "")
+                               string errorMsg = "")
             : executed(requests.begin(), executedEnd), skipped(executedEnd, requests.end()), isError(isError), errorMsg(errorMsg) {};
 
-        operator std::string() const;
+        operator string() const;
 
         bool isEmpty() const;
     };
 
-    bool addHandler(const std::string& request, RequestHandler handler);
+    void addOrReplaceHandler(const string& prefix, RequestHandler handler);
+    Result<string, string> executeSingleRequest(const string& req);
     RequestExecutionResult executeQueuedRequests(bool& running);
 
    public:

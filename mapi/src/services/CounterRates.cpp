@@ -15,12 +15,8 @@ CounterRates::CounterRates(shared_ptr<Board> board)
       m_names(board->isTcm() ? tcm_parameters::getAllCounters()
                              : pm_parameters::getAllCounters())
 {
-    addHandler("RESET", [this]() {
-        bool result = resetCounters();
-        if (result) {
-            Print::PrintInfo(name, "Successfully reset counters");
-        }
-        return result;
+    addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
+        return resetCounters();
     });
 }
 
@@ -201,19 +197,19 @@ vector<uint32_t> CounterRates::readDirectly()
     return result;
 }
 
-bool CounterRates::resetCounters()
+Result<string, string> CounterRates::resetCounters()
 {
     // additional read from FIFO (like in CS) shouldn't be required:
     // reset request is handled directly after last read from FIFO
 
     vector<uint32_t> directCounters = readDirectly();
     if (directCounters.empty()) {
-        return false;
+        return { .ok = nullopt, .error = "Direct counter readout failed" };
     }
 
     auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeRequest(m_resetFlagName, 1), false);
     if (parsedResponse.isError()) {
-        return false;
+        return { .ok = nullopt, .error = "Failed to set reset flag" };
     }
 
     if (m_counters.has_value()) {
@@ -225,7 +221,7 @@ bool CounterRates::resetCounters()
     }
     // m_counters->at(i) = 0;
 
-    return true;
+    return { .ok = "Successfully reset counters", .error = nullopt };
 }
 
 void CounterRates::processExecution()

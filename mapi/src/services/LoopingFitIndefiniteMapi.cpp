@@ -2,69 +2,84 @@
 #include <unistd.h>
 #include <chrono>
 #include <Alfred/print.h>
+#include "utils.h"
 
 LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_stopped(isDefaultStopped)
 {
-    addHandler("START", [this]() {
-        Print::PrintInfo(name, "Service started");
+    addOrReplaceHandler("START", [this](vector<string>) -> Result<string, string> {
         m_stopped = false;
-        return true;
+        return { .ok = "Service started", .error = nullopt };
     });
 
-    addHandler("STOP", [this]() {
-        Print::PrintInfo(name, "Service stopped");
+    addOrReplaceHandler("STOP", [this](vector<string>) -> Result<string, string> {
         m_stopped = true;
-        return true;
+        return { .ok = "Service stopped", .error = nullopt };
     });
 
-    m_startTime = std::chrono::high_resolution_clock::now();
+    m_startTime = chrono::high_resolution_clock::now();
 }
 
-bool LoopingFitIndefiniteMapi::addHandler(const std::string& request, RequestHandler handler)
+void LoopingFitIndefiniteMapi::addOrReplaceHandler(const string& prefix, RequestHandler handler)
 {
-    return m_requestHandlers.insert({ request, handler }).second;
+    m_requestHandlers[prefix] = handler;
 }
 
 void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& running)
 {
     if (!m_stopped) {
-        m_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_startTime).count();
+        m_elapsed = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - m_startTime).count();
 
         if (interval == 0) {
             return;
         }
 
         if (m_elapsed >= interval) {
-            Print::PrintWarning(name, "Service overloaded: elapsed " + std::to_string(m_elapsed * 0.001) + " ms, interval " + std::to_string(interval * 0.001) + " ms");
+            Print::PrintWarning(name, "Service overloaded: elapsed " + to_string(m_elapsed * 0.001) + " ms, interval " + to_string(interval * 0.001) + " ms");
         } else {
             usleep(interval - m_elapsed);
         }
     }
 
     while (m_stopped) {
-        std::string request = waitForRequest(running);
+        string request = waitForRequest(running);
         if (!running) {
             return;
         }
 
-        if (request == "START") {
-            m_requestHandlers["START"]();
+        auto result = executeSingleRequest(request);
+        if (result.isOk()) {
+            Print::PrintInfo(name, *result.ok);
         } else {
-            printAndPublishError("Unexpected request received while stopped: '" + request + "'");
+            printAndPublishError("Failed to execute " + request + ": " + *result.error);
         }
     }
 
-    m_startTime = std::chrono::high_resolution_clock::now();
+    m_startTime = chrono::high_resolution_clock::now();
 }
 
+Result<string, string> LoopingFitIndefiniteMapi::executeSingleRequest(const string& req)
+{
+    ParsedRequest pr = parseRequest(req);
+    if (pr.isMalformed) {
+        return { .ok = nullopt, .error = "Request " + req + " is malformed: expected [PREFIX][,OPTIONAL,ARGUMENTS,...]" };
+    }
+
+    auto handlerPairIt = m_requestHandlers.find(pr.prefix);
+    if (handlerPairIt == m_requestHandlers.end()) {
+        return { .ok = nullopt, .error = "Request " + pr.prefix + " is unexpected" };
+    }
+
+    auto handler = handlerPairIt->second;
+    return handler(pr.arguments);
+}
 LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::executeQueuedRequests(bool& running)
 {
-    std::list<std::string> requests;
+    list<string> requests;
     while (isRequestAvailable(running)) {
         if (!running) {
             return RequestExecutionResult(requests, requests.begin(), true, "Error getting available requests: not running");
         }
-        std::string currRequest = getRequest();
+        string currRequest = getRequest();
         // Insert only if the request is different than the last one
         // (treats consecutive identical queued requests as one)
         if (requests.empty() || requests.back() != currRequest) {
@@ -72,24 +87,19 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
         }
     }
 
-    for (std::list<std::string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
-        auto handlerPairIt = m_requestHandlers.find(*it);
-        if (handlerPairIt == m_requestHandlers.end()) {
-            return RequestExecutionResult(requests, it, true, "Request '" + *it + "' is unexpected");
-        }
-
-        auto handler = handlerPairIt->second;
-        if (!handler()) {
-            return RequestExecutionResult(requests, it, true, "Execution of '" + *it + "' failed");
+    for (list<string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
+        auto result = executeSingleRequest(*it);
+        if (!result.isOk()) {
+            return RequestExecutionResult(requests, it, true, *result.error);
         }
     }
 
     return RequestExecutionResult(requests, requests.end());
 }
 
-LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
+LoopingFitIndefiniteMapi::RequestExecutionResult::operator string() const
 {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << "Executed: ";
     for (const auto& req : executed) {
@@ -111,4 +121,19 @@ LoopingFitIndefiniteMapi::RequestExecutionResult::operator std::string() const
 bool LoopingFitIndefiniteMapi::RequestExecutionResult::isEmpty() const
 {
     return executed.empty() && skipped.empty();
+}
+
+LoopingFitIndefiniteMapi::ParsedRequest LoopingFitIndefiniteMapi::parseRequest(const string& request)
+{
+    auto result = string_utils::Splitter::getAll(request, ',');
+    if (!result.isOk()) {
+        return ParsedRequest("", {}, true);
+    }
+    if (result.ok->empty()) {
+        return ParsedRequest("", {}, true);
+    }
+    string prefix = result.ok->front();
+    result.ok->erase(result.ok->begin());
+
+    return ParsedRequest(prefix, *result.ok);
 }

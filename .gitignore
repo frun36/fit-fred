@@ -3,3 +3,5 @@
 local-dcs/common-storage/output
 !local-dcs/common-storage/output/.gitkeep
 test/build
+compile_commands.json
+.cache/

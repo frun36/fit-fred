@@ -1,13 +1,8 @@
 #pragma once
 
-#include <sstream>
-#include <chrono>
-#include "communication-utils/AlfResponseParser.h"
 #include "BoardCommunicationHandler.h"
 
 #include "services/LoopingFitIndefiniteMapi.h"
-#include "TCM.h"
-#include "PM.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -71,10 +66,11 @@ class CounterRates : public LoopingFitIndefiniteMapi
         FifoState fifoState;
         uint32_t fifoLoad;
         FifoReadResult fifoReadResult;
-        useconds_t prevElapsed;
 
         optional<vector<uint32_t>> counters;
         optional<vector<double>> rates;
+
+        useconds_t prevElapsed;
 
         ReadoutResult(
             ReadIntervalState readIntervalState,
@@ -115,11 +111,11 @@ class CounterRates : public LoopingFitIndefiniteMapi
     FifoState evaluateFifoState(uint32_t fifoLoad) const;
 
     FifoReadResult handleCounterValues(const BoardCommunicationHandler::FifoResponse&& fifoResult, bool clearOnly);
-    inline FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false) { return handleCounterValues(move(BasicFitIndefiniteMapi::readFifo(m_handler, m_fifoName, fifoLoad)), clearOnly); }
+    inline FifoReadResult readFifo(uint32_t fifoLoad, bool clearOnly = false) { return handleCounterValues(std::move(BasicFitIndefiniteMapi::readFifo(m_handler, m_fifoName, fifoLoad)), clearOnly); }
     inline FifoReadResult clearFifo(uint32_t fifoLoad) { return readFifo(fifoLoad, true); }
     vector<uint32_t> readDirectly();
     void resetService();
-    bool resetCounters();
+    Result<string, string> resetCounters();
 
     optional<ReadoutResult> handleDirectReadout();
     optional<ReadoutResult> handleFifoReadout(ReadIntervalState readIntervalState);

@@ -49,6 +49,7 @@ void LoopingFitIndefiniteMapi::handleSleepAndWake(useconds_t interval, bool& run
         auto result = executeSingleRequest(request);
         if (result.isOk()) {
             Print::PrintInfo(name, *result.ok);
+            publishAnswer("Successfully executed " + request);
         } else {
             printAndPublishError("Failed to execute " + request + ": " + *result.error);
         }
@@ -89,7 +90,11 @@ LoopingFitIndefiniteMapi::RequestExecutionResult LoopingFitIndefiniteMapi::execu
 
     for (list<string>::const_iterator it = requests.begin(); it != requests.end(); it++) {
         auto result = executeSingleRequest(*it);
-        if (!result.isOk()) {
+        if (result.isOk()) {
+            Print::PrintInfo(name, *result.ok);
+            publishAnswer("Successfully executed " + (*it));
+        } else {
+            printAndPublishError("Failed to execute " + (*it) + ": " + *result.error);
             return RequestExecutionResult(requests, it, true, *result.error);
         }
     }

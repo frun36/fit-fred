@@ -8,6 +8,14 @@ void ResetFEE::processExecution()
 {
     bool running = true;
 
+    if(m_initialized == false){
+        auto response = updatePmSpiMask();
+        if (response.errors.empty() == false) {
+            printAndPublishError(response);
+        }
+        m_initialized = true;
+    }
+
     std::string request = waitForRequest(running);
     if (running == false) {
         return;
@@ -45,7 +53,7 @@ void ResetFEE::processExecution()
 
     Print::PrintVerbose("Constructing SPI mask");
     {
-        auto response = testPMLinks();
+        auto response = updatePmSpiMask();
         if (response.errors.empty() == false) {
             printAndPublishError(response);
             return;
@@ -106,7 +114,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
     return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }
 
-BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
+BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
 {
     bool isConnected[20] = {false};
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);

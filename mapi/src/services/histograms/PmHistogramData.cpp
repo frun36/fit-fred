@@ -50,7 +50,7 @@ BlockView PmHistogramData::createBlockView()
     return view;
 }
 
-std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() const
+std::vector<PmHistogramData::OperationInfo> PmHistogramData::generateOperations() const
 {
     std::vector<OperationInfo> requests; // (baseAdress, readSize)
 
@@ -68,7 +68,7 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::getOperations() con
             }
 
             // extend previous readout if regblocks are connected
-            // (doesn't take into account the auto-skipped region inbetween channel data blocks)
+            // (works only within single channel)
             OperationInfo& lastRequest = requests.back();
             if (currBaseAddress == lastRequest.baseAddress + lastRequest.regblockSize) {
                 lastRequest.regblockSize += block.regblockSize;

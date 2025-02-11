@@ -1,16 +1,17 @@
 #include "services/histograms/PmHistograms.h"
 #include <cstdio>
+#include <string>
 #include "PM.h"
 #include "services/histograms/BinBlock.h"
 #include "utils.h"
 
-PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
+PmHistograms::PmHistograms(shared_ptr<Board> pm) : data(pm), m_handler(pm)
 {
     if (pm->isTcm()) {
         throw runtime_error("PmHistograms: board is a TCM");
     }
 
-    m_fifoAddress = pm->at(pm_parameters::HistogramDataReadout).baseAddress;
+    m_fifoAddress = pm->at(pm_parameters::HistogramReadout).baseAddress;
 
     addOrReplaceHandler("SELECT", [this](vector<string> arguments) -> Result<string, string> {
         return selectHistograms(arguments);
@@ -62,7 +63,7 @@ Result<string, string> PmHistograms::switchHistogramming(bool on)
             m_handler,
             WinCCRequest::writeRequest(pm_parameters::HistogrammingOn, static_cast<uint32_t>(on)));
     if (parsedResponse.isError()) {
-        return { .ok = nullopt, .error = "Failed to set histogramming flag:\n" + parsedResponse.getError() };
+        return { .ok = nullopt, .error = "Failed to write histogramming flag:\n" + parsedResponse.getError() };
     }
     return { .ok = "Successfully " + (on ? string("enabled") : string("disabled")) + " PM histogramming", .error = nullopt };
 }
@@ -94,11 +95,12 @@ Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
     if (!alreadySet) {
         auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeElectronicRequest(pm_parameters::BcIdToFilter, bcId));
         if (parsedResponse.isError()) {
-            return { .ok = nullopt, .error = "Filtering is enabled, but failed to select BCID to filter:\n" + parsedResponse.getError() };
+            return { .ok = nullopt, .error = "Filtering is enabled, but selecting BCID " + to_string(bcId) + " to filter has failed:\n" + parsedResponse.getError() };
         }
     }
 
-    return { .ok = "BCID filter " + (alreadyEnabled ? string("was already enabled") : string("successfully enabled")) + ". BCID " + to_string(bcId) + (alreadySet ? string("was already set.") : string("successfully set.")),
+    return { .ok = "BCID filter " + (alreadyEnabled ? string("was already enabled") : string("successfully enabled")) +
+                   ". BCID " + to_string(bcId) + (alreadySet ? string("was already set.") : string("successfully set.")),
              .error = nullopt };
 }
 

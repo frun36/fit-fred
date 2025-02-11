@@ -29,4 +29,6 @@ class PmHistograms : public BoardHistograms
     bool readHistograms() override;
 
     const char* parseResponse(const string& requestResponse) const override;
+
+    ~PmHistograms() { delete[] m_responseBuffer; }
 };

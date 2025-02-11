@@ -41,4 +41,6 @@ class BoardHistograms : public LoopingFitIndefiniteMapi
         publishAnswer(parseResponse(requestResultString));
         m_readId++;
     }
+
+    virtual ~BoardHistograms() = default;
 };

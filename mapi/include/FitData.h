@@ -20,16 +20,15 @@ class FitData
     std::unordered_map<std::string, std::shared_ptr<Board>>& getBoards() { return m_boards; }
     std::unordered_map<std::string, std::list<std::string>>& getStatusList() { return m_statusParameters; }
 
-    struct PmHistogramBlock
-    {
+    struct PmHistogramBlock {
         uint32_t addressOffset;
         uint32_t regBlockSize;
         int32_t startBin;
-        enum class Direction{Positive, Negative} direction;
+        enum class Direction { Positive,
+                               Negative } direction;
     };
 
-    struct PmHistogram
-    {
+    struct PmHistogram {
         std::string name;
         PmHistogramBlock positiveBins;
         PmHistogramBlock negativeBins;
@@ -46,6 +45,17 @@ class FitData
                                TCM } type;
         uint32_t index;
         bool isConnected;
+    };
+
+    struct PmHistogramInfo {
+        std::string histogramName;
+        uint32_t baseAddress;
+        uint32_t regblockSize;
+        int32_t startBin;
+        uint32_t binsPerRegister;
+        enum class Direction { Positive, Negative } direction;
+
+        PmHistogramInfo(const std::vector<MultiBase*>& row);
     };
 
     [[nodiscard]] bool fetchBoardParamters(std::string boardType);

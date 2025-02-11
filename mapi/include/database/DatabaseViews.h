@@ -13,7 +13,7 @@
 namespace db_fit
 {
 
-namespace tabels
+namespace tables
 {
 class BoardTypes
 {

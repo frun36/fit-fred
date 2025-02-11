@@ -1,6 +1,6 @@
 #include <sstream>
 #include <algorithm>
-#include<vector>
+#include <vector>
 #include "database/DatabaseViews.h"
 
 ///
@@ -10,11 +10,10 @@
 namespace db_fit
 {
 
-
 // namespace hex
 
 // BoardTypes class
-namespace tabels
+namespace tables
 {
 const std::string BoardTypes::TypeTCM{ "TCM" };
 const std::string BoardTypes::TypePM{ "PM" };
@@ -55,7 +54,6 @@ Parameters::Row::Row(const std::vector<MultiBase*>& row)
     eqPhysicToElectronic = Parameters::EqPhysicToElectronic.parse(row[Parameters::EqPhysicToElectronic.idx]);
     refreshType = Parameters::RefreshType.parseNullable(row[Parameters::RefreshType.idx]);
 }
-
 
 // ConnectedDevices class
 const std::string ConnectedDevices::TableName{ "CONNECTED_DEVICES" };
@@ -114,6 +112,6 @@ ConfigurationParameters::Row::Row(const std::vector<MultiBase*>& row)
     parameterName = ParameterName.parse(row[ParameterName.idx]);
     parameterValue = ParameterValue.parse(row[ParameterValue.idx]);
 }
-}
+} // namespace tables
 
 } // namespace db_fit

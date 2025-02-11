@@ -10,8 +10,6 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm) : m_handler(pm)
         throw runtime_error("PmHistograms: board is a TCM");
     }
 
-    // fetch histogram data from db - todo
-
     m_fifoAddress = pm->at(pm_parameters::HistogramDataReadout).baseAddress;
 
     addOrReplaceHandler("SELECT", [this](vector<string> arguments) -> Result<string, string> {

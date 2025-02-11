@@ -6,21 +6,18 @@
 #include <array>
 #include <services/histograms/BinBlock.h>
 
-using BlocksView = std::map<std::string, std::vector<const BinBlock*>>; 
+using BlockView = std::map<std::string, std::vector<const BinBlock*>>;
 
 class PmHistogramData
 {
    private:
     const std::array<std::vector<BinBlock>, 12> m_channelBlocks;
-    const BlocksView m_orderedBlocksView;
+    const BlockView m_orderedBlocksView;
     static constexpr uint32_t ChannelBaseAddress = 0x2000;
 
-    static std::array<std::vector<BinBlock>, 12> fetchChannelBlocks()
-    {
-        // todo
-    }
+    static std::array<std::vector<BinBlock>, 12> fetchChannelBlocks();
 
-    BlocksView createBlocksView();
+    BlockView createBlockView();
 
    public:
     struct OperationInfo {
@@ -34,9 +31,10 @@ class PmHistogramData
 
     bool storeReadoutData(uint32_t baseAddress, const std::vector<uint32_t>& data);
 
-    PmHistogramData() : m_channelBlocks(fetchChannelBlocks()), m_orderedBlocksView(createBlocksView()) {}
+    PmHistogramData() : m_channelBlocks(fetchChannelBlocks()), m_orderedBlocksView(createBlockView()) {}
 
-    const BlocksView& getData() const {
+    const BlockView& getData() const
+    {
         return m_orderedBlocksView;
     }
 };

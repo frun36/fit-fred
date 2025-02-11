@@ -1,11 +1,37 @@
 #include "services/histograms/PmHistogramData.h"
 #include <algorithm>
 #include <iomanip>
+#include <iterator>
 #include <sstream>
+#include <vector>
+#include "services/histograms/BinBlock.h"
+#include <database/sql.h>
+#include <Database/databaseinterface.h>
 
-BlocksView PmHistogramData::createBlocksView()
+std::array<std::vector<BinBlock>, 12> fetchChannelBlocks() {
+    sql::SelectModel s;
+    s.select("histogram_name", "base_address", "start_bin", "regblock_size", "is_negative_direction")
+        .from("pm_histograms")
+        .join("pm_histogram_structure")
+        .on(sql::column("pm_histograms.id") == sql::column("pm_histogram_structure.histogram_id"));
+
+    std::vector<std::vector<MultiBase*>> result = DatabaseInterface::executeQuery(s.str());
+    std::vector<BinBlock> channelBlocks;
+
+    std::transform(result.begin(), result.end(), std::back_inserter(channelBlocks), [](const auto& row) {
+        return HistogramInfoRow(row);
+    });
+
+    std::sort(channelBlocks.begin(), channelBlocks.end());
+
+    std::array<std::vector<BinBlock>, 12> channels;
+    std::for_each(channels.begin(), channels.end(), [channelBlocks](auto& ch) { ch = channelBlocks; });
+    return channels;
+}
+
+BlockView PmHistogramData::createBlockView()
 {
-    BlocksView view;
+    BlockView view;
     for (size_t chIdx = 0; chIdx < 12; chIdx++) {
         for (const auto& block : m_channelBlocks[chIdx]) {
             std::stringstream key;

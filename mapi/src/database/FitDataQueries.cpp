@@ -9,21 +9,21 @@ namespace queries
 std::string selectParameters(std::string boardType)
 {
     sql::SelectModel query;
-    query.select("*").from(db_fit::tables::Parameters::TableName).where(sql::column(db_fit::tables::Parameters::BoardType.name) == boardType);
+    query.select("*").from(db_fit::tabels::Parameters::TableName).where(sql::column(db_fit::tabels::Parameters::BoardType.name) == boardType);
     return query.str();
 }
 
 std::string selectConnectedDevices()
 {
     sql::SelectModel query;
-    query.select("*").from(db_fit::tables::ConnectedDevices::TableName);
+    query.select("*").from(db_fit::tabels::ConnectedDevices::TableName);
     return query.str();
 }
 
 std::string selectEnvironment()
 {
     sql::SelectModel query;
-    query.select("*").from(db_fit::tables::Environment::TableName);
+    query.select("*").from(db_fit::tabels::Environment::TableName);
     return query.str();
 }
 
@@ -31,15 +31,15 @@ std::string selectPmHistograms()
 {
     sql::SelectModel query;
     query.select(
-             tables::PmChannelHistograms::Name.name,
-             tables::PmChannelHistogramStructure::BaseAddress.name,
-             tables::PmChannelHistogramStructure::RegBlockSize.name,
-             tables::PmChannelHistogramStructure::StartBin.name,
-             tables::PmChannelHistogramStructure::BinsPerRegister.name,
-             tables::PmChannelHistogramStructure::BinDirection.name)
-        .from(tables::PmChannelHistograms::TableName)
-        .join(tables::PmChannelHistogramStructure::TableName)
-        .on(sql::column(tables::PmChannelHistograms::Id.name) == sql::column(tables::PmChannelHistogramStructure::PmHistogramId.name));
+             tabels::PmChannelHistograms::Name.name,
+             tabels::PmChannelHistogramStructure::BaseAddress.name,
+             tabels::PmChannelHistogramStructure::RegBlockSize.name,
+             tabels::PmChannelHistogramStructure::StartBin.name,
+             tabels::PmChannelHistogramStructure::BinsPerRegister.name,
+             tabels::PmChannelHistogramStructure::BinDirection.name)
+        .from(tabels::PmChannelHistograms::TableName)
+        .join(tabels::PmChannelHistogramStructure::TableName)
+        .on(sql::column(tabels::PmChannelHistograms::Id.name) == sql::column(tabels::PmChannelHistogramStructure::PmHistogramId.name));
     return query.str();
 }
 } // namespace queries

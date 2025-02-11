@@ -16,7 +16,7 @@ BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationIn
     optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        db_fit::tables::ConfigurationParameters::Row parsedRow(row);
+        db_fit::tabels::ConfigurationParameters::Row parsedRow(row);
         if (parsedRow.parameterName == tcm_parameters::DelayA) {
             delayA = parsedRow.parameterValue;
         } else if (parsedRow.parameterName == tcm_parameters::DelayC) {

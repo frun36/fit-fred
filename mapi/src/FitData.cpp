@@ -10,12 +10,12 @@
 
 FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 {
-    name = dbRow[db_fit::tables::ConnectedDevices::BoardName.idx]->getString();
-    std::string type = dbRow[db_fit::tables::ConnectedDevices::BoardType.idx]->getString();
+    name = dbRow[db_fit::tabels::ConnectedDevices::BoardName.idx]->getString();
+    std::string type = dbRow[db_fit::tabels::ConnectedDevices::BoardType.idx]->getString();
 
-    if (type == db_fit::tables::ConnectedDevices::TypePM)
+    if (type == db_fit::tabels::ConnectedDevices::TypePM)
         this->type = BoardType::PM;
-    else if (type == db_fit::tables::ConnectedDevices::TypeTCM)
+    else if (type == db_fit::tabels::ConnectedDevices::TypeTCM)
         this->type = BoardType::TCM;
     else
         throw std::runtime_error("Invalid board type in Connected Devices table");
@@ -28,7 +28,7 @@ FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 
         this->index = std::stoi(name.substr(3, 1));
     }
-    isConnected = db_fit::tables::ConnectedDevices::IsConnected.parse(dbRow[db_fit::tables::ConnectedDevices::IsConnected.idx]);
+    isConnected = db_fit::tabels::ConnectedDevices::IsConnected.parse(dbRow[db_fit::tabels::ConnectedDevices::IsConnected.idx]);
 }
 
 FitData::FitData() : m_ready(false)
@@ -39,10 +39,10 @@ FitData::FitData() : m_ready(false)
         return;
     }
 
-    if (!fetchBoardParamters(db_fit::tables::BoardTypes::TypeTCM)) {
+    if (!fetchBoardParamters(db_fit::tabels::BoardTypes::TypeTCM)) {
         return;
     }
-    if (!fetchBoardParamters(db_fit::tables::BoardTypes::TypePM)) {
+    if (!fetchBoardParamters(db_fit::tabels::BoardTypes::TypePM)) {
         return;
     }
     if (!fetchEnvironment()) {
@@ -145,7 +145,7 @@ bool FitData::fetchConnectedDevices()
 
 bool FitData::fetchPmHistogramStructure()
 {
-    auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectHistogramStucture());
+    auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectPmHistograms());
     
 }
 
@@ -153,7 +153,7 @@ std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<Multi
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0, false);
     for (auto& row : boardTable) {
-        Print::PrintVerbose("Parsing parameter: " + row[db_fit::tables::Parameters::Name.idx]->getString());
+        Print::PrintVerbose("Parsing parameter: " + row[db_fit::tabels::Parameters::Name.idx]->getString());
         board->emplace(parseParameter(row));
     }
     Print::PrintVerbose("Board parsed successfully");
@@ -173,7 +173,7 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
 
 Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
 {
-    db_fit::tables::Parameters::Row row(dbRow);
+    db_fit::tabels::Parameters::Row row(dbRow);
     Board::ParameterInfo::RefreshType refreshType = row.refreshType.has_value() ? Board::ParameterInfo::RefreshType::SYNC : Board::ParameterInfo::RefreshType::NOT;
 
     Board::ParameterInfo::ValueEncoding encoding = row.isSigned ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
@@ -194,7 +194,7 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     }
 
     return {
-        dbRow[db_fit::tables::Parameters::Name.idx]->getString(),
+        dbRow[db_fit::tabels::Parameters::Name.idx]->getString(),
         row.baseAddress,
         row.startBit,
         bitLength,
@@ -224,7 +224,7 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
 {
     m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
-        db_fit::tables::Environment::Row parsedRow(row);
+        db_fit::tabels::Environment::Row parsedRow(row);
         
         Print::PrintVerbose("Parsing " + parsedRow.name);
         Print::PrintVerbose("Equation: " + parsedRow.equation.equation);
@@ -235,7 +235,7 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
         }
     }
     for (auto& row : settingsTable) {
-        std::string name = row[db_fit::tables::Environment::Name.idx]->getString();
+        std::string name = row[db_fit::tabels::Environment::Name.idx]->getString();
         Print::PrintVerbose("Updating " + name);
         m_environmentalVariables->updateVariable(name);
         Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_environmentalVariables->getVariable(name)));

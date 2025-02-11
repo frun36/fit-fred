@@ -114,7 +114,7 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructInsertPar
     int64_t electronicValue = board->calculateElectronic(insert.paramName, physicalValue);
 
     sql::InsertModel query;
-    query.insert(db_fit::tables::ConfigurationParameters::ConfigurationName.name, insert.configName)(db_fit::tables::ConfigurationParameters::BoardName.name, insert.boardName)(db_fit::tables::ConfigurationParameters::BoardType.name, boardType)(db_fit::tables::ConfigurationParameters::ParameterName.name, insert.paramName)(db_fit::tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).into(db_fit::tables::ConfigurationParameters::TableName);
+    query.insert(db_fit::tabels::ConfigurationParameters::ConfigurationName.name, insert.configName)(db_fit::tabels::ConfigurationParameters::BoardName.name, insert.boardName)(db_fit::tabels::ConfigurationParameters::BoardType.name, boardType)(db_fit::tabels::ConfigurationParameters::ParameterName.name, insert.paramName)(db_fit::tabels::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).into(db_fit::tabels::ConfigurationParameters::TableName);
 
     return { .ok = query.str(), .error = std::nullopt };
 }
@@ -132,7 +132,7 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructInsertCon
     InsertConfiguration insert(result.ok.value());
 
     sql::InsertModel query;
-    query.insert(db_fit::tables::Configurations::ConfigurationName.name, insert.configName)(db_fit::tables::Configurations::Author.name, insert.author)(db_fit::tables::Configurations::Comment.name, insert.comment).into(db_fit::tables::Configurations::TableName);
+    query.insert(db_fit::tabels::Configurations::ConfigurationName.name, insert.configName)(db_fit::tabels::Configurations::Author.name, insert.author)(db_fit::tabels::Configurations::Comment.name, insert.comment).into(db_fit::tabels::Configurations::TableName);
     return { .ok = query.str(), .error = std::nullopt };
 }
 
@@ -164,7 +164,7 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructUpdatePar
     int64_t electronicValue = board->calculateElectronic(update.paramName, physicalValue);
 
     sql::UpdateModel query;
-    query.update(db_fit::tables::ConfigurationParameters::TableName).set(db_fit::tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == update.configName && sql::column(db_fit::tables::ConfigurationParameters::BoardType.name) == boardType && sql::column(db_fit::tables::ConfigurationParameters::BoardName.name) == update.boardName && sql::column(db_fit::tables::ConfigurationParameters::ParameterName.name) == update.paramName);
+    query.update(db_fit::tabels::ConfigurationParameters::TableName).set(db_fit::tabels::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).where(sql::column(db_fit::tabels::ConfigurationParameters::ConfigurationName.name) == update.configName && sql::column(db_fit::tabels::ConfigurationParameters::BoardType.name) == boardType && sql::column(db_fit::tabels::ConfigurationParameters::BoardName.name) == update.boardName && sql::column(db_fit::tabels::ConfigurationParameters::ParameterName.name) == update.paramName);
     return { .ok = query.str(), .error = std::nullopt };
 }
 
@@ -180,15 +180,15 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructSelectPar
     }
     SelectParameter select(result.ok.value());
     sql::SelectModel query;
-    query.select("*").from(db_fit::tables::ConfigurationParameters::TableName);
+    query.select("*").from(db_fit::tabels::ConfigurationParameters::TableName);
     if (select.configName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == select.configName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::ConfigurationName.name) == select.configName);
     }
     if (select.boardName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::BoardName.name) == select.boardName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::BoardName.name) == select.boardName);
     }
     if (select.paramName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::ParameterName.name) == select.paramName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::ParameterName.name) == select.paramName);
     }
     return { .ok = query.str(), .error = std::nullopt };
 }
@@ -205,18 +205,18 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructSelectVer
     SelectParameterVersion select(result.ok.value());
     sql::SelectModel query;
 
-    query.select("*").from(db_fit::tables::ConfigurationParameters::TableName);
+    query.select("*").from(db_fit::tabels::ConfigurationParameters::TableName);
     if (select.configName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == select.configName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::ConfigurationName.name) == select.configName);
     }
     if (select.boardName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::BoardName.name) == select.boardName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::BoardName.name) == select.boardName);
     }
     if (select.paramName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::ParameterName.name) == select.paramName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::ParameterName.name) == select.paramName);
     }
     std::string queryStr = query.str();
-    queryStr.insert(queryStr.find("*"), string_utils::concatenate(" ", db_fit::tables::ConfigurationParameters::TableName, "."));
+    queryStr.insert(queryStr.find("*"), string_utils::concatenate(" ", db_fit::tabels::ConfigurationParameters::TableName, "."));
     queryStr.insert(queryStr.find("*") + 1, string_utils::concatenate(",", VersionColumns));
     std::string version = versions(select.startDate);
     size_t versionPos = queryStr.find("where");
@@ -240,12 +240,12 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructSelectCon
     SelectConfiguration select(result.ok.value());
 
     sql::SelectModel query;
-    query.select("*").from(db_fit::tables::Configurations::TableName);
+    query.select("*").from(db_fit::tabels::Configurations::TableName);
     if (select.configName != "*") {
-        query.where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == select.configName);
+        query.where(sql::column(db_fit::tabels::ConfigurationParameters::ConfigurationName.name) == select.configName);
     }
     if (select.author != "*") {
-        query.where(sql::column(db_fit::tables::Configurations::Author.name) == select.author);
+        query.where(sql::column(db_fit::tabels::Configurations::Author.name) == select.author);
     }
 
     return { .ok = query.str(), .error = std::nullopt };
@@ -263,10 +263,10 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructDeletePar
     DeleteParameter deletion(result.ok.value());
 
     sql::DeleteModel query;
-    query.from(db_fit::tables::ConfigurationParameters::TableName);
-    query.where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == deletion.configName);
-    query.where(sql::column(db_fit::tables::ConfigurationParameters::BoardName.name) == deletion.boardName);
-    query.where(sql::column(db_fit::tables::ConfigurationParameters::ParameterName.name) == deletion.paramName);
+    query.from(db_fit::tabels::ConfigurationParameters::TableName);
+    query.where(sql::column(db_fit::tabels::ConfigurationParameters::ConfigurationName.name) == deletion.configName);
+    query.where(sql::column(db_fit::tabels::ConfigurationParameters::BoardName.name) == deletion.boardName);
+    query.where(sql::column(db_fit::tabels::ConfigurationParameters::ParameterName.name) == deletion.paramName);
     return { .ok = query.str(), .error = std::nullopt };
 }
 
@@ -295,11 +295,11 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::executeSelectParam
     }
 
     for (auto& row : results) {
-        std::string boardName = row[db_fit::tables::ConfigurationParameters::BoardName.idx]->getString();
-        std::string parameterName = row[db_fit::tables::ConfigurationParameters::ParameterName.idx]->getString();
-        std::string value = toPhysical(boardName, parameterName, row[db_fit::tables::ConfigurationParameters::ParameterValue.idx]->getDouble());
+        std::string boardName = row[db_fit::tabels::ConfigurationParameters::BoardName.idx]->getString();
+        std::string parameterName = row[db_fit::tabels::ConfigurationParameters::ParameterName.idx]->getString();
+        std::string value = toPhysical(boardName, parameterName, row[db_fit::tabels::ConfigurationParameters::ParameterValue.idx]->getDouble());
 
-        rows += row[db_fit::tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
+        rows += row[db_fit::tabels::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
         rows += boardName + ",";
         rows += parameterName + ",";
         rows += value;
@@ -329,11 +329,11 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::executeSelectVerio
     }
 
     for (auto& row : results) {
-        std::string boardName = row[db_fit::tables::ConfigurationParameters::BoardName.idx]->getString();
-        std::string parameterName = row[db_fit::tables::ConfigurationParameters::ParameterName.idx]->getString();
-        std::string value = toPhysical(boardName, parameterName, row[db_fit::tables::ConfigurationParameters::ParameterValue.idx]->getDouble());
+        std::string boardName = row[db_fit::tabels::ConfigurationParameters::BoardName.idx]->getString();
+        std::string parameterName = row[db_fit::tabels::ConfigurationParameters::ParameterName.idx]->getString();
+        std::string value = toPhysical(boardName, parameterName, row[db_fit::tabels::ConfigurationParameters::ParameterValue.idx]->getDouble());
 
-        rows += row[db_fit::tables::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
+        rows += row[db_fit::tabels::ConfigurationParameters::ConfigurationName.idx]->getString() + ",";
         rows += boardName + ",";
         rows += parameterName + ",";
         rows += value + ",";
@@ -371,10 +371,10 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::executeSelectConfi
     }
 
     for (auto& row : results) {
-        rows += row[db_fit::tables::Configurations::ConfigurationName.idx]->getString() + ",";
-        rows += row[db_fit::tables::Configurations::Author.idx]->getString() + ",";
-        rows += row[db_fit::tables::Configurations::Date.idx]->getString() + ",";
-        rows += (row[db_fit::tables::Configurations::Comment.idx] != nullptr) ? row[db_fit::tables::Configurations::Comment.idx]->getString() : "NULL";
+        rows += row[db_fit::tabels::Configurations::ConfigurationName.idx]->getString() + ",";
+        rows += row[db_fit::tabels::Configurations::Author.idx]->getString() + ",";
+        rows += row[db_fit::tabels::Configurations::Date.idx]->getString() + ",";
+        rows += (row[db_fit::tabels::Configurations::Comment.idx] != nullptr) ? row[db_fit::tabels::Configurations::Comment.idx]->getString() : "NULL";
         rows += "\n";
     }
     return { .ok = rows, .error = std::nullopt };

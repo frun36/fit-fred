@@ -13,7 +13,7 @@
 namespace db_fit
 {
 
-namespace tables
+namespace tabels
 {
 
 std::string fullColumnName(const std::string& tabelName, const std::string& columnName);

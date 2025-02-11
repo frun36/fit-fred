@@ -28,7 +28,7 @@ void MapiFactory::generateObjects()
     std::vector<std::shared_ptr<Board>> pms;
     for (auto [boardName, board] : boardsData.getBoards()) {
         string section;
-        if(board->isConnected() == false){
+        if (board->isConnected() == false) {
             continue;
         }
 
@@ -51,7 +51,10 @@ void MapiFactory::generateObjects()
         m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject->getBoardConfigurationServices().at(boardName).get()));
         m_fred->registerMapiObject(servicePrefix + "RESET", &m_resetObjects.back());
         m_fred->registerMapiObject(servicePrefix + "COUNTER_RATES", &m_counterRatesObjects.back());
-
+        if (!board->isTcm()) {
+            m_pmHistogramsObjects.emplace_back(board);
+            m_fred->registerMapiObject(servicePrefix + "HISTOGRAMS", &m_pmHistogramsObjects.back());
+        }
         Print::PrintVerbose(boardName + " registered");
     }
 

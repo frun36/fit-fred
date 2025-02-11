@@ -10,7 +10,7 @@
 
 std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks() {
     sql::SelectModel s;
-    s.select("histogram_name", "base_address", "start_bin", "regblock_size", "is_negative_direction")
+    s.select("histogram_name", "base_address", "regblock_size", "start_bin", "bins_per_register", "direction")
         .from("pm_histograms")
         .join("pm_histogram_structure")
         .on(sql::column("pm_histograms.id") == sql::column("pm_histogram_structure.histogram_id"));
@@ -22,7 +22,9 @@ std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks() {
         return HistogramInfoRow(row);
     });
 
-    std::sort(channelBlocks.begin(), channelBlocks.end());
+    std::sort(channelBlocks.begin(), channelBlocks.end(), [](const auto& a, const auto& b) {
+        return a.baseAddress < b.baseAddress;
+    });
 
     std::array<std::vector<BinBlock>, 12> channels;
     std::for_each(channels.begin(), channels.end(), [channelBlocks](auto& ch) { ch = channelBlocks; });

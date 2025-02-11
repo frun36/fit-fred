@@ -2,7 +2,6 @@
 
 #include "Fred/fred.h"
 #include "Fred/Mapi/mapi.h"
-#include "Alfred/print.h"
 #include "services/Parameters.h"
 #include "services/BoardStatus.h"
 #include "services/Configurations.h"
@@ -12,12 +11,8 @@
 #include "services/SetPhaseDelay.h"
 #include "services/CounterRates.h"
 #include "services/ConfigurationDatabaseBroker.h"
+#include "services/histograms/PmHistograms.h"
 #include "services/histograms/TcmHistograms.h"
-#include <exception>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <map>
 #include <memory>
 
 class MapiFactory
@@ -29,6 +24,7 @@ class MapiFactory
     std::list<BoardStatus> m_statusObjects;
     std::list<Reset> m_resetObjects;
     std::list<CounterRates> m_counterRatesObjects;
+    std::list<PmHistograms> m_pmHistogramsObjects;
 
     std::unique_ptr<Configurations> m_configurationsObject;
     std::unique_ptr<ResetFEE> m_resetSystem;

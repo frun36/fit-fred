@@ -48,7 +48,7 @@ void MapiFactory::generateObjects()
 
         m_fred->registerMapiObject(servicePrefix + "PARAMETERS", &m_parametersObjects.back());
         m_fred->registerMapiObject(servicePrefix + "STATUS", &m_statusObjects.back());
-        m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject.getBoardConfigurationServices().at(boardName).get()));
+        m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject->getBoardConfigurationServices().at(boardName).get()));
         m_fred->registerMapiObject(servicePrefix + "RESET", &m_resetObjects.back());
         m_fred->registerMapiObject(servicePrefix + "COUNTER_RATES", &m_counterRatesObjects.back());
 

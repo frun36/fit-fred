@@ -8,7 +8,7 @@
 #include <database/sql.h>
 #include <Database/databaseinterface.h>
 
-std::array<std::vector<BinBlock>, 12> fetchChannelBlocks() {
+std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks() {
     sql::SelectModel s;
     s.select("histogram_name", "base_address", "start_bin", "regblock_size", "is_negative_direction")
         .from("pm_histograms")

@@ -19,7 +19,6 @@ class PmHistograms : public BoardHistograms
 
    public:
     PmHistograms(shared_ptr<Board> pm);
-    void processExecution() override;
 
     Result<string, string> selectHistograms(const vector<string>& names);
     Result<string, string> resetHistograms() override;

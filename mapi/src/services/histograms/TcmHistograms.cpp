@@ -15,7 +15,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
     size_t totalBinCount = 0;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
-        m_histograms.emplace_back(name, param.baseAddress, param.regBlockSize);
+        m_histograms.emplace_back(string(name), param.baseAddress, param.regBlockSize);
         totalBinCount += param.regBlockSize;
     }
     sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto&b) {

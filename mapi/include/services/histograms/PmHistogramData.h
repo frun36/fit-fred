@@ -17,6 +17,8 @@ class PmHistogramData
     struct OperationInfo {
         uint32_t baseAddress;
         uint32_t regblockSize;
+
+        OperationInfo(uint32_t baseAddress, uint32_t regblockSize) : baseAddress(baseAddress), regblockSize(regblockSize) {}
     };
 
     std::string selectHistograms(std::vector<std::string> names);

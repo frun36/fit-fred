@@ -157,6 +157,12 @@ public:
     
     static const UnsignedColumn Id;
     static const StringColumn Name;
+    struct Row
+    {
+        Row(const std::vector<MultiBase*>& row);
+        uint32_t id;
+        std::string name;
+    };
 };
 
 class PmChannelHistogramStructure
@@ -174,6 +180,7 @@ public:
 
     struct Row
     {
+        Row(const std::vector<MultiBase*>& row);
         uint32_t id;
         uint32_t pmHistogramId;
         uint32_t baseAddress;

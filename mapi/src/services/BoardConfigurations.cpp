@@ -1,27 +1,22 @@
 #include "services/BoardConfigurations.h"
 #include "database/sql.h"
-#include "database/DatabaseTables.h"
+#include "database/BoardConfigurationQueries.h"
 #include "DelayChange.h"
 
 // BoardConfigurations
 
-std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(string_view configurationName, string_view boardName)
+std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(const std::string& configurationName, const std::string& boardName)
 {
-    sql::SelectModel query;
-    query
-        .select(db_tables::ConfigurationParameters::ParameterName.name, db_tables::ConfigurationParameters::ParameterValue.name)
-        .from(db_tables::ConfigurationParameters::TableName)
-        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == string(configurationName) && sql::column(db_tables::ConfigurationParameters::BoardName.name) == string(boardName));
-    return DatabaseInterface::executeQuery(query.str());
+    return DatabaseInterface::executeQuery(db_fit::queries::selectBoardConfiguration(configurationName, boardName));
 }
 
-BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
+BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(const std::string& configurationName, const vector<vector<MultiBase*>>& dbData)
 {
     optional<int64_t> delayA = nullopt;
     optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        db_tables::ConfigurationParameters::Row parsedRow(row);
+        db_fit::tabels::ConfigurationParameters::Row parsedRow(row);
         if (parsedRow.parameterName == tcm_parameters::DelayA) {
             delayA = parsedRow.parameterValue;
         } else if (parsedRow.parameterName == tcm_parameters::DelayC) {

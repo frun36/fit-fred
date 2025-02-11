@@ -2,20 +2,20 @@
 #include "FitData.h"
 #include "Alfred/print.h"
 #include "utils.h"
-#include "database/sql.h"
 #include <sstream>
 #include <iomanip>
+#include"database/FitDataQueries.h"
 
 ///
 
 FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 {
-    name = dbRow[db_tables::ConnectedDevices::BoardName.idx]->getString();
-    std::string type = dbRow[db_tables::ConnectedDevices::BoardType.idx]->getString();
+    name = dbRow[db_fit::tabels::ConnectedDevices::BoardName.idx]->getString();
+    std::string type = dbRow[db_fit::tabels::ConnectedDevices::BoardType.idx]->getString();
 
-    if (type == db_tables::ConnectedDevices::TypePM)
+    if (type == db_fit::tabels::ConnectedDevices::TypePM)
         this->type = BoardType::PM;
-    else if (type == db_tables::ConnectedDevices::TypeTCM)
+    else if (type == db_fit::tabels::ConnectedDevices::TypeTCM)
         this->type = BoardType::TCM;
     else
         throw std::runtime_error("Invalid board type in Connected Devices table");
@@ -28,7 +28,7 @@ FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 
         this->index = std::stoi(name.substr(3, 1));
     }
-    isConnected = db_tables::ConnectedDevices::IsConnected.parse(dbRow[db_tables::ConnectedDevices::IsConnected.idx]);
+    isConnected = db_fit::tabels::ConnectedDevices::IsConnected.parse(dbRow[db_fit::tabels::ConnectedDevices::IsConnected.idx]);
 }
 
 FitData::FitData() : m_ready(false)
@@ -39,10 +39,10 @@ FitData::FitData() : m_ready(false)
         return;
     }
 
-    if (!fetchBoardParamters(db_tables::BoardTypes::TypeTCM)) {
+    if (!fetchBoardParamters(db_fit::tabels::BoardTypes::TypeTCM)) {
         return;
     }
-    if (!fetchBoardParamters(db_tables::BoardTypes::TypePM)) {
+    if (!fetchBoardParamters(db_fit::tabels::BoardTypes::TypePM)) {
         return;
     }
     if (!fetchEnvironment()) {
@@ -57,11 +57,8 @@ FitData::FitData() : m_ready(false)
 
 bool FitData::fetchBoardParamters(std::string boardType)
 {
-    sql::SelectModel query;
-    query.select("*").from(db_tables::Parameters::TableName).where(sql::column(db_tables::Parameters::BoardType.name) == boardType);
-
     Print::PrintInfo("Fetching " + boardType + " register map");
-    auto parameters = DatabaseInterface::executeQuery(query.str());
+    auto parameters = DatabaseInterface::executeQuery(db_fit::queries::selectParameters(boardType));
     Print::PrintInfo("Fetched " + std::to_string(parameters.size()) + " rows");
 
     if (parameters.size() == 0) {
@@ -77,10 +74,8 @@ bool FitData::fetchBoardParamters(std::string boardType)
 bool FitData::fetchEnvironment()
 {
     Print::PrintInfo("Fetching information about unit definitions and other environment variables");
-    sql::SelectModel query;
-    query.select("*").from(db_tables::Environment::TableName);
-
-    auto environment = DatabaseInterface::executeQuery(query.str());
+    
+    auto environment = DatabaseInterface::executeQuery(db_fit::queries::selectEnvironment());
     Print::PrintInfo("Fetched " + std::to_string(environment.size()) + " rows");
     parseEnvVariables(environment);
     if (!checkEnvironment()) {
@@ -93,10 +88,7 @@ bool FitData::fetchEnvironment()
 bool FitData::fetchConnectedDevices()
 {
     sql::SelectModel query;
-    query.select("*").from(db_tables::ConnectedDevices::TableName);
-
-    Print::PrintInfo("Fetching information about connected devices");
-    auto connectedDevices = DatabaseInterface::executeQuery(query.str());
+    auto connectedDevices = DatabaseInterface::executeQuery(db_fit::queries::selectConnectedDevices());
 
     Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if (connectedDevices.size() == 0) {
@@ -151,11 +143,16 @@ bool FitData::fetchConnectedDevices()
     return true;
 }
 
+bool FitData::fetchPmHistogramStructure()
+{
+
+}
+
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0, false);
     for (auto& row : boardTable) {
-        Print::PrintVerbose("Parsing parameter: " + row[db_tables::Parameters::Name.idx]->getString());
+        Print::PrintVerbose("Parsing parameter: " + row[db_fit::tabels::Parameters::Name.idx]->getString());
         board->emplace(parseParameter(row));
     }
     Print::PrintVerbose("Board parsed successfully");
@@ -175,7 +172,7 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
 
 Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
 {
-    db_tables::Parameters::Row row(dbRow);
+    db_fit::tabels::Parameters::Row row(dbRow);
     Board::ParameterInfo::RefreshType refreshType = row.refreshType.has_value() ? Board::ParameterInfo::RefreshType::SYNC : Board::ParameterInfo::RefreshType::NOT;
 
     Board::ParameterInfo::ValueEncoding encoding = row.isSigned ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
@@ -196,7 +193,7 @@ Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
     }
 
     return {
-        dbRow[db_tables::Parameters::Name.idx]->getString(),
+        dbRow[db_fit::tabels::Parameters::Name.idx]->getString(),
         row.baseAddress,
         row.startBit,
         bitLength,
@@ -226,7 +223,7 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
 {
     m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
-        db_tables::Environment::Row parsedRow(row);
+        db_fit::tabels::Environment::Row parsedRow(row);
         
         Print::PrintVerbose("Parsing " + parsedRow.name);
         Print::PrintVerbose("Equation: " + parsedRow.equation.equation);
@@ -237,7 +234,7 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
         }
     }
     for (auto& row : settingsTable) {
-        std::string name = row[db_tables::Environment::Name.idx]->getString();
+        std::string name = row[db_fit::tabels::Environment::Name.idx]->getString();
         Print::PrintVerbose("Updating " + name);
         m_environmentalVariables->updateVariable(name);
         Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_environmentalVariables->getVariable(name)));

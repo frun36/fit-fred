@@ -1,19 +1,21 @@
 #include <sstream>
 #include <algorithm>
 #include<vector>
-#include "database/DatabaseTables.h"
+#include "database/DatabaseViews.h"
 
 ///
 ///     ParameteresTable
 ///
 
-namespace db_tables
+namespace db_fit
 {
 
 
 // namespace hex
 
 // BoardTypes class
+namespace tabels
+{
 const std::string BoardTypes::TypeTCM{ "TCM" };
 const std::string BoardTypes::TypePM{ "PM" };
 
@@ -112,5 +114,6 @@ ConfigurationParameters::Row::Row(const std::vector<MultiBase*>& row)
     parameterName = ParameterName.parse(row[ParameterName.idx]);
     parameterValue = ParameterValue.parse(row[ParameterValue.idx]);
 }
+}
 
-} // namespace db_tables
+} // namespace db_fit

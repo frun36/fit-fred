@@ -7,7 +7,7 @@
 #include "Database/databaseinterface.h"
 #include "utils.h"
 
-namespace db_tables
+namespace db_fit
 {
 
 template<typename DataType, DataType(*DataParser)(MultiBase*)>

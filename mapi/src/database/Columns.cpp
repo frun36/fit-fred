@@ -1,6 +1,6 @@
 #include"database/Columns.h"
 
-namespace db_tables
+namespace db_fit
 {
     
 namespace parsers

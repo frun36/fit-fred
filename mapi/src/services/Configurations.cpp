@@ -3,8 +3,7 @@
 #include <unistd.h>
 #include <sstream>
 #include "utils.h"
-#include "database/sql.h"
-#include "database/DatabaseTables.h"
+#include"database/ConfigurationsQueries.h"
 #include "Alfred/print.h"
 #include "DelayChange.h"
 
@@ -26,13 +25,7 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
 
 vector<string> Configurations::fetchBoardNamesToConfigure(const string& configurationName) const
 {
-    sql::SelectModel query;
-    query
-        .select(db_tables::ConfigurationParameters::BoardName.name)
-        .distinct()
-        .from(db_tables::ConfigurationParameters::TableName)
-        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == configurationName);
-    auto boardNameData = DatabaseInterface::executeQuery(query.str());
+    auto boardNameData = DatabaseInterface::executeQuery(db_fit::queries::selectDistinctBoards(configurationName));
 
     vector<string> names(boardNameData.size());
     std::transform(boardNameData.begin(), boardNameData.end(), names.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {

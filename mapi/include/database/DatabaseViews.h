@@ -10,10 +10,11 @@
 #include "utils.h"
 #include"Columns.h"
 
-namespace db_tables
+namespace db_fit
 {
 
-
+namespace tabels
+{
 class BoardTypes
 {
    public:
@@ -146,4 +147,42 @@ class ConfigurationParameters
     };
 };
 
-} // namespace db_tables
+class PmChannelHistograms
+{
+public:
+    static const std::string TableName;
+    
+    static const IntegerColumn Id;
+    static const StringColumn Name;
+};
+
+class PmChannelHistogramStructure
+{
+public:
+    static const std::string TableName;
+
+    static const UnsignedColumn Id;
+    static const UnsignedColumn PmHistogramId;
+    static const StringColumn BaseAddress;
+    static const UnsignedColumn RegBlockSize;
+    static const IntegerColumn StartBin;
+    static const UnsignedColumn BinsPerRegister;
+    static const StringColumn BinDirection;
+};
+
+}
+
+namespace views
+{
+class Histogram
+{
+public:
+    static const StringColumn HistogramName;
+    static const HexColumn BaseAddress;
+    static const IntegerColumn StartBin;
+    static const UnsignedColumn RegBlockSize;
+};
+}
+
+
+} // namespace db_fit

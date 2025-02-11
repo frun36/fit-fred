@@ -1,5 +1,7 @@
 #include "mapifactory.h"
+#include <memory>
 #include "FitData.h"
+#include "services/histograms/TcmHistograms.h"
 
 MapiFactory::MapiFactory(Fred* fred) : m_fred(fred)
 {
@@ -20,8 +22,8 @@ void MapiFactory::generateObjects()
     }
     Print::PrintVerbose("Registering MAPI Objects");
 
-    m_configurationsObject = Configurations(m_fred->Name(), boardsData.getBoards());
-    m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", &m_configurationsObject);
+    m_configurationsObject = make_unique<Configurations>(m_fred->Name(), boardsData.getBoards());
+    m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", m_configurationsObject.get());
     std::shared_ptr<Board> tcm;
     std::vector<std::shared_ptr<Board>> pms;
     for (auto [boardName, board] : boardsData.getBoards()) {
@@ -61,4 +63,7 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
     m_saveConfiguration = std::make_unique<ConfigurationDatabaseBroker>(boardsData.getBoards());
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/CONFIGURATION_DB_BROKER"), m_saveConfiguration.get());
+
+    m_tcmHistograms = std::make_unique<TcmHistograms>(tcm);
+    m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/HISTOGRAMS", m_tcmHistograms.get());
 }

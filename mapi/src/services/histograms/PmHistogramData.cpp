@@ -8,12 +8,13 @@
 #include <database/sql.h>
 #include <Database/databaseinterface.h>
 
-std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks() {
+std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks()
+{
     sql::SelectModel s;
-    s.select("histogram_name", "base_address", "regblock_size", "start_bin", "bins_per_register", "direction")
-        .from("pm_histograms")
-        .join("pm_histogram_structure")
-        .on(sql::column("pm_histograms.id") == sql::column("pm_histogram_structure.histogram_id"));
+    s.select("name", "base_address", "regblock_size", "start_bin", "bins_per_register", "bin_direction")
+        .from("pm_channel_histograms")
+        .join("pm_channel_histogram_structure")
+        .on(sql::column("id") == sql::column("pm_histogram_id"));
 
     std::vector<std::vector<MultiBase*>> result = DatabaseInterface::executeQuery(s.str());
     std::vector<BinBlock> channelBlocks;
@@ -88,8 +89,9 @@ std::string PmHistogramData::selectHistograms(std::vector<std::string> names)
     for (auto& channelBlocks : m_channelBlocks) {
         for (auto& bins : channelBlocks) {
             bins.readoutEnabled = (std::find(names.begin(), names.end(), bins.histogramName) != names.end());
-            if (bins.readoutEnabled)
+            if (bins.readoutEnabled) {
                 response += bins.histogramName + "; ";
+            }
         }
     }
     return response;
@@ -116,4 +118,3 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
 
     return currDataIdx == data.size();
 }
-

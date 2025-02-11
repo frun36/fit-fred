@@ -25,7 +25,7 @@ struct HistogramInfoRow {
         iss >> hex >> baseAddress;
         regblockSize = data[2]->getDouble();
         startBin = data[3]->getDouble();
-        isNegativeDirection = data[4]->getString() == "Negative";
+        isNegativeDirection = data[4]->getString() == "N";
     }
 };
 

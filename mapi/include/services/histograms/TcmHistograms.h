@@ -19,15 +19,10 @@ class TcmHistograms : public BoardHistograms
         {
             data.reserve(binCount);
         }
-
-        bool operator<(const Histogram& o)
-        {
-            return baseAddress < o.baseAddress;
-        }
     };
 
     BoardCommunicationHandler m_handler;
-    vector<Histogram> m_histograms;
+    vector<Histogram> m_histograms; // Needs to be sorted by base address!
 
     char* m_responseBuffer = nullptr;
     size_t m_responseBufferSize;

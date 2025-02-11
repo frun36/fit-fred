@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cstdio>
 #include <sstream>
+#include <string>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 {
@@ -17,7 +18,9 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
         m_histograms.emplace_back(name, param.baseAddress, param.regBlockSize);
         totalBinCount += param.regBlockSize;
     }
-    sort(m_histograms.begin(), m_histograms.end());
+    sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto&b) {
+        return a.baseAddress < b.baseAddress;
+    });
     m_responseBufferSize = 9 * totalBinCount + 256; // 8 hex digits + comma, 256B for additional info
     m_responseBuffer = new char[m_responseBufferSize];
 
@@ -57,9 +60,9 @@ Result<string, string> TcmHistograms::setCounterId(uint32_t counterId)
         m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCountersSelect, counterId));
 
     if (parsedResponse.isError()) {
-        return { .ok = nullopt, .error = "Failed to write desired counter id:\n" + parsedResponse.getError() };
+        return { .ok = nullopt, .error = "Failed to select counter" + to_string(counterId) + ":\n" + parsedResponse.getError() };
     }
-    return { .ok = "Successfully selected counter id " + to_string(counterId), .error = nullopt };
+    return { .ok = "Successfully selected counter " + to_string(counterId), .error = nullopt };
 }
 
 bool TcmHistograms::readHistograms()
@@ -79,7 +82,7 @@ bool TcmHistograms::readHistograms()
     auto res = blockRead(startAddress, true, words); // single read with unnecessary words is allegedly faster than separate reads
 
     if (res.isError()) {
-        printAndPublishError(res.errors->mess);
+        printAndPublishError("Failed to read TCM histograms: " + res.errors->mess);
         return false;
     } else {
         return parseHistogramData(res.content, startAddress);

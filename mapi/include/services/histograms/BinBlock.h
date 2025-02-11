@@ -27,12 +27,12 @@ struct HistogramInfoRow {
 };
 
 struct BinBlock {
-    const std::string histogramName;
-    const uint8_t binsPerRegister = 2;
-    const uint32_t baseAddress;
-    const int32_t startBin;
-    const uint32_t regblockSize;
-    const bool isNegativeDirection;
+    std::string histogramName;
+    uint8_t binsPerRegister = 2;
+    uint32_t baseAddress;
+    int32_t startBin;
+    uint32_t regblockSize;
+    bool isNegativeDirection;
 
     mutable bool readoutEnabled = false;
     mutable std::vector<uint32_t> data;

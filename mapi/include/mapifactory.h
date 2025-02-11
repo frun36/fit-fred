@@ -35,14 +35,9 @@ class MapiFactory
     std::unique_ptr<ResetErrors> m_resetError;
     std::unique_ptr<SetPhaseDelay> m_setPhaseDelay;
     std::unique_ptr<ConfigurationDatabaseBroker> m_saveConfiguration;
-<<<<<<< HEAD
-    
-=======
-    std::unique_ptr<BlockReadTest> m_blockReadTest;
 
     std::unique_ptr<TcmHistograms> m_tcmHistograms;
 
->>>>>>> e8fd66d (Add TCM histograms to mapifactory)
     void generateObjects();
 
    public:

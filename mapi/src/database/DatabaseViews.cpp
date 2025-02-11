@@ -13,8 +13,13 @@ namespace db_fit
 // namespace hex
 
 // BoardTypes class
-namespace tables
+namespace tabels
 {
+std::string fullColumnName(const std::string& tabelName, const std::string& columnName)
+{
+    return string_utils::concatenate(tabelName,".",columnName);
+}   
+
 const std::string BoardTypes::TypeTCM{ "TCM" };
 const std::string BoardTypes::TypePM{ "PM" };
 
@@ -112,6 +117,21 @@ ConfigurationParameters::Row::Row(const std::vector<MultiBase*>& row)
     parameterName = ParameterName.parse(row[ParameterName.idx]);
     parameterValue = ParameterValue.parse(row[ParameterValue.idx]);
 }
-} // namespace tables
+
+// PmHistograms
+
+const std::string PmChannelHistograms::TableName{"PM_CHANNEL_HISTOGRAMS"};
+const UnsignedColumn PmChannelHistograms::Id{0,"ID"};
+const StringColumn PmChannelHistograms::Name{1,"NAME"};
+
+const std::string PmChannelHistogramStructure::TableName{"PM_CHANNEL_HISTOGRAMS_STRUCTURE"};
+const UnsignedColumn PmChannelHistogramStructure::Id{0,"ID"};
+const UnsignedColumn PmChannelHistogramStructure::PmHistogramId{1,"PM_HISTOGRAM_ID"};
+const HexColumn PmChannelHistogramStructure::BaseAddress{2,"BASE_ADDRESS"};
+const UnsignedColumn PmChannelHistogramStructure::RegBlockSize{3,"REGBLOCK_SIZE"};
+const IntegerColumn PmChannelHistogramStructure::StartBin{4, "START_BIN"};
+const UnsignedColumn PmChannelHistogramStructure::BinsPerRegister{5, "BIN_PER_REGISTER"};
+const StringColumn PmChannelHistogramStructure::BinDirection{6,"BIN_DIRECTION"};
+}
 
 } // namespace db_fit

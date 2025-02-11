@@ -145,7 +145,8 @@ bool FitData::fetchConnectedDevices()
 
 bool FitData::fetchPmHistogramStructure()
 {
-
+    auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectHistogramStucture());
+    
 }
 
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)

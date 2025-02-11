@@ -7,7 +7,7 @@ namespace parsers
 {
 bool booleanParser(MultiBase* data)
 {
-    return (data->getString() == "T");
+    return (data->getString() == "Y");
 }
 
 uint32_t hexParser(MultiBase* data)

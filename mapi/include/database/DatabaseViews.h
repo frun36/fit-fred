@@ -15,6 +15,9 @@ namespace db_fit
 
 namespace tables
 {
+
+std::string fullColumnName(const std::string& tabelName, const std::string& columnName);
+
 class BoardTypes
 {
    public:
@@ -152,7 +155,7 @@ class PmChannelHistograms
 public:
     static const std::string TableName;
     
-    static const IntegerColumn Id;
+    static const UnsignedColumn Id;
     static const StringColumn Name;
 };
 
@@ -163,11 +166,22 @@ public:
 
     static const UnsignedColumn Id;
     static const UnsignedColumn PmHistogramId;
-    static const StringColumn BaseAddress;
+    static const HexColumn BaseAddress;
     static const UnsignedColumn RegBlockSize;
     static const IntegerColumn StartBin;
     static const UnsignedColumn BinsPerRegister;
     static const StringColumn BinDirection;
+
+    struct Row
+    {
+        uint32_t id;
+        uint32_t pmHistogramId;
+        uint32_t baseAddress;
+        uint32_t regBlockSize;
+        int32_t startBin;
+        uint32_t binsPerRegister;
+        std::string binDirection;
+    };
 };
 
 }
@@ -181,6 +195,7 @@ public:
     static const HexColumn BaseAddress;
     static const IntegerColumn StartBin;
     static const UnsignedColumn RegBlockSize;
+    static const StringColumn Direction;
 };
 }
 

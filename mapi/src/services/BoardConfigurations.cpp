@@ -16,13 +16,13 @@ BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationIn
     optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        db_fit::tables::ConfigurationParameters::Row parsedRow(row);
-        if (parsedRow.parameterName == tcm_parameters::DelayA) {
-            delayA = parsedRow.parameterValue;
-        } else if (parsedRow.parameterName == tcm_parameters::DelayC) {
-            delayC = parsedRow.parameterValue;
+        db_fit::views::ConfigurationValue::Row parsedRow(row);
+        if (parsedRow.name == tcm_parameters::DelayA) {
+            delayA = parsedRow.value;
+        } else if (parsedRow.name == tcm_parameters::DelayC) {
+            delayC = parsedRow.value;
         } else {
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parsedRow.parameterName, parsedRow.parameterValue));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parsedRow.name, parsedRow.value));
         }
     }
 

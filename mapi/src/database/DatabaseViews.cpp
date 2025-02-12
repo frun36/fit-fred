@@ -153,6 +153,16 @@ Histogram::Row::Row(const std::vector<MultiBase*>& row)
     binsPerRegister = BinsPerRegister.parse(row[BinsPerRegister.idx]);
     direction = Direction.parse(row[Direction.idx]);
 }
-} // namespace views
+
+const StringColumn ConfigurationValue::ParameterName{0};
+const IntegerColumn ConfigurationValue::ParameterValue{1};
+
+ConfigurationValue::Row::Row(const std::vector<MultiBase*>& row)
+{
+    name = ParameterName.parse(row[ParameterName.idx]);
+    value = ParameterValue.parse(row[ParameterValue.idx]);
+}
+
+}
 
 } // namespace db_fit

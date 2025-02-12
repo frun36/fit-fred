@@ -22,24 +22,29 @@ class BoardHistograms : public LoopingFitIndefiniteMapi
 
     void processExecution() override
     {
+        Print::PrintVerbose(name, "Entering processExecution");
         bool running;
         handleSleepAndWake(ReadoutInterval, running);
         if (!running) {
             return;
         }
 
+        Print::PrintVerbose(name, "Executing queued requests");
         RequestExecutionResult requestResult = executeQueuedRequests(running);
         if (requestResult.isError) {
             printAndPublishError(requestResult);
         }
 
+        Print::PrintVerbose(name, "Reading histograms");
         if (!readHistograms()) {
             return;
         }
 
+        Print::PrintVerbose(name, "Parsing response");
         string requestResultString = (requestResult.isEmpty() || requestResult.isError) ? string("") : requestResult;
         publishAnswer(parseResponse(requestResultString));
         m_readId++;
+        Print::PrintVerbose(name, "processExecution done");
     }
 
     virtual ~BoardHistograms() = default;

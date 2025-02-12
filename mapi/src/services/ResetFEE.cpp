@@ -3,10 +3,19 @@
 #include "PM.h"
 #include "gbtInterfaceUtils.h"
 #include <thread>
-
+#include<unistd.h>
 void ResetFEE::processExecution()
 {
     bool running = true;
+
+    if(m_initialized == false){
+        usleep(1e6); // wait for fred to start;
+        auto response = updatePmSpiMask();
+        if (response.errors.empty() == false) {
+            printAndPublishError(response);
+        }
+        m_initialized = true;
+    }
 
     std::string request = waitForRequest(running);
     if (running == false) {
@@ -45,7 +54,7 @@ void ResetFEE::processExecution()
 
     Print::PrintVerbose("Constructing SPI mask");
     {
-        auto response = testPMLinks();
+        auto response = updatePmSpiMask();
         if (response.errors.empty() == false) {
             printAndPublishError(response);
             return;
@@ -106,7 +115,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
     return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }
 
-BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
+BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
 {
     bool isConnected[20] = {false};
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
@@ -136,6 +145,11 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::testPMLinks()
     for(int idx = 0; idx < 20; idx++){
         if(isConnected[idx] == false){
             currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
+             Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
+         } else if( ((currentMask >> idx) & 0x1) == 0){
+            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
+        } else {
+            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is connected"));
         }
     }
     {

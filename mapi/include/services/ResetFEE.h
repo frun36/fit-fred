@@ -28,7 +28,7 @@ class ResetFEE : public BasicFitIndefiniteMapi
     std::string seqCntUpdateRate(uint8_t updateRate);
 
     BoardCommunicationHandler::ParsedResponse applyResetFEE();
-    BoardCommunicationHandler::ParsedResponse testPMLinks();
+    BoardCommunicationHandler::ParsedResponse updatePmSpiMask();
     BoardCommunicationHandler::ParsedResponse applyGbtConfiguration();
     BoardCommunicationHandler::ParsedResponse applyGbtConfigurationToBoard(BoardCommunicationHandler& boardHandler);
     BoardCommunicationHandler::ParsedResponse applyTriggersSign();
@@ -40,6 +40,8 @@ class ResetFEE : public BasicFitIndefiniteMapi
 
     bool m_enforceDefGbtConfig{ false };
     bool m_forceLocalClock{ false };
+
+    bool m_initialized{false};
 
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BoardCommunicationHandler> m_PMs;

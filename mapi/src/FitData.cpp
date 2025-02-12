@@ -155,12 +155,14 @@ bool FitData::fetchPmHistogramStructure()
         if(m_PmHistograms.find(row.histogramName) == m_PmHistograms.end()){
             m_PmHistograms.emplace(row.histogramName, PmHistogram()); 
         }
+        Print::PrintVerbose("Parsing: "+ row.histogramName + ", start bin: " + std::to_string(row.startBin));
         auto& hist = m_PmHistograms[row.histogramName];
         if(row.startBin < 0){
             hist.negativeBins = PmHistogramBlock();
             hist.negativeBins->baseAddress = row.baseAddress;
             hist.negativeBins->regBlockSize = row.regBlockSize;
             hist.negativeBins->startBin = row.startBin;
+            hist.negativeBins->binsPerRegister = row.binsPerRegister;
             hist.negativeBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
         }
         else{
@@ -168,6 +170,7 @@ bool FitData::fetchPmHistogramStructure()
             hist.positiveBins->baseAddress = row.baseAddress;
             hist.positiveBins->regBlockSize = row.regBlockSize;
             hist.positiveBins->startBin = row.startBin;
+            hist.positiveBins->binsPerRegister = row.binsPerRegister;
             hist.positiveBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
         }
     }

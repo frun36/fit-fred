@@ -29,17 +29,19 @@ std::string selectEnvironment()
 
 std::string selectPmHistograms()
 {
+    using  namespace db_fit::tabels;
     sql::SelectModel query;
     query.select(
-             tabels::PmChannelHistograms::Name.name,
-             tabels::PmChannelHistogramStructure::BaseAddress.name,
-             tabels::PmChannelHistogramStructure::RegBlockSize.name,
-             tabels::PmChannelHistogramStructure::StartBin.name,
-             tabels::PmChannelHistogramStructure::BinsPerRegister.name,
-             tabels::PmChannelHistogramStructure::BinDirection.name)
+             PmChannelHistograms::Name.name,
+             PmChannelHistogramStructure::BaseAddress.name,
+             PmChannelHistogramStructure::RegBlockSize.name,
+             PmChannelHistogramStructure::StartBin.name,
+             PmChannelHistogramStructure::BinsPerRegister.name,
+             PmChannelHistogramStructure::BinDirection.name)
         .from(tabels::PmChannelHistograms::TableName)
         .join(tabels::PmChannelHistogramStructure::TableName)
-        .on(sql::column(tabels::PmChannelHistograms::Id.name) == sql::column(tabels::PmChannelHistogramStructure::PmHistogramId.name));
+        .on(sql::column(fullColumnName(PmChannelHistograms::TableName,PmChannelHistograms::Id.name)) == 
+            sql::column(fullColumnName(PmChannelHistogramStructure::TableName,PmChannelHistogramStructure::PmHistogramId.name)));
     return query.str();
 }
 } // namespace queries

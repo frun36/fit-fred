@@ -140,14 +140,17 @@ namespace views
 {
 const StringColumn  Histogram::HistogramName{0};
 const HexColumn  Histogram::BaseAddress{1};
-const IntegerColumn  Histogram::StartBin{2};
-const UnsignedColumn  Histogram::RegBlockSize{3};
-const StringColumn  Histogram::Direction{4};
+const UnsignedColumn  Histogram::RegBlockSize{2};
+const IntegerColumn  Histogram::StartBin{3};
+const UnsignedColumn Histogram::BinsPerRegister{4};
+const StringColumn  Histogram::Direction{5};
 Histogram::Row::Row(const std::vector<MultiBase*>& row)
 {
+    histogramName = HistogramName.parse(row[HistogramName.idx]);
     baseAddress = BaseAddress.parse(row[BaseAddress.idx]);
     regBlockSize = RegBlockSize.parse(row[RegBlockSize.idx]);
     startBin = StartBin.parse(row[StartBin.idx]);
+    binsPerRegister = BinsPerRegister.parse(row[BinsPerRegister.idx]);
     direction = Direction.parse(row[Direction.idx]);
 }
 }

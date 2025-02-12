@@ -184,6 +184,7 @@ public:
     static const HexColumn BaseAddress;
     static const IntegerColumn StartBin;
     static const UnsignedColumn RegBlockSize;
+    static const UnsignedColumn BinsPerRegister;
     static const StringColumn Direction;
 
     struct Row
@@ -193,10 +194,11 @@ public:
         uint32_t baseAddress;
         int32_t startBin;
         uint32_t regBlockSize;
+        uint32_t binsPerRegister;
         std::string direction;
     };
 };
-}
 
 
 } // namespace db_fit
+}

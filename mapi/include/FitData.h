@@ -24,6 +24,7 @@ class FitData
         uint32_t baseAddress;
         uint32_t regBlockSize;
         int32_t startBin;
+        uint32_t binsPerRegister;
         enum class Direction { Positive,
                                Negative } direction;
     };

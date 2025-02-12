@@ -4,7 +4,7 @@
 #include "utils.h"
 #include <sstream>
 #include <iomanip>
-#include"database/FitDataQueries.h"
+#include "database/FitDataQueries.h"
 
 ///
 
@@ -13,18 +13,20 @@ FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
     name = dbRow[db_fit::tabels::ConnectedDevices::BoardName.idx]->getString();
     std::string type = dbRow[db_fit::tabels::ConnectedDevices::BoardType.idx]->getString();
 
-    if (type == db_fit::tabels::ConnectedDevices::TypePM)
+    if (type == db_fit::tabels::ConnectedDevices::TypePM) {
         this->type = BoardType::PM;
-    else if (type == db_fit::tabels::ConnectedDevices::TypeTCM)
+    } else if (type == db_fit::tabels::ConnectedDevices::TypeTCM) {
         this->type = BoardType::TCM;
-    else
+    } else {
         throw std::runtime_error("Invalid board type in Connected Devices table");
+    }
 
     if (this->type == BoardType::PM) {
-        if (name.find("C") != std::string::npos)
+        if (name.find("C") != std::string::npos) {
             this->side = Side::C;
-        else
+        } else {
             this->side = Side::A;
+        }
 
         this->index = std::stoi(name.substr(3, 1));
     }
@@ -48,7 +50,7 @@ FitData::FitData() : m_ready(false)
     if (!fetchEnvironment()) {
         return;
     }
-    if(!fetchPmHistogramStructure()){
+    if (!fetchPmHistogramStructure()) {
         return;
     }
     if (!fetchConnectedDevices()) {
@@ -77,7 +79,7 @@ bool FitData::fetchBoardParamters(std::string boardType)
 bool FitData::fetchEnvironment()
 {
     Print::PrintInfo("Fetching information about unit definitions and other environment variables");
-    
+
     auto environment = DatabaseInterface::executeQuery(db_fit::queries::selectEnvironment());
     Print::PrintInfo("Fetched " + std::to_string(environment.size()) + " rows");
     parseEnvVariables(environment);
@@ -108,12 +110,12 @@ bool FitData::fetchConnectedDevices()
         }
         Print::PrintInfo("Registering " + device.name);
         TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, device.isConnected, m_templateBoards["TCM"])).first->second;
-        m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
+        m_environmentalVariables->emplace({ device.name, Equation{ "1", {} } });
     }
 
     if (TCM.get() == nullptr) {
-            Print::PrintVerbose("Missing TCM!");
-            return false;
+        Print::PrintVerbose("Missing TCM!");
+        return false;
     }
 
     for (auto& deviceRow : connectedDevices) {
@@ -122,14 +124,13 @@ bool FitData::fetchConnectedDevices()
             continue;
         }
 
-        if(!device.isConnected){
+        if (!device.isConnected) {
             Print::PrintWarning(device.name + " is not connected");
-            m_environmentalVariables->emplace({device.name, Equation{"0",{}}});
+            m_environmentalVariables->emplace({ device.name, Equation{ "0", {} } });
+        } else {
+            m_environmentalVariables->emplace({ device.name, Equation{ "1", {} } });
         }
-        else{
-            m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
-        }
-        
+
         Print::PrintInfo("Registering " + device.name);
 
         switch (device.side) {
@@ -149,23 +150,21 @@ bool FitData::fetchConnectedDevices()
 bool FitData::fetchPmHistogramStructure()
 {
     auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectPmHistograms());
-    for(auto rawRow: histogramStructure)
-    {
+    for (auto rawRow : histogramStructure) {
         db_fit::views::Histogram::Row row(rawRow);
-        if(m_PmHistograms.find(row.histogramName) == m_PmHistograms.end()){
-            m_PmHistograms.emplace(row.histogramName, PmHistogram()); 
+        if (m_PmHistograms.find(row.histogramName) == m_PmHistograms.end()) {
+            m_PmHistograms.emplace(row.histogramName, PmHistogram());
         }
-        Print::PrintVerbose("Parsing: "+ row.histogramName + ", start bin: " + std::to_string(row.startBin));
+        Print::PrintVerbose("Parsing: " + row.histogramName + ", start bin: " + std::to_string(row.startBin));
         auto& hist = m_PmHistograms[row.histogramName];
-        if(row.startBin < 0){
+        if (row.startBin < 0) {
             hist.negativeBins = PmHistogramBlock();
             hist.negativeBins->baseAddress = row.baseAddress;
             hist.negativeBins->regBlockSize = row.regBlockSize;
             hist.negativeBins->startBin = row.startBin;
             hist.negativeBins->binsPerRegister = row.binsPerRegister;
             hist.negativeBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
-        }
-        else{
+        } else {
             hist.positiveBins = PmHistogramBlock();
             hist.positiveBins->baseAddress = row.baseAddress;
             hist.positiveBins->regBlockSize = row.regBlockSize;
@@ -175,13 +174,12 @@ bool FitData::fetchPmHistogramStructure()
         }
     }
 
-    for(auto [name, histogram]: m_PmHistograms)
-    {
-        if(histogram.negativeBins == std::nullopt){
+    for (auto [name, histogram] : m_PmHistograms) {
+        if (histogram.negativeBins == std::nullopt) {
             Print::PrintError("Information about " + name + " is incomplete; negative bins definition is missing");
             return false;
         }
-        if(histogram.positiveBins == std::nullopt){
+        if (histogram.positiveBins == std::nullopt) {
             Print::PrintError("Information about " + name + " is incomplete; positive bins definition is missing");
             return false;
         }
@@ -209,7 +207,7 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
             statusList.emplace_back(parameter.first);
         }
     }
-    return std::move(statusList);
+    return statusList;
 }
 
 Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
@@ -266,7 +264,7 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
     m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
         db_fit::tabels::Environment::Row parsedRow(row);
-        
+
         Print::PrintVerbose("Parsing " + parsedRow.name);
         Print::PrintVerbose("Equation: " + parsedRow.equation.equation);
         m_environmentalVariables->emplace(

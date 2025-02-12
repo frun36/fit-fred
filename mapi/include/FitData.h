@@ -50,17 +50,6 @@ class FitData
         bool isConnected;
     };
 
-    struct PmHistogramInfo {
-        std::string histogramName;
-        uint32_t baseAddress;
-        uint32_t regblockSize;
-        int32_t startBin;
-        uint32_t binsPerRegister;
-        enum class Direction { Positive, Negative } direction;
-
-        PmHistogramInfo(const std::vector<MultiBase*>& row);
-    };
-
     [[nodiscard]] bool fetchBoardParamters(std::string boardType);
     [[nodiscard]] bool fetchEnvironment();
     [[nodiscard]] bool fetchConnectedDevices();

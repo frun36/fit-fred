@@ -176,11 +176,13 @@ bool FitData::fetchPmHistogramStructure()
     {
         if(histogram.negativeBins == std::nullopt){
             Print::PrintError("Information about " + name + " is incomplete; negative bins definition is missing");
+            return false;
         }
         if(histogram.positiveBins == std::nullopt){
             Print::PrintError("Information about " + name + " is incomplete; positive bins definition is missing");
+            return false;
         }
-        return false;
+        Print::PrintInfo(name + " histogram data successfully fetched");
     }
     return true;
 }

@@ -19,7 +19,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
         m_histograms.emplace_back(string(name), param.baseAddress, param.regBlockSize);
         totalBinCount += param.regBlockSize;
     }
-    sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto&b) {
+    sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto& b) {
         return a.baseAddress < b.baseAddress;
     });
     m_responseBufferSize = 11 * totalBinCount + 256; // up to 10 digits + comma, 256B for additional info
@@ -124,6 +124,6 @@ const char* TcmHistograms::parseResponse(const string& requestResponse) const
         }
         *buffPos++ = '\n';
     }
-    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "%s", requestResponse.c_str()); // inserts '\0' as well, even if requestResponse is empty
+    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "PREV_ELAPSED,%.6fms\n%s", getPrevElapsed() * 1e-3, requestResponse.c_str()); // inserts '\0' as well
     return m_responseBuffer;
 }

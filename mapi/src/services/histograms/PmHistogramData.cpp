@@ -9,6 +9,7 @@
 #include "services/histograms/BinBlock.h"
 #include <database/sql.h>
 #include <Database/databaseinterface.h>
+#include <Alfred/print.h>
 
 std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks(std::unordered_map<std::string, FitData::PmHistogram> histograms)
 {
@@ -76,6 +77,9 @@ void PmHistogramData::updateOperations()
         }
     }
     m_operations = operations;
+    for (auto o : m_operations) {
+        Print::PrintData("Operation: " + to_string(o.baseAddress) + " " + to_string(o.regblockSize));
+    }
 }
 
 std::string PmHistogramData::selectHistograms(std::vector<std::string> names)
@@ -90,7 +94,7 @@ std::string PmHistogramData::selectHistograms(std::vector<std::string> names)
         }
     }
     updateOperations();
-    return std::accumulate(enabledNames.begin(), enabledNames.end(), "", [](const std::string& acc, const std::string& name) {
+    return std::accumulate(enabledNames.begin(), enabledNames.end(), std::string(""), [](const std::string& acc, const std::string& name) {
         return acc + name + "; ";
     });
 }
@@ -99,19 +103,30 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
 {
     // assumes we are inside a single channel
     uint32_t chIdx = baseAddress / ChannelBaseAddress;
+    uint32_t relativeAddress = baseAddress % ChannelBaseAddress;
+    Print::PrintData("CH idx: " + to_string(chIdx) + ", base address " + to_string(baseAddress) + ", readout len " + to_string(data.size()));
 
     const std::vector<BinBlock>& blocks = m_channelBlocks[chIdx];
     // we know the result from a single operation is a contiguous block of data
     size_t currDataIdx = 0;
     for (auto& block : blocks) {
-        if (!(baseAddress + currDataIdx >= block.baseAddress && baseAddress + currDataIdx < block.baseAddress + block.regBlockSize)) {
+        Print::PrintData("Block: " + block.histogramName + " " + to_string(block.baseAddress) + " " + to_string(block.regBlockSize) + ", position in data: " + to_string(relativeAddress + currDataIdx));
+        if (!(relativeAddress + currDataIdx >= block.baseAddress && relativeAddress + currDataIdx < block.baseAddress + block.regBlockSize)) {
             continue;
         }
 
-        auto begin = block.data.begin() + baseAddress + currDataIdx - block.baseAddress;
-        size_t copyLen = data.end() - begin;
+        auto begin = block.data.begin() + relativeAddress + currDataIdx - block.baseAddress;
+        size_t copyLen = block.data.end() - begin;
+        Print::PrintData("Copy len: " + std::to_string(copyLen));
+        if (data.begin() + currDataIdx >= data.end() || data.begin() + currDataIdx + copyLen > data.end()) {
+            Print::PrintError("Unexpected: histogram readout data storage requires copy out of data vector range");
+            return false;
+        }
         std::copy(data.begin() + currDataIdx, data.begin() + currDataIdx + copyLen, begin);
         currDataIdx += copyLen;
+        if (currDataIdx >= data.size()) {
+            break;
+        }
     }
 
     return currDataIdx == data.size();

@@ -111,11 +111,11 @@ Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
 
 bool PmHistograms::readHistograms()
 {
-    Print::PrintVerbose(name, "readHistograms start");
+    Print::PrintData("readHistograms start");
     auto operations = data.getOperations();
 
     for (const auto& [baseAddress, readSize] : operations) {
-        Print::PrintVerbose(name, "Setting address " + to_string(baseAddress) + " size " + to_string(readSize));
+        Print::PrintData("Setting address " + to_string(baseAddress) + " size " + to_string(readSize));
         auto parsedResponse =
             processSequenceThroughHandler(
                 m_handler,
@@ -126,7 +126,7 @@ bool PmHistograms::readHistograms()
             return false;
         }
 
-        Print::PrintVerbose(name, "Performing FIFO readout");
+        Print::PrintData("Performing FIFO readout");
         auto blockReadResponse = blockRead(m_fifoAddress, false, readSize);
         if (blockReadResponse.isError()) {
             printAndPublishError("Error in histogram FIFO readout: " + blockReadResponse.errors->mess);
@@ -137,10 +137,10 @@ bool PmHistograms::readHistograms()
             printAndPublishError("Error: invalid data readout length");
             return false;
         }
-        Print::PrintVerbose(name, "Data read out and stored");
+        Print::PrintData("Data read out and stored");
     }
 
-    Print::PrintVerbose(name, "readHistograms end");
+    Print::PrintData("readHistograms end");
     return true;
 }
 
@@ -166,6 +166,6 @@ const char* PmHistograms::parseResponse(const string& requestResponse) const
         }
         buffPos += sprintf(buffPos, "\n");
     }
-    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "%s", requestResponse.c_str()); // inserts '\0' as well, even if requestResponse is empty
+    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "PREV_ELAPSED,%.6fms\n%s", getPrevElapsed() * 1e-3, requestResponse.c_str()); // inserts '\0' as well
     return m_responseBuffer;
 }

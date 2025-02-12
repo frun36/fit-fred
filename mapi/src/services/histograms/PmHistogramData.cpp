@@ -12,8 +12,8 @@ std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks(std::u
 {
     std::vector<BinBlock> channelBlocks;
     for (const auto& [name, hist] : histograms) {
-        channelBlocks.emplace_back(name, hist.negativeBins);
-        channelBlocks.emplace_back(name, hist.positiveBins);
+        channelBlocks.emplace_back(name, *hist.negativeBins);
+        channelBlocks.emplace_back(name, *hist.positiveBins);
     }
 
     std::sort(channelBlocks.begin(), channelBlocks.end(), [](const auto& a, const auto& b) {

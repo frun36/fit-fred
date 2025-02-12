@@ -11,7 +11,6 @@ class PmHistograms : public BoardHistograms
     BoardCommunicationHandler m_handler;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;
-    uint32_t m_readId = 0;
     uint32_t m_fifoAddress;
 
     size_t m_responseBufferSize = 0;

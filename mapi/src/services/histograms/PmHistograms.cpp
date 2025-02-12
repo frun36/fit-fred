@@ -142,7 +142,7 @@ bool PmHistograms::readHistograms()
 const char* PmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%08" PRIu32 "\n", m_readId);
+    buffPos += sprintf(buffPos, "%" PRIu32 "\n", m_readId);
     for (const auto& [name, blocks] : data.getData()) {
         buffPos += sprintf(buffPos, "%s", name.c_str());
         for (const BinBlock* block : blocks) {

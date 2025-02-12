@@ -116,7 +116,7 @@ bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t st
 const char* TcmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%08" PRIu32 "\n", m_readId);
+    buffPos += sprintf(buffPos, "%" PRIu32 "\n", m_readId);
     for (const auto& h : m_histograms) {
         buffPos += sprintf(buffPos, "%s", h.name.c_str());
         for (uint32_t binVal : h.data) {

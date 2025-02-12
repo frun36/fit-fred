@@ -32,13 +32,13 @@ BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCo
 
 BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint32_t baseAddress, bool isIncrementing, uint32_t words)
 {
-    uint32_t packetsNumber = words / SwtSequence::maxBlockReadSize;
+    uint32_t fullPacketsNumber = words / SwtSequence::maxBlockReadSize;
     uint32_t offset = words % SwtSequence::maxBlockReadSize;
 
     SwtSequence sequence;
 
     if(offset < words){
-        for(uint32_t idx = 0; idx < packetsNumber; idx++){
+        for(uint32_t idx = 0; idx < fullPacketsNumber; idx++){
         switch (isIncrementing)
         {
             case true:
@@ -52,14 +52,11 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
         }
     }
 
-    switch (isIncrementing)
+    if(isIncrementing)
     {
-        case true:
-            sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &offset, true);
-            break;
-        default:
-            sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &offset, true);
-            break;
+        sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &offset, true);
+    }else{
+        sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &offset, true);
     }
 
     std::string response = executeAlfSequence(sequence.getSequence());

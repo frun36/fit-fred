@@ -157,12 +157,6 @@ public:
     
     static const UnsignedColumn Id;
     static const StringColumn Name;
-    struct Row
-    {
-        Row(const std::vector<MultiBase*>& row);
-        uint32_t id;
-        std::string name;
-    };
 };
 
 class PmChannelHistogramStructure
@@ -177,18 +171,6 @@ public:
     static const IntegerColumn StartBin;
     static const UnsignedColumn BinsPerRegister;
     static const StringColumn BinDirection;
-
-    struct Row
-    {
-        Row(const std::vector<MultiBase*>& row);
-        uint32_t id;
-        uint32_t pmHistogramId;
-        uint32_t baseAddress;
-        uint32_t regBlockSize;
-        int32_t startBin;
-        uint32_t binsPerRegister;
-        std::string binDirection;
-    };
 };
 
 }
@@ -203,6 +185,16 @@ public:
     static const IntegerColumn StartBin;
     static const UnsignedColumn RegBlockSize;
     static const StringColumn Direction;
+
+    struct Row
+    {
+        Row(const std::vector<MultiBase*>& row);
+        std::string histogramName;
+        uint32_t baseAddress;
+        int32_t startBin;
+        uint32_t regBlockSize;
+        std::string direction;
+    };
 };
 }
 

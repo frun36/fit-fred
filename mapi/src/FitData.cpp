@@ -48,6 +48,9 @@ FitData::FitData() : m_ready(false)
     if (!fetchEnvironment()) {
         return;
     }
+    if(!fetchPmHistogramStructure()){
+        return;
+    }
     if (!fetchConnectedDevices()) {
         return;
     }
@@ -146,7 +149,40 @@ bool FitData::fetchConnectedDevices()
 bool FitData::fetchPmHistogramStructure()
 {
     auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectPmHistograms());
-    
+    for(auto rawRow: histogramStructure)
+    {
+        db_fit::views::Histogram::Row row(rawRow);
+        if(m_PmHistograms.find(row.histogramName) == m_PmHistograms.end()){
+            m_PmHistograms.emplace(row.histogramName, PmHistogram()); 
+        }
+        auto& hist = m_PmHistograms[row.histogramName];
+        if(row.startBin < 0){
+            hist.negativeBins = PmHistogramBlock();
+            hist.negativeBins->baseAddress = row.baseAddress;
+            hist.negativeBins->regBlockSize = row.regBlockSize;
+            hist.negativeBins->startBin = row.startBin;
+            hist.negativeBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
+        }
+        else{
+            hist.positiveBins = PmHistogramBlock();
+            hist.positiveBins->baseAddress = row.baseAddress;
+            hist.positiveBins->regBlockSize = row.regBlockSize;
+            hist.positiveBins->startBin = row.startBin;
+            hist.positiveBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
+        }
+    }
+
+    for(auto [name, histogram]: m_PmHistograms)
+    {
+        if(histogram.negativeBins == std::nullopt){
+            Print::PrintError("Information about " + name + " is incomplete; negative bins definition is missing");
+        }
+        if(histogram.positiveBins == std::nullopt){
+            Print::PrintError("Information about " + name + " is incomplete; positive bins definition is missing");
+        }
+        return false;
+    }
+    return true;
 }
 
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)

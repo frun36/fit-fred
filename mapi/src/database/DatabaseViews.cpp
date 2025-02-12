@@ -124,13 +124,6 @@ const std::string PmChannelHistograms::TableName{"PM_CHANNEL_HISTOGRAMS"};
 const UnsignedColumn PmChannelHistograms::Id{0,"ID"};
 const StringColumn PmChannelHistograms::Name{1,"NAME"};
 
-PmChannelHistograms::Row::Row(const std::vector<MultiBase*>& row)
-{
-    id = Id.parse(row[Id.idx]);
-    name = Name.parse(row[Name.idx]);
-}
-
-
 // PmChannelHistogramStructure
 const std::string PmChannelHistogramStructure::TableName{"PM_CHANNEL_HISTOGRAM_STRUCTURE"};
 const UnsignedColumn PmChannelHistogramStructure::Id{0,"ID"};
@@ -141,18 +134,22 @@ const IntegerColumn PmChannelHistogramStructure::StartBin{4, "START_BIN"};
 const UnsignedColumn PmChannelHistogramStructure::BinsPerRegister{5, "BIN_PER_REGISTER"};
 const StringColumn PmChannelHistogramStructure::BinDirection{6,"BIN_DIRECTION"};
 
-PmChannelHistogramStructure::Row::Row(const std::vector<MultiBase*>& row)
+}
+
+namespace views
 {
-    id = Id.parse(row[Id.idx]);
-    pmHistogramId = PmHistogramId.parse(row[PmHistogramId.idx]);
+const StringColumn  Histogram::HistogramName{0};
+const HexColumn  Histogram::BaseAddress{1};
+const IntegerColumn  Histogram::StartBin{2};
+const UnsignedColumn  Histogram::RegBlockSize{3};
+const StringColumn  Histogram::Direction{4};
+Histogram::Row::Row(const std::vector<MultiBase*>& row)
+{
     baseAddress = BaseAddress.parse(row[BaseAddress.idx]);
     regBlockSize = RegBlockSize.parse(row[RegBlockSize.idx]);
     startBin = StartBin.parse(row[StartBin.idx]);
-    binsPerRegister = BinsPerRegister.parse(row[BinsPerRegister.idx]);
-    binDirection = BinDirection.parse(row[BinDirection.idx]);
+    direction = Direction.parse(row[Direction.idx]);
 }
-
-
 }
 
 } // namespace db_fit

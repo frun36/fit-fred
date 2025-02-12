@@ -12,7 +12,7 @@ namespace db_fit
 
 template<typename DataType, DataType(*DataParser)(MultiBase*)>
 struct Column {
-    Column(uint8_t _idx, std::string _name, std::optional<DataType> _default = std::nullopt) : 
+    Column(uint8_t _idx, std::string _name = "", std::optional<DataType> _default = std::nullopt) : 
         idx(_idx), name(_name), defaultValue(_default) {}
 
     const uint8_t idx;

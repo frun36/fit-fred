@@ -21,7 +21,7 @@ class FitData
     std::unordered_map<std::string, std::list<std::string>>& getStatusList() { return m_statusParameters; }
 
     struct PmHistogramBlock {
-        uint32_t addressOffset;
+        uint32_t baseAddress;
         uint32_t regBlockSize;
         int32_t startBin;
         enum class Direction { Positive,
@@ -30,9 +30,11 @@ class FitData
 
     struct PmHistogram {
         std::string name;
-        PmHistogramBlock positiveBins;
-        PmHistogramBlock negativeBins;
+        std::optional<PmHistogramBlock> positiveBins;
+        std::optional<PmHistogramBlock> negativeBins;
     };
+
+   std::unordered_map<std::string,PmHistogram>& getPmHistograms() {return m_PmHistograms;}
 
    private:
     struct DeviceInfo {
@@ -76,6 +78,6 @@ class FitData
     std::unordered_map<std::string, std::shared_ptr<Board>> m_templateBoards;
     std::unordered_map<std::string, std::list<std::string>> m_statusParameters;
     std::unordered_map<std::string, std::shared_ptr<Board>> m_boards;
-    std::vector<PmHistogram> m_PmHistograms;
+    std::unordered_map<std::string, PmHistogram> m_PmHistograms;
     std::shared_ptr<EnvironmentVariables> m_environmentalVariables;
 };

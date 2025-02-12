@@ -131,7 +131,7 @@ const UnsignedColumn PmChannelHistogramStructure::PmHistogramId{1,"PM_HISTOGRAM_
 const HexColumn PmChannelHistogramStructure::BaseAddress{2,"BASE_ADDRESS"};
 const UnsignedColumn PmChannelHistogramStructure::RegBlockSize{3,"REGBLOCK_SIZE"};
 const IntegerColumn PmChannelHistogramStructure::StartBin{4, "START_BIN"};
-const UnsignedColumn PmChannelHistogramStructure::BinsPerRegister{5, "BIN_PER_REGISTER"};
+const UnsignedColumn PmChannelHistogramStructure::BinsPerRegister{5, "BINS_PER_REGISTER"};
 const StringColumn PmChannelHistogramStructure::BinDirection{6,"BIN_DIRECTION"};
 
 }

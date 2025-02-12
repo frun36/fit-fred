@@ -14,7 +14,9 @@ class SwtSequence
     enum class Operation { Read,
                            Write,
                            RMWbits,
-                           RMWsum };
+                           RMWsum,
+                           BlockRead,
+                           BlockReadNonIncrement};
 
     struct SwtOperation {
         SwtOperation(Operation type, uint32_t address, std::array<uint32_t, 2> data = std::array<uint32_t, 2>(), bool expectResponse = false);
@@ -104,6 +106,12 @@ class SwtSequence
         FIT SWT specific, marks RMW sum operation   */
     static constexpr const char* _RMW_SUM_PREFIX_ = "\n0x004";
 
+    static constexpr const char* _BLOCK_READ_PREFIX_ = "\n0x008";
+
+    static constexpr const char* _BLOCK_READ_NON_INC_PREFIX_ = "\n0x009";
+
+
+    static constexpr uint32_t maxBlockReadSize = 1024;
    private:
     /*
         Stores sequence in the ALF-ready format*/

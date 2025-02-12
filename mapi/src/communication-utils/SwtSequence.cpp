@@ -47,14 +47,15 @@ SwtSequence& SwtSequence::addOperation(Operation type, const char* address, cons
             m_buffer.append(wordToHex(data[0]));
             m_buffer.append(_FRAME_POSTFIX_);
 
-            if (expectResponse) {
-                m_buffer.append(_READ_WORD_);
-            }
-
             m_buffer.append(_RMW_BITS_OR_PREFIX_);
             m_buffer.append(address);
             m_buffer.append(wordToHex(data[1]));
             m_buffer.append(_FRAME_POSTFIX_);
+
+            if (expectResponse) {
+                m_buffer.append(_READ_WORD_);
+            }
+
         }
 
         break;

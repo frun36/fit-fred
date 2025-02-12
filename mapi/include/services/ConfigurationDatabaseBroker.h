@@ -1,7 +1,7 @@
 #pragma once
 #include "Fred/Mapi/indefinitemapi.h"
 #include "Board.h"
-#include "database/DatabaseTables.h"
+#include "database/DatabaseViews.h"
 #include "Alfred/print.h"
 #include "utils.h"
 #include <unordered_set>

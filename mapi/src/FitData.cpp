@@ -2,33 +2,35 @@
 #include "FitData.h"
 #include "Alfred/print.h"
 #include "utils.h"
-#include "database/sql.h"
 #include <sstream>
 #include <iomanip>
+#include "database/FitDataQueries.h"
 
 ///
 
 FitData::DeviceInfo::DeviceInfo(std::vector<MultiBase*>& dbRow)
 {
-    name = dbRow[db_tables::ConnectedDevices::BoardName.idx]->getString();
-    std::string type = dbRow[db_tables::ConnectedDevices::BoardType.idx]->getString();
+    name = dbRow[db_fit::tables::ConnectedDevices::BoardName.idx]->getString();
+    std::string type = dbRow[db_fit::tables::ConnectedDevices::BoardType.idx]->getString();
 
-    if (type == db_tables::ConnectedDevices::TypePM)
+    if (type == db_fit::tables::ConnectedDevices::TypePM) {
         this->type = BoardType::PM;
-    else if (type == db_tables::ConnectedDevices::TypeTCM)
+    } else if (type == db_fit::tables::ConnectedDevices::TypeTCM) {
         this->type = BoardType::TCM;
-    else
+    } else {
         throw std::runtime_error("Invalid board type in Connected Devices table");
+    }
 
     if (this->type == BoardType::PM) {
-        if (name.find("C") != std::string::npos)
+        if (name.find("C") != std::string::npos) {
             this->side = Side::C;
-        else
+        } else {
             this->side = Side::A;
+        }
 
         this->index = std::stoi(name.substr(3, 1));
     }
-    isConnected = db_tables::boolean::parse(dbRow[db_tables::ConnectedDevices::IsConnected.idx]);
+    isConnected = db_fit::tables::ConnectedDevices::IsConnected.parse(dbRow[db_fit::tables::ConnectedDevices::IsConnected.idx]);
 }
 
 FitData::FitData() : m_ready(false)
@@ -39,13 +41,16 @@ FitData::FitData() : m_ready(false)
         return;
     }
 
-    if (!fetchBoardParamters(db_tables::BoardTypes::TypeTCM)) {
+    if (!fetchBoardParamters(db_fit::tables::BoardTypes::TypeTCM)) {
         return;
     }
-    if (!fetchBoardParamters(db_tables::BoardTypes::TypePM)) {
+    if (!fetchBoardParamters(db_fit::tables::BoardTypes::TypePM)) {
         return;
     }
     if (!fetchEnvironment()) {
+        return;
+    }
+    if (!fetchPmHistogramStructure()) {
         return;
     }
     if (!fetchConnectedDevices()) {
@@ -57,11 +62,8 @@ FitData::FitData() : m_ready(false)
 
 bool FitData::fetchBoardParamters(std::string boardType)
 {
-    sql::SelectModel query;
-    query.select("*").from(db_tables::Parameters::TableName).where(sql::column(db_tables::Parameters::BoardType.name) == boardType);
-
     Print::PrintInfo("Fetching " + boardType + " register map");
-    auto parameters = DatabaseInterface::executeQuery(query.str());
+    auto parameters = DatabaseInterface::executeQuery(db_fit::queries::selectParameters(boardType));
     Print::PrintInfo("Fetched " + std::to_string(parameters.size()) + " rows");
 
     if (parameters.size() == 0) {
@@ -77,10 +79,8 @@ bool FitData::fetchBoardParamters(std::string boardType)
 bool FitData::fetchEnvironment()
 {
     Print::PrintInfo("Fetching information about unit definitions and other environment variables");
-    sql::SelectModel query;
-    query.select("*").from(db_tables::Environment::TableName);
 
-    auto environment = DatabaseInterface::executeQuery(query.str());
+    auto environment = DatabaseInterface::executeQuery(db_fit::queries::selectEnvironment());
     Print::PrintInfo("Fetched " + std::to_string(environment.size()) + " rows");
     parseEnvVariables(environment);
     if (!checkEnvironment()) {
@@ -93,10 +93,7 @@ bool FitData::fetchEnvironment()
 bool FitData::fetchConnectedDevices()
 {
     sql::SelectModel query;
-    query.select("*").from(db_tables::ConnectedDevices::TableName);
-
-    Print::PrintInfo("Fetching information about connected devices");
-    auto connectedDevices = DatabaseInterface::executeQuery(query.str());
+    auto connectedDevices = DatabaseInterface::executeQuery(db_fit::queries::selectConnectedDevices());
 
     Print::PrintInfo("Fetched " + std::to_string(connectedDevices.size()) + " rows");
     if (connectedDevices.size() == 0) {
@@ -113,12 +110,12 @@ bool FitData::fetchConnectedDevices()
         }
         Print::PrintInfo("Registering " + device.name);
         TCM = m_boards.emplace(device.name, constructBoardFromTemplate(device.name, 0x0, device.isConnected, m_templateBoards["TCM"])).first->second;
-        m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
+        m_environmentalVariables->emplace({ device.name, Equation{ "1", {} } });
     }
 
     if (TCM.get() == nullptr) {
-            Print::PrintVerbose("Missing TCM!");
-            return false;
+        Print::PrintVerbose("Missing TCM!");
+        return false;
     }
 
     for (auto& deviceRow : connectedDevices) {
@@ -127,14 +124,13 @@ bool FitData::fetchConnectedDevices()
             continue;
         }
 
-        if(!device.isConnected){
+        if (!device.isConnected) {
             Print::PrintWarning(device.name + " is not connected");
-            m_environmentalVariables->emplace({device.name, Equation{"0",{}}});
+            m_environmentalVariables->emplace({ device.name, Equation{ "0", {} } });
+        } else {
+            m_environmentalVariables->emplace({ device.name, Equation{ "1", {} } });
         }
-        else{
-            m_environmentalVariables->emplace({device.name, Equation{"1",{}}});
-        }
-        
+
         Print::PrintInfo("Registering " + device.name);
 
         switch (device.side) {
@@ -151,11 +147,52 @@ bool FitData::fetchConnectedDevices()
     return true;
 }
 
+bool FitData::fetchPmHistogramStructure()
+{
+    auto histogramStructure = DatabaseInterface::executeQuery(db_fit::queries::selectPmHistograms());
+    for (auto rawRow : histogramStructure) {
+        db_fit::views::Histogram::Row row(rawRow);
+        if (m_PmHistograms.find(row.histogramName) == m_PmHistograms.end()) {
+            m_PmHistograms.emplace(row.histogramName, PmHistogram());
+        }
+        Print::PrintVerbose("Parsing: " + row.histogramName + ", start bin: " + std::to_string(row.startBin));
+        auto& hist = m_PmHistograms[row.histogramName];
+        if (row.startBin < 0) {
+            hist.negativeBins = PmHistogramBlock();
+            hist.negativeBins->baseAddress = row.baseAddress;
+            hist.negativeBins->regBlockSize = row.regBlockSize;
+            hist.negativeBins->startBin = row.startBin;
+            hist.negativeBins->binsPerRegister = row.binsPerRegister;
+            hist.negativeBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
+        } else {
+            hist.positiveBins = PmHistogramBlock();
+            hist.positiveBins->baseAddress = row.baseAddress;
+            hist.positiveBins->regBlockSize = row.regBlockSize;
+            hist.positiveBins->startBin = row.startBin;
+            hist.positiveBins->binsPerRegister = row.binsPerRegister;
+            hist.positiveBins->direction = (row.direction == "P") ? PmHistogramBlock::Direction::Positive : PmHistogramBlock::Direction::Negative;
+        }
+    }
+
+    for (auto [name, histogram] : m_PmHistograms) {
+        if (histogram.negativeBins == std::nullopt) {
+            Print::PrintError("Information about " + name + " is incomplete; negative bins definition is missing");
+            return false;
+        }
+        if (histogram.positiveBins == std::nullopt) {
+            Print::PrintError("Information about " + name + " is incomplete; positive bins definition is missing");
+            return false;
+        }
+        Print::PrintVerbose(name + " histogram data successfully fetched");
+    }
+    return true;
+}
+
 std::shared_ptr<Board> FitData::parseTemplateBoard(std::vector<std::vector<MultiBase*>>& boardTable)
 {
     std::shared_ptr<Board> board = std::make_shared<Board>("TemplateBoard", 0x0, false);
     for (auto& row : boardTable) {
-        Print::PrintVerbose("Parsing parameter: " + row[db_tables::Parameters::Name.idx]->getString());
+        Print::PrintVerbose("Parsing parameter: " + row[db_fit::tables::Parameters::Name.idx]->getString());
         board->emplace(parseParameter(row));
     }
     Print::PrintVerbose("Board parsed successfully");
@@ -170,59 +207,44 @@ std::list<std::string> FitData::constructStatusParametersList(std::string_view b
             statusList.emplace_back(parameter.first);
         }
     }
-    return std::move(statusList);
+    return statusList;
 }
 
 Board::ParameterInfo FitData::parseParameter(std::vector<MultiBase*>& dbRow)
 {
-    Equation electronicToPhysic = (dbRow[db_tables::Parameters::EqElectronicToPhysic.idx] == NULL) ? Equation::Empty()
-                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqElectronicToPhysic.idx]->getString());
+    db_fit::tables::Parameters::Row row(dbRow);
+    Board::ParameterInfo::RefreshType refreshType = row.refreshType.has_value() ? Board::ParameterInfo::RefreshType::SYNC : Board::ParameterInfo::RefreshType::NOT;
 
-    Equation physicToElectronic = (dbRow[db_tables::Parameters::EqPhysicToElectronic.idx] == NULL) ? Equation::Empty()
-                                                                                                   : db_tables::equation::parseEquation(dbRow[db_tables::Parameters::EqPhysicToElectronic.idx]->getString());
-
-    Board::ParameterInfo::RefreshType refreshType = Board::ParameterInfo::RefreshType::NOT;
-
-    if (dbRow[db_tables::Parameters::RefreshType.idx] != NULL) {
-
-        if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshCNT) {
-            refreshType = Board::ParameterInfo::RefreshType::CNT;
-        } else if (dbRow[db_tables::Parameters::RefreshType.idx]->getString() == db_tables::Parameters::RefreshSYNC) {
-            refreshType = Board::ParameterInfo::RefreshType::SYNC;
-        }
-    }
-
-    Board::ParameterInfo::ValueEncoding encoding = db_tables::boolean::parse(dbRow[db_tables::Parameters::IsSigned.idx]) ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
-    uint32_t startBit = dbRow[db_tables::Parameters::StartBit.idx]->getInt();
-    uint32_t bitLength = dbRow[db_tables::Parameters::EndBit.idx]->getInt() - startBit + 1;
+    Board::ParameterInfo::ValueEncoding encoding = row.isSigned ? Board::ParameterInfo::ValueEncoding::Signed : Board::ParameterInfo::ValueEncoding::Unsigned;
+    uint32_t bitLength = row.endBit - row.startBit + 1;
 
     int64_t max = 0;
     int64_t min = 0;
-    if (dbRow[db_tables::Parameters::MinValue.idx] == NULL) {
+    if (row.minValue.has_value() == false) {
         min = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? 0 : -(1ull << (bitLength - 1));
     } else {
-        min = static_cast<int64_t>(dbRow[db_tables::Parameters::MinValue.idx]->getDouble());
+        min = row.minValue.value();
     }
 
-    if (dbRow[db_tables::Parameters::MaxValue.idx] == NULL) {
+    if (row.maxValue.has_value() == false) {
         max = (encoding == Board::ParameterInfo::ValueEncoding::Unsigned) ? ((1ull << bitLength) - 1) : ((1ull << (bitLength - 1)) - 1);
     } else {
-        max = static_cast<int64_t>(dbRow[db_tables::Parameters::MaxValue.idx]->getDouble());
+        max = row.maxValue.value();
     }
 
     return {
-        dbRow[db_tables::Parameters::Name.idx]->getString(),
-        db_tables::hex::parse(dbRow[db_tables::Parameters::BaseAddress.idx]),
-        startBit,
+        dbRow[db_fit::tables::Parameters::Name.idx]->getString(),
+        row.baseAddress,
+        row.startBit,
         bitLength,
-        static_cast<uint8_t>(dbRow[db_tables::Parameters::RegBlockSize.idx]->getInt()),
+        row.regBlockSize,
         encoding,
         min,
         max,
-        electronicToPhysic,
-        physicToElectronic,
-        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsFifo.idx]),
-        db_tables::boolean::parse(dbRow[db_tables::Parameters::IsReadOnly.idx]),
+        row.eqElectronicToPhysic,
+        row.eqPhysicToElectronic,
+        row.isFifo,
+        row.isReadOnly,
         refreshType
     };
 }
@@ -241,18 +263,18 @@ void FitData::parseEnvVariables(std::vector<std::vector<MultiBase*>>& settingsTa
 {
     m_environmentalVariables = std::make_shared<EnvironmentVariables>();
     for (auto& row : settingsTable) {
-        std::string name = row[db_tables::Environment::Name.idx]->getString();
-        Equation equation = db_tables::equation::parseEquation(row[db_tables::Environment::Equation.idx]->getString());
-        Print::PrintVerbose("Parsing " + name);
-        Print::PrintVerbose("Equation: " + equation.equation);
+        db_fit::tables::Environment::Row parsedRow(row);
+
+        Print::PrintVerbose("Parsing " + parsedRow.name);
+        Print::PrintVerbose("Equation: " + parsedRow.equation.equation);
         m_environmentalVariables->emplace(
-            EnvironmentVariables::Variable(name, equation));
-        if (equation.variables.empty()) {
-            m_environmentalVariables->updateVariable(name);
+            EnvironmentVariables::Variable(parsedRow.name, parsedRow.equation));
+        if (parsedRow.equation.variables.empty()) {
+            m_environmentalVariables->updateVariable(parsedRow.name);
         }
     }
     for (auto& row : settingsTable) {
-        std::string name = row[db_tables::Environment::Name.idx]->getString();
+        std::string name = row[db_fit::tables::Environment::Name.idx]->getString();
         Print::PrintVerbose("Updating " + name);
         m_environmentalVariables->updateVariable(name);
         Print::PrintVerbose("Updated " + name + " to " + std::to_string(m_environmentalVariables->getVariable(name)));

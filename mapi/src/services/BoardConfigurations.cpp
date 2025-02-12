@@ -1,38 +1,28 @@
 #include "services/BoardConfigurations.h"
 #include "database/sql.h"
-#include "database/DatabaseTables.h"
+#include "database/BoardConfigurationQueries.h"
 #include "DelayChange.h"
 
 // BoardConfigurations
 
-std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(string_view configurationName, string_view boardName)
+std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(const std::string& configurationName, const std::string& boardName)
 {
-    sql::SelectModel query;
-    query
-        .select(db_tables::ConfigurationParameters::ParameterName.name, db_tables::ConfigurationParameters::ParameterValue.name)
-        .from(db_tables::ConfigurationParameters::TableName)
-        .where(sql::column(db_tables::ConfigurationParameters::ConfigurationName.name) == string(configurationName) && sql::column(db_tables::ConfigurationParameters::BoardName.name) == string(boardName));
-    return DatabaseInterface::executeQuery(query.str());
+    return DatabaseInterface::executeQuery(db_fit::queries::selectBoardConfiguration(configurationName, boardName));
 }
 
-BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData)
+BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(const std::string& configurationName, const vector<vector<MultiBase*>>& dbData)
 {
     optional<int64_t> delayA = nullopt;
     optional<int64_t> delayC = nullopt;
     string request;
     for (const auto& row : dbData) {
-        if (row.size() != 2 || !row[0]->isString() || !row[1]->isDouble()) {
-            throw runtime_error(string_utils::concatenate(configurationName, ": invalid CONFIGURATIONS data row"));
-        }
-
-        string parameterName = row[0]->getString();
-        int64_t parameterValue = static_cast<int64_t>(row[1]->getDouble());
-        if (parameterName == tcm_parameters::DelayA) {
-            delayA = parameterValue;
-        } else if (parameterName == tcm_parameters::DelayC) {
-            delayC = parameterValue;
+        db_fit::views::ConfigurationValue::Row parsedRow(row);
+        if (parsedRow.name == tcm_parameters::DelayA) {
+            delayA = parsedRow.value;
+        } else if (parsedRow.name == tcm_parameters::DelayC) {
+            delayC = parsedRow.value;
         } else {
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parameterName, parameterValue));
+            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parsedRow.name, parsedRow.value));
         }
     }
 

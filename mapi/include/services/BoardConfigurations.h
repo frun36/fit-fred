@@ -19,10 +19,10 @@ class BoardConfigurations
         ConfigurationInfo(const string& name, const string& req, optional<int64_t> delayA, optional<int64_t> delayC) : name(name), req(req), delayA(delayA), delayC(delayC) {}
     };
 
-    static vector<vector<MultiBase*>> fetchConfiguration(string_view configurationName, string_view boardName);
-    static ConfigurationInfo parseConfigurationInfo(string_view configurationName, const vector<vector<MultiBase*>>& dbData);
+    static vector<vector<MultiBase*>> fetchConfiguration(const std::string& configurationName, const std::string& boardName);
+    static ConfigurationInfo parseConfigurationInfo(const std::string& configurationName, const vector<vector<MultiBase*>>& dbData);
 
-    inline ConfigurationInfo getConfigurationInfo(string_view configurationName) const
+    inline ConfigurationInfo getConfigurationInfo(const std::string& configurationName) const
     {
         auto dbData = fetchConfiguration(configurationName, m_boardName);
         return parseConfigurationInfo(configurationName, dbData);

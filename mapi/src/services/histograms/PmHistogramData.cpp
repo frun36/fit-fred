@@ -66,7 +66,7 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::generateOperations(
 
             uint32_t currBaseAddress = chIdx * ChannelBaseAddress + block.baseAddress;
             if (requests.empty()) {
-                requests.emplace_back(currBaseAddress, block.regblockSize);
+                requests.emplace_back(currBaseAddress, block.regBlockSize);
                 continue;
             }
 
@@ -74,9 +74,9 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::generateOperations(
             // (works only within single channel)
             OperationInfo& lastRequest = requests.back();
             if (currBaseAddress == lastRequest.baseAddress + lastRequest.regblockSize) {
-                lastRequest.regblockSize += block.regblockSize;
+                lastRequest.regblockSize += block.regBlockSize;
             } else {
-                requests.emplace_back(currBaseAddress, block.regblockSize);
+                requests.emplace_back(currBaseAddress, block.regBlockSize);
             }
         }
     }
@@ -106,7 +106,7 @@ bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<u
     // we know the result from a single operation is a contiguous block of data
     size_t currDataIdx = 0;
     for (auto& block : blocks) {
-        if (!(baseAddress + currDataIdx >= block.baseAddress && baseAddress + currDataIdx < block.baseAddress + block.regblockSize)) {
+        if (!(baseAddress + currDataIdx >= block.baseAddress && baseAddress + currDataIdx < block.baseAddress + block.regBlockSize)) {
             continue;
         }
 

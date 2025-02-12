@@ -5,7 +5,10 @@
 #include "services/histograms/BinBlock.h"
 #include "utils.h"
 
-PmHistograms::PmHistograms(shared_ptr<Board> pm) : data(pm), m_handler(pm)
+PmHistograms::PmHistograms(shared_ptr<Board> pm) : data(pm),
+                                                   m_handler(pm),
+                                                   m_responseBufferSize(5 * data.getTotalBins() + 256), // 4 digit hex + comma, 256B space for headers, newlines etc.
+                                                   m_responseBuffer(new char[m_responseBufferSize])
 {
     if (pm->isTcm()) {
         throw runtime_error("PmHistograms: board is a TCM");

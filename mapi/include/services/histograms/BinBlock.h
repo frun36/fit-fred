@@ -9,7 +9,7 @@
 struct HistogramInfoRow {
     std::string histogramName;
     uint32_t baseAddress;
-    uint32_t regblockSize;
+    uint32_t regBlockSize;
     int32_t startBin;
     uint32_t binsPerRegister;
     bool isNegativeDirection;
@@ -23,7 +23,7 @@ struct HistogramInfoRow {
         histogramName = data[0]->getString();
         istringstream iss(data[1]->getString());
         iss >> hex >> baseAddress;
-        regblockSize = data[2]->getDouble();
+        regBlockSize = data[2]->getDouble();
         startBin = data[3]->getDouble();
         isNegativeDirection = data[4]->getString() == "N";
     }
@@ -32,7 +32,7 @@ struct HistogramInfoRow {
 struct BinBlock {
     std::string histogramName;
     uint32_t baseAddress;
-    uint32_t regblockSize;
+    uint32_t regBlockSize;
     int32_t startBin;
     uint32_t binsPerRegister;
     bool isNegativeDirection;
@@ -42,20 +42,20 @@ struct BinBlock {
 
     BinBlock(std::string histogramName,
              uint32_t baseAddress,
-             uint32_t regblockSize,
+             uint32_t regBlockSize,
              int32_t startBin,
              uint32_t binsPerRegister,
              bool isNegativeDirection)
         : histogramName(histogramName),
           baseAddress(baseAddress),
-          regblockSize(regblockSize),
+          regBlockSize(regBlockSize),
           startBin(startBin),
           binsPerRegister(binsPerRegister),
           isNegativeDirection(isNegativeDirection)
     {
-        data.resize(regblockSize);
+        data.resize(regBlockSize);
     }
 
     BinBlock(const HistogramInfoRow& row)
-        : BinBlock(row.histogramName, row.baseAddress, row.regblockSize, row.startBin, row.binsPerRegister, row.isNegativeDirection) {}
+        : BinBlock(row.histogramName, row.baseAddress, row.regBlockSize, row.startBin, row.binsPerRegister, row.isNegativeDirection) {}
 };

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 #include <array>
@@ -39,6 +40,14 @@ class PmHistogramData
     const BlockView& getData() const
     {
         return m_orderedBlocksView;
+    }
+
+    size_t getTotalBins() const {
+        return std::accumulate(m_channelBlocks.begin(), m_channelBlocks.end(), 0, [](size_t acc, const std::vector<BinBlock> ch) {
+            return acc + std::accumulate(ch.begin(), ch.end(), 0, [](size_t chAcc, const BinBlock& block) {
+                return chAcc + block.regBlockSize * block.binsPerRegister;
+            });
+        });
     }
 
    private:

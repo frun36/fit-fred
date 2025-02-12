@@ -14,8 +14,8 @@ class PmHistograms : public BoardHistograms
     uint32_t m_readId = 0;
     uint32_t m_fifoAddress;
 
-    char* m_responseBuffer = nullptr;
     size_t m_responseBufferSize = 0;
+    char* m_responseBuffer = nullptr;
 
    public:
     PmHistograms(shared_ptr<Board> pm);

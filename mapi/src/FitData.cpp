@@ -185,7 +185,7 @@ bool FitData::fetchPmHistogramStructure()
             Print::PrintError("Information about " + name + " is incomplete; positive bins definition is missing");
             return false;
         }
-        Print::PrintInfo(name + " histogram data successfully fetched");
+        Print::PrintVerbose(name + " histogram data successfully fetched");
     }
     return true;
 }

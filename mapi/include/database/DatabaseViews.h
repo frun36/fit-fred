@@ -4,19 +4,19 @@
 #include <sstream>
 #include <cstdint>
 #include <algorithm>
-#include<vector>
+#include <vector>
 #include "Board.h"
 #include "Database/databaseinterface.h"
 #include "utils.h"
-#include"Columns.h"
+#include "Columns.h"
 
 namespace db_fit
 {
 
-namespace tabels
+namespace tables
 {
 
-std::string fullColumnName(const std::string& tabelName, const std::string& columnName);
+std::string fullColumnName(const std::string& tableName, const std::string& columnName);
 
 class BoardTypes
 {
@@ -47,8 +47,7 @@ class Parameters
     static const EquationColumn EqPhysicToElectronic;
     static const StringColumn RefreshType;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string boardType;
         std::string name;
@@ -65,7 +64,7 @@ class Parameters
         Equation eqPhysicToElectronic;
         std::optional<std::string> refreshType;
     };
-    
+
     static const std::string RefreshSYNC;
     static const std::string RefreshCNT;
 };
@@ -79,14 +78,12 @@ class ConnectedDevices
     static const StringColumn BoardType;
     static const BooleanColumn IsConnected;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string boardName;
         std::string boardType;
         bool isConnected;
     };
-    
 
     static const std::string TypePM;
     static const std::string TypeTCM;
@@ -100,8 +97,7 @@ class Environment
     static const StringColumn Name;
     static const EquationColumn VariableEquation;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string name;
         Equation equation;
@@ -118,8 +114,7 @@ class Configurations
     static const StringColumn Date;
     static const StringColumn Comment;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string configuratioName;
         std::string author;
@@ -139,8 +134,7 @@ class ConfigurationParameters
     static const StringColumn ParameterName;
     static const IntegerColumn ParameterValue;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string configuratioName;
         std::string boardName;
@@ -152,16 +146,16 @@ class ConfigurationParameters
 
 class PmChannelHistograms
 {
-public:
+   public:
     static const std::string TableName;
-    
+
     static const UnsignedColumn Id;
     static const StringColumn Name;
 };
 
 class PmChannelHistogramStructure
 {
-public:
+   public:
     static const std::string TableName;
 
     static const UnsignedColumn Id;
@@ -173,13 +167,13 @@ public:
     static const StringColumn BinDirection;
 };
 
-}
+} // namespace tables
 
 namespace views
 {
 class Histogram
 {
-public:
+   public:
     static const StringColumn HistogramName;
     static const HexColumn BaseAddress;
     static const IntegerColumn StartBin;
@@ -187,8 +181,7 @@ public:
     static const UnsignedColumn BinsPerRegister;
     static const StringColumn Direction;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string histogramName;
         uint32_t baseAddress;
@@ -199,6 +192,5 @@ public:
     };
 };
 
-
+} // namespace views
 } // namespace db_fit
-}

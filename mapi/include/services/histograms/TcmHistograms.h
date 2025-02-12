@@ -24,8 +24,8 @@ class TcmHistograms : public BoardHistograms
     BoardCommunicationHandler m_handler;
     vector<Histogram> m_histograms; // Needs to be sorted by base address!
 
+    size_t m_responseBufferSize = 0;
     char* m_responseBuffer = nullptr;
-    size_t m_responseBufferSize;
 
     Result<string, string> setCounterId(uint32_t counterId);
     Result<string, string> resetHistograms() override;

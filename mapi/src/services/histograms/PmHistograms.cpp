@@ -4,11 +4,12 @@
 #include "PM.h"
 #include "services/histograms/BinBlock.h"
 #include "utils.h"
+#include <cinttypes>
 
 PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
     : data(pm, histograms),
       m_handler(pm),
-      m_responseBufferSize(5 * data.getTotalBins() + 256), // 4 digit hex + comma, 256B space for headers, newlines etc.
+      m_responseBufferSize(6 * data.getTotalBins() + 256), // up to 5 digits + comma, 256B space for headers, newlines etc.
       m_responseBuffer(new char[m_responseBufferSize])
 {
     if (pm->isTcm()) {
@@ -141,7 +142,7 @@ bool PmHistograms::readHistograms()
 const char* PmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%08X\n", m_readId);
+    buffPos += sprintf(buffPos, "%08" PRIu32 "\n", m_readId);
     for (const auto& [name, blocks] : data.getData()) {
         buffPos += sprintf(buffPos, "%s", name.c_str());
         for (const BinBlock* block : blocks) {
@@ -150,11 +151,11 @@ const char* PmHistograms::parseResponse(const string& requestResponse) const
             }
             if (block->isNegativeDirection) {
                 for (auto it = block->data.end() - 1; it >= block->data.begin(); it--) {
-                    buffPos += sprintf(buffPos, ",%X,%X", (*it) >> 16, (*it) & 0xFFFF);
+                    buffPos += sprintf(buffPos, ",%" PRIu32 ",%" PRIu32, (*it) >> 16, (*it) & 0xFFFF);
                 }
             } else {
                 for (auto it = block->data.begin(); it < block->data.end(); it++) {
-                    buffPos += sprintf(buffPos, ",%X,%X", (*it) & 0xFFFF, (*it) >> 16);
+                    buffPos += sprintf(buffPos, ",%" PRIu32 ",%" PRIu32, (*it) & 0xFFFF, (*it) >> 16);
                 }
             }
         }

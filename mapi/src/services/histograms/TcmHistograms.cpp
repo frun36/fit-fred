@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
+#include <cinttypes>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 {
@@ -21,7 +22,7 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
     sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto&b) {
         return a.baseAddress < b.baseAddress;
     });
-    m_responseBufferSize = 9 * totalBinCount + 256; // 8 hex digits + comma, 256B for additional info
+    m_responseBufferSize = 11 * totalBinCount + 256; // up to 10 digits + comma, 256B for additional info
     m_responseBuffer = new char[m_responseBufferSize];
 
     addOrReplaceHandler("COUNTER", [this](vector<string> arguments) -> Result<string, string> {
@@ -115,11 +116,11 @@ bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t st
 const char* TcmHistograms::parseResponse(const string& requestResponse) const
 {
     char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%08X\n", m_readId);
+    buffPos += sprintf(buffPos, "%08" PRIu32 "\n", m_readId);
     for (const auto& h : m_histograms) {
         buffPos += sprintf(buffPos, "%s", h.name.c_str());
         for (uint32_t binVal : h.data) {
-            buffPos += sprintf(buffPos, ",%X", binVal);
+            buffPos += sprintf(buffPos, ",%" PRIu32, binVal);
         }
         *buffPos++ = '\n';
     }

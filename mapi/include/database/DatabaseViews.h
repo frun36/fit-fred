@@ -206,19 +206,5 @@ public:
     };
 };
 
-class ConfigurationValue
-{
-public:
-    static const StringColumn ParameterName;
-    static const IntegerColumn ParameterValue;
-
-    struct Row
-    {
-        Row(const std::vector<MultiBase*>& row);
-        std::string name;
-        int64_t value;
-    };
-};
-
 } // namespace views
 } // namespace db_fit

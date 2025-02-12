@@ -1,27 +1,20 @@
 #include "services/histograms/PmHistogramData.h"
 #include <algorithm>
 #include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <vector>
+#include "FitData.h"
 #include "services/histograms/BinBlock.h"
 #include <database/sql.h>
 #include <Database/databaseinterface.h>
 
-std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks()
+std::array<std::vector<BinBlock>, 12> PmHistogramData::fetchChannelBlocks(std::unordered_map<std::string, FitData::PmHistogram> histograms)
 {
-    sql::SelectModel s;
-    s.select("name", "base_address", "regblock_size", "start_bin", "bins_per_register", "bin_direction")
-        .from("pm_channel_histograms")
-        .join("pm_channel_histogram_structure")
-        .on(sql::column("id") == sql::column("pm_histogram_id"));
-
-    std::vector<std::vector<MultiBase*>> result = DatabaseInterface::executeQuery(s.str());
     std::vector<BinBlock> channelBlocks;
-
-    std::transform(result.begin(), result.end(), std::back_inserter(channelBlocks), [](const auto& row) {
-        return HistogramInfoRow(row);
-    });
+    for (const auto& [name, hist] : histograms) {
+        channelBlocks.emplace_back(name, hist.negativeBins);
+        channelBlocks.emplace_back(name, hist.positiveBins);
+    }
 
     std::sort(channelBlocks.begin(), channelBlocks.end(), [](const auto& a, const auto& b) {
         return a.baseAddress < b.baseAddress;

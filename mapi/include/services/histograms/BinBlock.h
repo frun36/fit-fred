@@ -1,33 +1,9 @@
 #pragma once
 
-#include <sstream>
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "Database/databaseinterface.h"
-
-struct HistogramInfoRow {
-    std::string histogramName;
-    uint32_t baseAddress;
-    uint32_t regBlockSize;
-    int32_t startBin;
-    uint32_t binsPerRegister;
-    bool isNegativeDirection;
-
-    HistogramInfoRow(vector<MultiBase*> data)
-    {
-        if (data.size() != 6) {
-            throw runtime_error("Invalid histogram info data row size");
-        }
-
-        histogramName = data[0]->getString();
-        istringstream iss(data[1]->getString());
-        iss >> hex >> baseAddress;
-        regBlockSize = data[2]->getDouble();
-        startBin = data[3]->getDouble();
-        isNegativeDirection = data[4]->getString() == "N";
-    }
-};
+#include "FitData.h"
 
 struct BinBlock {
     std::string histogramName;
@@ -56,6 +32,6 @@ struct BinBlock {
         data.resize(regBlockSize);
     }
 
-    BinBlock(const HistogramInfoRow& row)
-        : BinBlock(row.histogramName, row.baseAddress, row.regBlockSize, row.startBin, row.binsPerRegister, row.isNegativeDirection) {}
+    BinBlock(const std::string& histogramName, const FitData::PmHistogramBlock& row)
+        : BinBlock(histogramName, row.baseAddress, row.regBlockSize, row.startBin, row.binsPerRegister, row.direction == FitData::PmHistogramBlock::Direction::Negative) {}
 };

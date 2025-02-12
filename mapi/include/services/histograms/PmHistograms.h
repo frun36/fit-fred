@@ -18,7 +18,7 @@ class PmHistograms : public BoardHistograms
     char* m_responseBuffer = nullptr;
 
    public:
-    PmHistograms(shared_ptr<Board> pm);
+    PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms);
 
     Result<string, string> selectHistograms(const vector<string>& names);
     Result<string, string> resetHistograms() override;

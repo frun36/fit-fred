@@ -26,8 +26,8 @@ class PmHistogramData
 
     bool storeReadoutData(uint32_t baseAddress, const std::vector<uint32_t>& data);
 
-    PmHistogramData(shared_ptr<Board> pm)
-        : m_channelBlocks(fetchChannelBlocks()),
+    PmHistogramData(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
+        : m_channelBlocks(fetchChannelBlocks(histograms)),
           m_orderedBlocksView(createBlockView()),
           m_operations(generateOperations()),
           ChannelBaseAddress(!pm->isTcm() ? pm->at(pm_parameters::HistogramReadout).regBlockSize : 0) {}
@@ -56,7 +56,7 @@ class PmHistogramData
     const std::vector<OperationInfo> m_operations;
     const uint32_t ChannelBaseAddress;
 
-    static std::array<std::vector<BinBlock>, 12> fetchChannelBlocks();
+    static std::array<std::vector<BinBlock>, 12> fetchChannelBlocks(std::unordered_map<std::string, FitData::PmHistogram> histograms);
     BlockView createBlockView();
     std::vector<OperationInfo> generateOperations() const;
 };

@@ -29,8 +29,9 @@ class PmHistogramData
     PmHistogramData(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
         : m_channelBlocks(fetchChannelBlocks(histograms)),
           m_orderedBlocksView(createBlockView()),
-          m_operations(generateOperations()),
-          ChannelBaseAddress(!pm->isTcm() ? pm->at(pm_parameters::HistogramReadout).regBlockSize : 0) {}
+          ChannelBaseAddress(!pm->isTcm() ? pm->at(pm_parameters::HistogramReadout).regBlockSize : 0) {
+        updateOperations();
+    }
 
     const vector<OperationInfo>& getOperations() const
     {
@@ -42,21 +43,22 @@ class PmHistogramData
         return m_orderedBlocksView;
     }
 
-    size_t getTotalBins() const {
+    size_t getTotalBins() const
+    {
         return std::accumulate(m_channelBlocks.begin(), m_channelBlocks.end(), 0, [](size_t acc, const std::vector<BinBlock> ch) {
             return acc + std::accumulate(ch.begin(), ch.end(), 0, [](size_t chAcc, const BinBlock& block) {
-                return chAcc + block.regBlockSize * block.binsPerRegister;
-            });
+                       return chAcc + block.regBlockSize * block.binsPerRegister;
+                   });
         });
     }
 
    private:
     const std::array<std::vector<BinBlock>, 12> m_channelBlocks;
     const BlockView m_orderedBlocksView;
-    const std::vector<OperationInfo> m_operations;
+    std::vector<OperationInfo> m_operations;
     const uint32_t ChannelBaseAddress;
 
     static std::array<std::vector<BinBlock>, 12> fetchChannelBlocks(std::unordered_map<std::string, FitData::PmHistogram> histograms);
     BlockView createBlockView();
-    std::vector<OperationInfo> generateOperations() const;
+    void updateOperations();
 };

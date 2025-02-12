@@ -46,9 +46,9 @@ BlockView PmHistogramData::createBlockView()
     return view;
 }
 
-std::vector<PmHistogramData::OperationInfo> PmHistogramData::generateOperations() const
+void PmHistogramData::updateOperations()
 {
-    std::vector<OperationInfo> requests; // (baseAdress, readSize)
+    std::vector<OperationInfo> operations;
 
     for (size_t chIdx = 0; chIdx < 12; chIdx++) {
         const std::vector<BinBlock>& channel = m_channelBlocks[chIdx];
@@ -58,22 +58,22 @@ std::vector<PmHistogramData::OperationInfo> PmHistogramData::generateOperations(
             }
 
             uint32_t currBaseAddress = chIdx * ChannelBaseAddress + block.baseAddress;
-            if (requests.empty()) {
-                requests.emplace_back(currBaseAddress, block.regBlockSize);
+            if (operations.empty()) {
+                operations.emplace_back(currBaseAddress, block.regBlockSize);
                 continue;
             }
 
             // extend previous readout if regblocks are connected
             // (works only within single channel)
-            OperationInfo& lastRequest = requests.back();
+            OperationInfo& lastRequest = operations.back();
             if (currBaseAddress == lastRequest.baseAddress + lastRequest.regblockSize) {
                 lastRequest.regblockSize += block.regBlockSize;
             } else {
-                requests.emplace_back(currBaseAddress, block.regBlockSize);
+                operations.emplace_back(currBaseAddress, block.regBlockSize);
             }
         }
     }
-    return requests;
+    m_operations = operations;
 }
 
 std::string PmHistogramData::selectHistograms(std::vector<std::string> names)

@@ -1,6 +1,8 @@
 #include "services/histograms/PmHistogramData.h"
 #include <algorithm>
 #include <iomanip>
+#include <numeric>
+#include <set>
 #include <sstream>
 #include <vector>
 #include "FitData.h"
@@ -78,16 +80,19 @@ void PmHistogramData::updateOperations()
 
 std::string PmHistogramData::selectHistograms(std::vector<std::string> names)
 {
-    std::string response;
+    std::set<std::string> enabledNames;
     for (auto& channelBlocks : m_channelBlocks) {
         for (auto& bins : channelBlocks) {
             bins.readoutEnabled = (std::find(names.begin(), names.end(), bins.histogramName) != names.end());
             if (bins.readoutEnabled) {
-                response += bins.histogramName + "; ";
+                enabledNames.insert(bins.histogramName);
             }
         }
     }
-    return response;
+    updateOperations();
+    return std::accumulate(enabledNames.begin(), enabledNames.end(), "", [](const std::string& acc, const std::string& name) {
+        return acc + name + "; ";
+    });
 }
 
 bool PmHistogramData::storeReadoutData(uint32_t baseAddress, const std::vector<uint32_t>& data)

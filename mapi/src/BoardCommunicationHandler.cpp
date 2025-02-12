@@ -108,7 +108,7 @@ SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const Wi
     }
 
     return SwtSequence::SwtOperation(SwtSequence::Operation::RMWbits, parameter.baseAddress,
-                                     { SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue });
+                                     { SwtSequence::createANDMask(parameter.startBit, parameter.bitLength), rawValue }, true);
 }
 
 BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::processMessageFromALF(std::string alfresponse)
@@ -145,6 +145,11 @@ BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::processMess
 
 void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
 {
+    // This function unpack only response to SWT READ
+    if(read.frame.prefix != 0){
+        return;
+    }
+
     for (auto& parameterToHandle : m_registerTasks.at(read.frame.address)) {
         try {
             int64_t electronic = m_board->parseElectronic(parameterToHandle.name, read.frame.data);

@@ -53,17 +53,18 @@ Result<string, string> TcmHistograms::resetHistograms()
 Result<string, string> TcmHistograms::setCounterId(uint32_t counterId)
 {
     int64_t curr = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(-1);
+    string name = (counterId == 0 ? string("[disabled]") : to_string(counterId));
     if (curr == counterId) {
-        return { .ok = "Counter " + to_string(counterId) + " already selected", .error = nullopt };
+        return { .ok = "Counter " + name + " already selected", .error = nullopt };
     }
 
     auto parsedResponse = processSequenceThroughHandler(
         m_handler, WinCCRequest::writeRequest(tcm_parameters::CorrelationCountersSelect, counterId));
 
     if (parsedResponse.isError()) {
-        return { .ok = nullopt, .error = "Failed to select counter" + to_string(counterId) + ":\n" + parsedResponse.getError() };
+        return { .ok = nullopt, .error = "Failed to select counter " + name + ":\n" + parsedResponse.getError() };
     }
-    return { .ok = "Successfully selected counter " + to_string(counterId), .error = nullopt };
+    return { .ok = "Successfully selected counter " + name, .error = nullopt };
 }
 
 bool TcmHistograms::readHistograms()

@@ -23,7 +23,7 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string,
     });
 
     addOrReplaceHandler("HISTOGRAMMING", [this](vector<string> arguments) -> Result<string, string> {
-        if (arguments.size() != 1 || (arguments[0] != "0" && arguments[1] != "1")) {
+        if (arguments.size() != 1 || (arguments[0] != "0" && arguments[0] != "1")) {
             return { .ok = nullopt, .error = "HISTOGRAMMING command takes exactly one argument: 0 or 1" };
         }
         return switchHistogramming(arguments[0] == "1");
@@ -37,8 +37,8 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string,
             return setBcIdFilter(-1);
         }
 
-        if (!(iss >> hex >> counterId) || !iss.eof()) {
-            return { .ok = nullopt, .error = "BCID_FILTER takes exactly one valid hexadecimal integer argument or the string \"OFF\"" };
+        if (!(iss >> counterId) || !iss.eof()) {
+            return { .ok = nullopt, .error = "BCID_FILTER takes exactly one valid integer argument or the string \"OFF\"" };
         }
 
         return setBcIdFilter(counterId);
@@ -76,7 +76,7 @@ Result<string, string> PmHistograms::switchHistogramming(bool on)
 Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
 {
     if (bcId < 0) {
-        if (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValue() == 0) {
+        if (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValueOptional().value_or(-1) == 0) {
             return { .ok = "BCID filter already disabled.", .error = nullopt };
         }
 
@@ -87,8 +87,8 @@ Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
         return { .ok = "Successfully disabled BCID filter", .error = nullopt };
     }
 
-    bool alreadyEnabled = (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValue() == 1);
-    bool alreadySet = (m_handler.getBoard()->at(pm_parameters::BcIdToFilter).getElectronicValue() == bcId);
+    bool alreadyEnabled = (m_handler.getBoard()->at(pm_parameters::BcIdFilterOn).getElectronicValueOptional().value_or(-1) == 1);
+    bool alreadySet = (m_handler.getBoard()->at(pm_parameters::BcIdToFilter).getElectronicValueOptional().value_or(-1) == bcId);
 
     if (!alreadyEnabled) {
         auto parsedResponse = processSequenceThroughHandler(m_handler, WinCCRequest::writeElectronicRequest(pm_parameters::BcIdFilterOn, 1));
@@ -105,7 +105,7 @@ Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
     }
 
     return { .ok = "BCID filter " + (alreadyEnabled ? string("was already enabled") : string("successfully enabled")) +
-                   ". BCID " + to_string(bcId) + (alreadySet ? string("was already set.") : string("successfully set.")),
+                   ". BCID " + to_string(bcId) + (alreadySet ? string(" was already set.") : string(" successfully set.")),
              .error = nullopt };
 }
 

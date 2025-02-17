@@ -9,7 +9,7 @@
 PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
     : data(pm, histograms),
       m_handler(pm),
-      m_responseBufferSize(6 * data.getTotalBins() + 256), // up to 5 digits + comma, 256B space for headers, newlines etc.
+      m_responseBufferSize(6 * data.getTotalBins() + 512), // up to 5 digits + comma, 512B space for headers, newlines etc.
       m_responseBuffer(new char[m_responseBufferSize])
 {
     if (pm->isTcm()) {
@@ -154,6 +154,9 @@ const char* PmHistograms::parseResponse(const string& requestResponse) const
             if (!block->readoutEnabled) {
                 continue;
             }
+            if (block->binsPerRegister != 2) {
+                buffPos += sprintf(buffPos, "ERROR: invalid binsPerRegister %" PRIu32 " != 2", block->binsPerRegister);
+            }
             if (block->isNegativeDirection) {
                 for (auto it = block->data.end() - 1; it >= block->data.begin(); it--) {
                     buffPos += sprintf(buffPos, ",%" PRIu32 ",%" PRIu32, (*it) >> 16, (*it) & 0xFFFF);
@@ -167,5 +170,9 @@ const char* PmHistograms::parseResponse(const string& requestResponse) const
         buffPos += sprintf(buffPos, "\n");
     }
     snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "PREV_ELAPSED,%.6fms\n%s", getPrevElapsed() * 1e-3, requestResponse.c_str()); // inserts '\0' as well
+
+    if (static_cast<size_t>(buffPos - m_responseBuffer) > m_responseBufferSize) {
+        Print::PrintWarning(name, "Response buffer overflow has occurred!");
+    }
     return m_responseBuffer;
 }

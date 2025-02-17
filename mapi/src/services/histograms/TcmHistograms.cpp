@@ -126,5 +126,9 @@ const char* TcmHistograms::parseResponse(const string& requestResponse) const
         *buffPos++ = '\n';
     }
     snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "PREV_ELAPSED,%.6fms\n%s", getPrevElapsed() * 1e-3, requestResponse.c_str()); // inserts '\0' as well
+
+    if (static_cast<size_t>(buffPos - m_responseBuffer) > m_responseBufferSize) {
+        Print::PrintWarning(name, "Response buffer overflow has occurred!");
+    }
     return m_responseBuffer;
 }

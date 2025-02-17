@@ -15,7 +15,7 @@ class BoardHistograms : public LoopingFitIndefiniteMapi
 
     virtual Result<string, string> resetHistograms() = 0;
     virtual bool readHistograms() = 0;
-    virtual const char* parseResponse(const string& requestResultString) const = 0;
+    virtual string parseResponse(const string& requestResultString) const = 0;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;
     uint32_t m_readId = 0;

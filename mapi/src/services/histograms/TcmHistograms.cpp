@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
-#include <cinttypes>
 
 TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
 {
@@ -13,17 +12,13 @@ TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
         throw runtime_error("TcmHistograms: board is not a TCM");
     }
 
-    size_t totalBinCount = 0;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
         m_histograms.emplace_back(string(name), param.baseAddress, param.regBlockSize);
-        totalBinCount += param.regBlockSize;
     }
     sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto& b) {
         return a.baseAddress < b.baseAddress;
     });
-    m_responseBufferSize = 11 * totalBinCount + 256; // up to 10 digits + comma, 256B for additional info
-    m_responseBuffer = new char[m_responseBufferSize];
 
     addOrReplaceHandler("COUNTER", [this](vector<string> arguments) -> Result<string, string> {
         if (arguments.size() != 1 || arguments[0].empty()) {
@@ -114,21 +109,18 @@ bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t st
     return true;
 }
 
-const char* TcmHistograms::parseResponse(const string& requestResponse) const
+string TcmHistograms::parseResponse(const string& requestResponse) const
 {
-    char* buffPos = m_responseBuffer;
-    buffPos += sprintf(buffPos, "%" PRIu32 "\n", m_readId);
+    ostringstream oss;
+    oss << m_readId << "\n";
     for (const auto& h : m_histograms) {
-        buffPos += sprintf(buffPos, "%s", h.name.c_str());
+        oss << h.name.c_str();
         for (uint32_t binVal : h.data) {
-            buffPos += sprintf(buffPos, ",%" PRIu32, binVal);
+            oss << "," << binVal;
         }
-        *buffPos++ = '\n';
+        oss << "\n";
     }
-    snprintf(buffPos, (m_responseBuffer + m_responseBufferSize) - buffPos, "PREV_ELAPSED,%.6fms\n%s", getPrevElapsed() * 1e-3, requestResponse.c_str()); // inserts '\0' as well
+    oss << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n" << requestResponse.c_str(); // inserts '\0' as well
 
-    if (static_cast<size_t>(buffPos - m_responseBuffer) > m_responseBufferSize) {
-        Print::PrintWarning(name, "Response buffer overflow has occurred!");
-    }
-    return m_responseBuffer;
+    return oss.str();
 }

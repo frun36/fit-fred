@@ -24,9 +24,6 @@ class TcmHistograms : public BoardHistograms
     BoardCommunicationHandler m_handler;
     vector<Histogram> m_histograms; // Needs to be sorted by base address!
 
-    size_t m_responseBufferSize = 0;
-    char* m_responseBuffer = nullptr;
-
     Result<string, string> setCounterId(uint32_t counterId);
     Result<string, string> resetHistograms() override;
 
@@ -34,10 +31,8 @@ class TcmHistograms : public BoardHistograms
     bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
 
     // Assumes data is formatted properly - needs to be ensured after read
-    const char* parseResponse(const string& requestResponse) const override;
+    string parseResponse(const string& requestResponse) const override;
 
    public:
     TcmHistograms(shared_ptr<Board> tcm);
-
-    ~TcmHistograms() { delete[] m_responseBuffer; }
 };

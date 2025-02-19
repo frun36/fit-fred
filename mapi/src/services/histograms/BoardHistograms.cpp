@@ -46,6 +46,7 @@ void BoardHistograms::handleResponse(double readElapsed, string requestResultStr
     m_responseOss << m_readId << "\n";
     parseResponse(m_responseOss);
     m_responseOss << "READ_ELAPSED," << readElapsed << "ms\n"
+                  << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n"
                   << requestResultString.c_str();
     publishAnswer(m_responseOss.str());
 }

@@ -1,11 +1,10 @@
-#include "services/Configurations.h"
+#include "services/configurations/Configurations.h"
+#include "services/configurations/TcmConfigurations.h"
+#include "services/configurations/PmConfigurations.h"
 #include <cctype>
 #include <unistd.h>
-#include <sstream>
-#include "utils.h"
-#include"database/ConfigurationsQueries.h"
+#include "database/ConfigurationsQueries.h"
 #include "Alfred/print.h"
-#include "DelayChange.h"
 
 Configurations::Configurations(const string& fredName, const unordered_map<string, shared_ptr<Board>>& boards) : m_fredName(fredName)
 {
@@ -28,7 +27,7 @@ vector<string> Configurations::fetchBoardNamesToConfigure(const string& configur
     auto boardNameData = DatabaseInterface::executeQuery(db_fit::queries::selectDistinctBoards(configurationName));
 
     vector<string> names(boardNameData.size());
-    std::transform(boardNameData.begin(), boardNameData.end(), names.begin(), [&configurationName, this](const vector<MultiBase*>& entry) {
+    std::transform(boardNameData.begin(), boardNameData.end(), names.begin(), [&configurationName](const vector<MultiBase*>& entry) {
         if (entry.empty() || !entry[0]->isString()) {
             throw runtime_error(configurationName + ": invalid board name format in DB");
         }
@@ -64,4 +63,9 @@ string Configurations::processInputMessage(string msg)
     newMapiGroupRequest(requests);
     noRpcRequest = true;
     return "";
+}
+
+std::string Configurations::processOutputMessage(string msg)
+{
+    throw std::runtime_error("Configurations: unexpectedly received '" + msg + "' from ALF");
 }

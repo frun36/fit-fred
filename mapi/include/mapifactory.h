@@ -4,7 +4,7 @@
 #include "Fred/Mapi/mapi.h"
 #include "services/Parameters.h"
 #include "services/BoardStatus.h"
-#include "services/Configurations.h"
+#include "services/configurations/Configurations.h"
 #include "services/ResetFEE.h"
 #include "services/Reset.h"
 #include "services/ResetErrors.h"

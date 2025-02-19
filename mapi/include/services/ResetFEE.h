@@ -1,5 +1,5 @@
 #include "BasicFitIndefiniteMapi.h"
-#include "Configurations.h"
+#include "services/configurations/Configurations.h"
 #include "Alfred/print.h"
 #include "../utils.h"
 #include <string_view>

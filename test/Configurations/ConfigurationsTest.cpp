@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "services/Configurations.h"
+#include "services/configurations/Configurations.h"
 #include "Board.h"
 #include "Equation.h"
 

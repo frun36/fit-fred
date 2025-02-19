@@ -1,57 +1,13 @@
-#include "services/BoardConfigurations.h"
-#include "database/sql.h"
-#include "database/BoardConfigurationQueries.h"
+#include "services/configurations/TcmConfigurations.h"
 #include "DelayChange.h"
+#include <unistd.h>
 
-// BoardConfigurations
-
-std::vector<std::vector<MultiBase*>> BoardConfigurations::fetchConfiguration(const std::string& configurationName, const std::string& boardName)
+TcmConfigurations::TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)
 {
-    return DatabaseInterface::executeQuery(db_fit::queries::selectBoardConfiguration(configurationName, boardName));
-}
-
-BoardConfigurations::ConfigurationInfo BoardConfigurations::parseConfigurationInfo(const std::string& configurationName, const vector<vector<MultiBase*>>& dbData)
-{
-    optional<int64_t> delayA = nullopt;
-    optional<int64_t> delayC = nullopt;
-    string request;
-    for (const auto& row : dbData) {
-        db_fit::views::ConfigurationValue::Row parsedRow(row);
-        if (parsedRow.name == tcm_parameters::DelayA) {
-            delayA = parsedRow.value;
-        } else if (parsedRow.name == tcm_parameters::DelayC) {
-            delayC = parsedRow.value;
-        } else {
-            WinCCRequest::appendToRequest(request, WinCCRequest::writeElectronicRequest(parsedRow.name, parsedRow.value));
-        }
+    if (!board->doesExist(string(tcm_parameters::DelayA)) || !board->doesExist(string(tcm_parameters::DelayC))) {
+        throw runtime_error("Couldn't construct TcmConfigurations: no delay parameters");
     }
-
-    return ConfigurationInfo(string(configurationName), request, delayA, delayC);
 }
-
-// PmConfigurations
-
-string PmConfigurations::processInputMessage(string request)
-{
-    const string& configurationName = request;
-    m_configurationInfo = getConfigurationInfo(configurationName);
-    const string& req = m_configurationInfo.req;
-    Print::PrintVerbose("Configuration '" + name + "' for " + m_boardName + ":\n" + req);
-    return m_handler.processMessageFromWinCC(req).getSequence();
-}
-
-string PmConfigurations::processOutputMessage(string msg)
-{
-    auto parsedResponse = m_handler.processMessageFromALF(msg);
-    if (parsedResponse.isError()) {
-        returnError = true;
-    } else {
-        Print::PrintInfo("Configuration '" + m_configurationInfo.name + "' successfully applied to " + m_boardName);
-    }
-    return parsedResponse.getContents();
-}
-
-// TcmConfigurations
 
 bool TcmConfigurations::handleDelays()
 {

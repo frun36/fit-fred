@@ -107,7 +107,7 @@ Result<string, string> PmHistograms::setBcIdFilter(int64_t bcId)
              .error = nullopt };
 }
 
-bool PmHistograms::readHistograms()
+Result<string, string> PmHistograms::readAndStoreHistograms()
 {
     Print::PrintData("readHistograms start");
     auto operations = data.getOperations();
@@ -120,26 +120,23 @@ bool PmHistograms::readHistograms()
                 WinCCRequest::writeRequest(pm_parameters::CurrentAddressInHistogramData, baseAddress),
                 true);
         if (parsedResponse.isError()) {
-            printAndPublishError("Error setting position in FIFO: " + parsedResponse.getError());
-            return false;
+            return { .ok = nullopt, .error = "Error setting position in FIFO: " + parsedResponse.getError() };
         }
 
         Print::PrintData("Performing FIFO readout");
         auto blockReadResponse = blockRead(m_fifoAddress, false, readSize);
         if (blockReadResponse.isError()) {
-            printAndPublishError("Error in histogram FIFO readout: " + blockReadResponse.errors->mess);
-            return false;
+            return { .ok = nullopt, .error = "Error in histogram FIFO readout: " + blockReadResponse.errors->mess };
         }
 
         if (!data.storeReadoutData(baseAddress, blockReadResponse.content)) {
-            printAndPublishError("Error: invalid data readout length");
-            return false;
+            return { .ok = nullopt, .error = "Error: invalid data readout length" };
         }
         Print::PrintData("Data read out and stored");
     }
 
     Print::PrintData("readHistograms end");
-    return true;
+    return { .ok = "", .error = nullopt };
 }
 
 string PmHistograms::parseResponse(const string& requestResponse) const

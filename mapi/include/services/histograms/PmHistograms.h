@@ -3,6 +3,7 @@
 #include "BoardCommunicationHandler.h"
 #include "services/histograms/BoardHistograms.h"
 #include "services/histograms/PmHistogramData.h"
+#include "utils.h"
 
 class PmHistograms : public BoardHistograms
 {
@@ -21,7 +22,7 @@ class PmHistograms : public BoardHistograms
     Result<string, string> switchHistogramming(bool on);
     Result<string, string> setBcIdFilter(int64_t bcId);
 
-    bool readHistograms() override;
+    Result<string, string> readAndStoreHistograms() override;
 
     string parseResponse(const string& requestResponse) const override;
 };

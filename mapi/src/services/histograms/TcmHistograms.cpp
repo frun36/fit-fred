@@ -62,11 +62,10 @@ Result<string, string> TcmHistograms::setCounterId(uint32_t counterId)
     return { .ok = "Successfully selected counter " + name, .error = nullopt };
 }
 
-bool TcmHistograms::readHistograms()
+Result<string, string> TcmHistograms::readAndStoreHistograms()
 {
     if (m_histograms.size() < 2) {
-        printAndPublishError("Missing histogram parameter information");
-        return false;
+        return { .ok = nullopt, .error = "Missing histogram parameter information" };
     }
 
     int64_t selectedCounter = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(0);
@@ -77,12 +76,12 @@ bool TcmHistograms::readHistograms()
     uint32_t words = m_histograms.back().baseAddress + m_histograms.back().binCount - startAddress;
 
     auto res = blockRead(startAddress, true, words); // single read with unnecessary words is allegedly faster than separate reads
-
     if (res.isError()) {
-        printAndPublishError("Failed to read TCM histograms: " + res.errors->mess);
-        return false;
+        return { .ok = nullopt, .error = "Failed to read TCM histograms: " + res.errors->mess };
     } else {
-        return parseHistogramData(res.content, startAddress);
+        return parseHistogramData(res.content, startAddress)
+                   ? Result<string, string>{ .ok = "", .error = nullopt }
+                   : Result<string, string>{ .ok = nullopt, .error = "Incomplete histogram readout - couldn't parse all bins" };
     }
 }
 
@@ -98,7 +97,6 @@ bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t st
         auto end = begin + h.binCount;
 
         if (end > data.end()) {
-            printAndPublishError("Incomplete histogram readout - couldn't parse all bins");
             return false;
         }
 
@@ -120,7 +118,8 @@ string TcmHistograms::parseResponse(const string& requestResponse) const
         }
         oss << "\n";
     }
-    oss << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n" << requestResponse.c_str(); // inserts '\0' as well
+    oss << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n"
+        << requestResponse.c_str(); // inserts '\0' as well
 
     return oss.str();
 }

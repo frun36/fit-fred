@@ -27,7 +27,7 @@ class TcmHistograms : public BoardHistograms
     Result<string, string> setCounterId(uint32_t counterId);
     Result<string, string> resetHistograms() override;
 
-    bool readHistograms() override;
+    Result<string, string> readAndStoreHistograms() override;
     bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
 
     // Assumes data is formatted properly - needs to be ensured after read

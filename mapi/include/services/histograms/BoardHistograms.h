@@ -11,10 +11,22 @@ class BoardHistograms : public LoopingFitIndefiniteMapi
         addOrReplaceHandler("RESET", [this](vector<string>) -> Result<string, string> {
             return resetHistograms();
         });
+
+        addOrReplaceHandler("READ", [this](vector<string>) -> Result<string, string> {
+            if (!isStopped()) {
+                return { .ok = nullopt, .error = "Additional read can only be performed when the service is stopped" };
+            }
+
+            Result<string, string> readResult = readAndStoreHistograms();
+            if (readResult.isOk()) {
+                publishAnswer(parseResponse(""));
+            }
+            return readResult;
+        });
     }
 
     virtual Result<string, string> resetHistograms() = 0;
-    virtual bool readHistograms() = 0;
+    virtual Result<string, string> readAndStoreHistograms() = 0;
     virtual string parseResponse(const string& requestResultString) const = 0;
 
     static constexpr useconds_t ReadoutInterval = 1'000'000;
@@ -36,7 +48,9 @@ class BoardHistograms : public LoopingFitIndefiniteMapi
         }
 
         Print::PrintData("Reading histograms");
-        if (!readHistograms()) {
+        Result<string, string> readResult = readAndStoreHistograms();
+        if (readResult.isError()) {
+            printAndPublishError(*readResult.error);
             return;
         }
 

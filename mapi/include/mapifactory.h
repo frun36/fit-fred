@@ -10,7 +10,7 @@
 #include "services/ResetErrors.h"
 #include "services/SetPhaseDelay.h"
 #include "services/CounterRates.h"
-#include "services/ConfigurationDatabaseBroker.h"
+#include "services/configurations/ConfigurationDatabaseBroker.h"
 #include "services/histograms/PmHistograms.h"
 #include "services/histograms/TcmHistograms.h"
 #include <memory>

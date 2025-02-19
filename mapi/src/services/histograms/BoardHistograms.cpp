@@ -62,9 +62,6 @@ void BoardHistograms::processExecution()
 
     Print::PrintData("Executing queued requests");
     RequestExecutionResult requestResult = executeQueuedRequests(running);
-    if (requestResult.isError) {
-        printAndPublishError(requestResult);
-    }
 
     Print::PrintData("Reading histograms");
     auto readResult = handleReadout();

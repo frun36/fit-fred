@@ -3,6 +3,7 @@
 #include "Board.h"
 #include "BoardCommunicationHandler.h"
 #include "services/histograms/BoardHistograms.h"
+#include <sstream>
 #include <vector>
 
 class TcmHistograms : public BoardHistograms
@@ -31,7 +32,7 @@ class TcmHistograms : public BoardHistograms
     bool parseHistogramData(const vector<uint32_t>& data, uint32_t startAddress);
 
     // Assumes data is formatted properly - needs to be ensured after read
-    string parseResponse(const string& requestResponse) const override;
+    void parseResponse(ostringstream& oss) const override;
 
    public:
     TcmHistograms(shared_ptr<Board> tcm);

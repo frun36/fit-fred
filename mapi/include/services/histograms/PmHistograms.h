@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include "BoardCommunicationHandler.h"
 #include "services/histograms/BoardHistograms.h"
 #include "services/histograms/PmHistogramData.h"
@@ -24,5 +25,5 @@ class PmHistograms : public BoardHistograms
 
     Result<string, string> readAndStoreHistograms() override;
 
-    string parseResponse(const string& requestResponse) const override;
+    void parseResponse(ostringstream& oss) const override;
 };

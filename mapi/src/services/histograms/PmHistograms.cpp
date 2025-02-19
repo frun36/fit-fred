@@ -139,10 +139,8 @@ Result<string, string> PmHistograms::readAndStoreHistograms()
     return { .ok = "", .error = nullopt };
 }
 
-string PmHistograms::parseResponse(const string& requestResponse) const
+void PmHistograms::parseResponse(ostringstream& oss) const
 {
-    ostringstream oss;
-    oss << m_readId << "\n";
     for (const auto& [name, blocks] : data.getData()) {
         oss << name.c_str();
         for (const BinBlock* block : blocks) {
@@ -165,7 +163,4 @@ string PmHistograms::parseResponse(const string& requestResponse) const
         }
         oss << "\n";
     }
-    oss << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n" << requestResponse.c_str(); // inserts '\0' as well
-
-    return oss.str();
 }

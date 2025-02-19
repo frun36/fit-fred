@@ -107,10 +107,8 @@ bool TcmHistograms::parseHistogramData(const vector<uint32_t>& data, uint32_t st
     return true;
 }
 
-string TcmHistograms::parseResponse(const string& requestResponse) const
+void TcmHistograms::parseResponse(ostringstream& oss) const
 {
-    ostringstream oss;
-    oss << m_readId << "\n";
     for (const auto& h : m_histograms) {
         oss << h.name.c_str();
         for (uint32_t binVal : h.data) {
@@ -118,8 +116,4 @@ string TcmHistograms::parseResponse(const string& requestResponse) const
         }
         oss << "\n";
     }
-    oss << "PREV_ELAPSED," << getPrevElapsed() * 1e-3 << "ms\n"
-        << requestResponse.c_str(); // inserts '\0' as well
-
-    return oss.str();
 }

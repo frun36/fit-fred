@@ -3,9 +3,7 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include <stdexcept>
-#include <sstream>
-#include "utils.h"
+#include "utils/utils.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -66,7 +64,7 @@ class WinCCRequest
     template <typename T>
     static std::string writeElectronicRequest(std::string_view param, T value)
     {
-        static_assert((!std::is_same<T,double>::value) && (!std::is_same<T,float>::value), "Electronic value has to be integer type");
+        static_assert((!std::is_same<T, double>::value) && (!std::is_same<T, float>::value), "Electronic value has to be integer type");
         return string_utils::concatenate(param, ",WRITE_ELECTRONIC,", std::to_string(value));
     }
 

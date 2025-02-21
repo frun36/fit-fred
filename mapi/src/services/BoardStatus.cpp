@@ -58,10 +58,9 @@ void BoardStatus::processExecution()
     WinCCResponse gbtRates = updateRates(wordsCount.getPhysicalValue(), eventsCount.getPhysicalValue());
     WinCCResponse systemClock;
 
-    if(m_boardHandler.getBoard()->isTcm()){
+    if (m_boardHandler.getBoard()->isTcm()) {
         systemClock.addParameter(environment::parameters::SystemClock.data(),
-                                {m_boardHandler.getBoard()->getEnvironment(environment::parameters::SystemClock.data())}
-                                );
+                                 { m_boardHandler.getBoard()->getEnvironment(environment::parameters::SystemClock.data()) });
     }
 
     Print::PrintVerbose("Publishing " + m_boardHandler.getBoard()->getName() + " status");

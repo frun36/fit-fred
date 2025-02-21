@@ -1,7 +1,7 @@
 #pragma once
 
 #include "services/configurations/BoardConfigurations.h"
-#include "services/BasicFitIndefiniteMapi.h"
+#include "services/templates/BasicFitIndefiniteMapi.h"
 
 class TcmConfigurations : public BasicFitIndefiniteMapi, public BoardConfigurations
 {

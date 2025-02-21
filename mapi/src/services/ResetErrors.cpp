@@ -1,6 +1,6 @@
 #include "services/ResetErrors.h"
-#include "gbtInterfaceUtils.h"
-#include "TCM.h"
+#include "utils/gbtInterfaceUtils.h"
+#include "board/TCM.h"
 
 ResetErrors::ResetErrors(std::shared_ptr<Board> tcm, std::vector<std::shared_ptr<Board>> pms) : m_TCM(tcm)
 {

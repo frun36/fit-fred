@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoardCommunicationHandler.h"
+#include "board/BoardCommunicationHandler.h"
 #include <optional>
 #include "Database/databaseinterface.h"
 

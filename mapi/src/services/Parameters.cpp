@@ -1,5 +1,4 @@
 #include "services/Parameters.h"
-#include <algorithm>
 
 string Parameters::processInputMessage(string msg)
 {
@@ -15,7 +14,8 @@ string Parameters::processInputMessage(string msg)
 string Parameters::processOutputMessage(string msg)
 {
     auto parsedResponse = m_boardHandler.processMessageFromALF(msg);
-    if (parsedResponse.isError())
+    if (parsedResponse.isError()) {
         returnError = true;
+    }
     return parsedResponse.getContents();
 }

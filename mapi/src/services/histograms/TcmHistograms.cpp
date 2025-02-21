@@ -1,6 +1,6 @@
 #include "services/histograms/TcmHistograms.h"
-#include "TCM.h"
-#include "utils.h"
+#include "board/TCM.h"
+#include "utils/utils.h"
 #include <cctype>
 #include <cstdio>
 #include <sstream>

@@ -1,6 +1,5 @@
 #include "communication-utils/AlfResponseParser.h"
 #include <cstring>
-#include <iostream>
 
 static constexpr auto SUCCESS_STR = "success\n";
 static constexpr auto FAILURE_STR = "failure\n";

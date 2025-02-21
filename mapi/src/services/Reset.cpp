@@ -1,5 +1,5 @@
 #include "services/Reset.h"
-#include "gbtInterfaceUtils.h"
+#include "utils/gbtInterfaceUtils.h"
 
 Reset::Reset(std::shared_ptr<Board> board) : m_boardHandler(board)
 {

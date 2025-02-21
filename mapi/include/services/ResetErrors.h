@@ -1,7 +1,5 @@
-#include "BasicFitIndefiniteMapi.h"
-#include "../BoardCommunicationHandler.h"
-#include "Fred/Mapi/indefinitemapi.h"
-#include "../utils.h"
+#include "services/templates/BasicFitIndefiniteMapi.h"
+#include "board/BoardCommunicationHandler.h"
 
 class ResetErrors : public BasicFitIndefiniteMapi
 {

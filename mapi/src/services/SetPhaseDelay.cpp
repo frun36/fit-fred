@@ -1,6 +1,5 @@
 #include "services/SetPhaseDelay.h"
-#include "TCM.h"
-#include "DelayChange.h"
+#include "utils/DelayChange.h"
 #include "Alfred/print.h"
 
 void SetPhaseDelay::processExecution()

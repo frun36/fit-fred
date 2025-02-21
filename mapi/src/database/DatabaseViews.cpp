@@ -1,7 +1,6 @@
-#include <sstream>
-#include <algorithm>
 #include <vector>
 #include "database/DatabaseViews.h"
+#include "utils/utils.h"
 
 ///
 ///     ParameteresTable
@@ -154,8 +153,8 @@ Histogram::Row::Row(const std::vector<MultiBase*>& row)
     direction = Direction.parse(row[Direction.idx]);
 }
 
-const StringColumn ConfigurationValue::ParameterName{0};
-const IntegerColumn ConfigurationValue::ParameterValue{1};
+const StringColumn ConfigurationValue::ParameterName{ 0 };
+const IntegerColumn ConfigurationValue::ParameterValue{ 1 };
 
 ConfigurationValue::Row::Row(const std::vector<MultiBase*>& row)
 {
@@ -163,6 +162,6 @@ ConfigurationValue::Row::Row(const std::vector<MultiBase*>& row)
     value = ParameterValue.parse(row[ParameterValue.idx]);
 }
 
-}
+} // namespace views
 
 } // namespace db_fit

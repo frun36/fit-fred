@@ -1,5 +1,6 @@
 #include "services/configurations/TcmConfigurations.h"
-#include "DelayChange.h"
+#include "utils/DelayChange.h"
+#include "board/TCM.h"
 #include <unistd.h>
 
 TcmConfigurations::TcmConfigurations(std::shared_ptr<Board> board) : BoardConfigurations(board)

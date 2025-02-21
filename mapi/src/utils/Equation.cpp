@@ -1,4 +1,4 @@
-#include "Equation.h"
+#include "utils/Equation.h"
 #include "Parser/calculator.h"
 #include "Alfred/print.h"
 

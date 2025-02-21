@@ -2,13 +2,11 @@
 
 #include <unordered_map>
 #include <string>
-#include <vector>
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <list>
-#include "Equation.h"
-#include "EnvironmentVariables.h"
+#include "utils/Equation.h"
+#include "board/EnvironmentVariables.h"
 
 class Board
 {

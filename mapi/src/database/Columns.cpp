@@ -1,8 +1,10 @@
-#include"database/Columns.h"
+#include "database/Columns.h"
+#include <sstream>
+#include <algorithm>
 
 namespace db_fit
 {
-    
+
 namespace parsers
 {
 bool booleanParser(MultiBase* data)
@@ -26,7 +28,7 @@ int64_t integerParser(MultiBase* data)
 
 uint32_t unsignedParser(MultiBase* data)
 {
-    return data->getDouble(); 
+    return data->getDouble();
 }
 
 std::string stringParser(MultiBase* data)
@@ -50,7 +52,7 @@ Equation equationParser(MultiBase* field)
     equation.erase(std::remove(equation.begin(), equation.end(), '{'), equation.end());
     equation.erase(std::remove(equation.begin(), equation.end(), '}'), equation.end());
     parsed.equation = std::move(equation);
-    return parsed;    
+    return parsed;
 }
-}
-};
+} // namespace parsers
+}; // namespace db_fit

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Fred/Mapi/indefinitemapi.h"
-#include "Board.h"
-#include "utils.h"
+#include "board/Board.h"
+#include "utils/utils.h"
 #include <functional>
 
 class ConfigurationDatabaseBroker : public IndefiniteMapi

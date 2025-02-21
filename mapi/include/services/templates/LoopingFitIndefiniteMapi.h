@@ -1,6 +1,7 @@
 #pragma once
 
-#include "services/BasicFitIndefiniteMapi.h"
+#include "services/templates/BasicFitIndefiniteMapi.h"
+#include <functional>
 
 using RequestHandler = function<Result<string, string>(vector<string>)>;
 

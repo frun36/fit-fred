@@ -1,6 +1,7 @@
 #include "services/configurations/BoardConfigurations.h"
 #include "database/BoardConfigurationQueries.h"
-#include "TCM.h"
+#include "database/DatabaseViews.h"
+#include "board/TCM.h"
 
 BoardConfigurations::ConfigurationInfo::ConfigurationInfo(const string& name, const string& req, optional<int64_t> delayA, optional<int64_t> delayC) : name(name), req(req), delayA(delayA), delayC(delayC) {}
 

@@ -1,4 +1,6 @@
 #include "database/BoardConfigurationQueries.h"
+#include "database/sql.h"
+#include "database/DatabaseViews.h"
 
 namespace db_fit
 {

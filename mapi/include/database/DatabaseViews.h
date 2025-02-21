@@ -1,14 +1,9 @@
 #pragma once
 
-#include <string_view>
-#include <sstream>
 #include <cstdint>
-#include <algorithm>
 #include <vector>
-#include "Board.h"
 #include "Database/databaseinterface.h"
-#include "utils.h"
-#include "Columns.h"
+#include "database/Columns.h"
 
 namespace db_fit
 {
@@ -194,12 +189,11 @@ class Histogram
 
 class ConfigurationValue
 {
-public:
+   public:
     static const StringColumn ParameterName;
     static const IntegerColumn ParameterValue;
 
-    struct Row
-    {
+    struct Row {
         Row(const std::vector<MultiBase*>& row);
         std::string name;
         int64_t value;

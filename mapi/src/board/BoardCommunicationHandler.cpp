@@ -1,7 +1,6 @@
-#include "BoardCommunicationHandler.h"
-#include "Board.h"
-#include "utils.h"
-#include "Alfred/print.h"
+#include "board/BoardCommunicationHandler.h"
+#include "board/Board.h"
+#include "utils/utils.h"
 
 const BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::ParsedResponse::EmptyResponse({ WinCCResponse(), {} });
 const BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::FifoResponse::EmptyFifoResponse{ {}, nullopt };
@@ -90,13 +89,12 @@ SwtSequence::SwtOperation BoardCommunicationHandler::createSwtOperation(const Wi
     }
 
     int64_t electronicValue = 0;
-    if(command.operation == WinCCRequest::Operation::WriteElectronic){
+    if (command.operation == WinCCRequest::Operation::WriteElectronic) {
         electronicValue = static_cast<int64_t>(command.value.value());
-    }
-    else{
+    } else {
         electronicValue = m_board->calculateElectronic(parameter.name, command.value.value());
     }
-    
+
     if (electronicValue > parameter.maxValue || electronicValue < parameter.minValue) {
         throw std::runtime_error(parameter.name + ": attempted to write a value outside the valid range [" + std::to_string(parameter.minValue) + "; " + std::to_string(parameter.maxValue) + "] - value: " + std::to_string(electronicValue));
     }
@@ -146,7 +144,7 @@ BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::processMess
 void BoardCommunicationHandler::unpackReadResponse(const AlfResponseParser::Line& read, WinCCResponse& response, std::list<ErrorReport>& report)
 {
     // This function unpack only response to SWT READ
-    if(read.frame.prefix != 0){
+    if (read.frame.prefix != 0) {
         return;
     }
 
@@ -222,4 +220,3 @@ BoardCommunicationHandler::FifoResponse BoardCommunicationHandler::parseFifo(std
 
     return { fifo, {} };
 }
-

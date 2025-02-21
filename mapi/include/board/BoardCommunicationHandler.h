@@ -9,7 +9,7 @@
 #include "communication-utils/AlfResponseParser.h"
 #include "communication-utils/WinCCRequest.h"
 #include "communication-utils/WinCCResponse.h"
-#include "Board.h"
+#include "board/Board.h"
 
 class BoardCommunicationHandler
 {
@@ -43,12 +43,14 @@ class BoardCommunicationHandler
 
         string getContents() const
         {
-            if (!isError())
+            if (!isError()) {
                 return response.getContents();
+            }
 
             std::stringstream ss;
-            for (auto& report : errors)
+            for (auto& report : errors) {
                 ss << report.what() << '\n';
+            }
             ss << response.getContents();
             return ss.str();
         }
@@ -56,7 +58,7 @@ class BoardCommunicationHandler
         string getError() const
         {
             std::stringstream ss;
-            for (auto& report : errors){
+            for (auto& report : errors) {
                 ss << report.what() << '\n';
             }
             return ss.str();

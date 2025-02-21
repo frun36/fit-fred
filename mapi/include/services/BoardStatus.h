@@ -1,15 +1,11 @@
 #pragma once
 
 #include <list>
-#include <unordered_map>
-#include <chrono>
 #include <string_view>
 
-#include "Fred/Mapi/mapi.h"
-#include "Fred/Mapi/indefinitemapi.h"
-#include "BoardCommunicationHandler.h"
-#include "LoopingFitIndefiniteMapi.h"
-#include "gbtInterfaceUtils.h"
+#include "board/BoardCommunicationHandler.h"
+#include "services/templates/LoopingFitIndefiniteMapi.h"
+#include "utils/gbtInterfaceUtils.h"
 
 class BoardStatus : public LoopingFitIndefiniteMapi, gbt::GbtRateMonitor
 {

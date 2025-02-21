@@ -1,10 +1,10 @@
 #pragma once
 
 #include <sstream>
-#include "BoardCommunicationHandler.h"
+#include "board/BoardCommunicationHandler.h"
 #include "services/histograms/BoardHistograms.h"
 #include "services/histograms/PmHistogramData.h"
-#include "utils.h"
+#include "utils/utils.h"
 
 class PmHistograms : public BoardHistograms
 {

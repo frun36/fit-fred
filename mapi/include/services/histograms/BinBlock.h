@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "FitData.h"
+#include "board/FitData.h"
 
 struct BinBlock {
     std::string histogramName;

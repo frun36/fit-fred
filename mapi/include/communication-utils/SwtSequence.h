@@ -16,7 +16,7 @@ class SwtSequence
                            RMWbits,
                            RMWsum,
                            BlockRead,
-                           BlockReadNonIncrement};
+                           BlockReadNonIncrement };
 
     struct SwtOperation {
         SwtOperation(Operation type, uint32_t address, std::array<uint32_t, 2> data = std::array<uint32_t, 2>(), bool expectResponse = false);
@@ -110,8 +110,8 @@ class SwtSequence
 
     static constexpr const char* _BLOCK_READ_NON_INC_PREFIX_ = "\n0x009";
 
-
     static constexpr uint32_t maxBlockReadSize = 1024;
+
    private:
     /*
         Stores sequence in the ALF-ready format*/

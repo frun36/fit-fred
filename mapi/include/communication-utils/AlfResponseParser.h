@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <list>
 #include <stdexcept>
-#include <algorithm>
 #include <cstring>
 #include <string_view>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Board.h"
-#include "BoardCommunicationHandler.h"
+#include "board/Board.h"
+#include "board/BoardCommunicationHandler.h"
 #include "services/histograms/BoardHistograms.h"
 #include <sstream>
 #include <vector>

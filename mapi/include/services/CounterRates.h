@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BoardCommunicationHandler.h"
+#include "board/BoardCommunicationHandler.h"
 
-#include "services/LoopingFitIndefiniteMapi.h"
+#include "services/templates/LoopingFitIndefiniteMapi.h"
 
 #ifdef FIT_UNIT_TEST
 

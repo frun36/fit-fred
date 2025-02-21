@@ -2,9 +2,9 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
-#include "PM.h"
+#include "board/PM.h"
 #include "services/histograms/BinBlock.h"
-#include "utils.h"
+#include "utils/utils.h"
 
 PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
     : data(pm, histograms),

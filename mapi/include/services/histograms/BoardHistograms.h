@@ -2,8 +2,8 @@
 
 #include <chrono>
 #include <sstream>
-#include "services/LoopingFitIndefiniteMapi.h"
-#include "utils.h"
+#include "services/templates/LoopingFitIndefiniteMapi.h"
+#include "utils/utils.h"
 
 class BoardHistograms : public LoopingFitIndefiniteMapi
 {

@@ -1,8 +1,8 @@
-#include "services/LoopingFitIndefiniteMapi.h"
+#include "services/templates/LoopingFitIndefiniteMapi.h"
 #include <unistd.h>
 #include <chrono>
 #include <Alfred/print.h>
-#include "utils.h"
+#include "utils/utils.h"
 
 LoopingFitIndefiniteMapi::LoopingFitIndefiniteMapi(bool isDefaultStopped) : m_stopped(isDefaultStopped)
 {

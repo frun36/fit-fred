@@ -5,7 +5,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
-#include "FitData.h"
+#include "board/FitData.h"
 #include "services/histograms/BinBlock.h"
 #include <database/sql.h>
 #include <Database/databaseinterface.h>

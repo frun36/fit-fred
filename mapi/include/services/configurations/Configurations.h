@@ -1,13 +1,9 @@
 #pragma once
 
-#include "services/BoardConfigurations.h"
-#include "BoardCommunicationHandler.h"
-#include <optional>
+#include "services/configurations/BoardConfigurations.h"
 #include <unordered_map>
 #include <cstring>
 #include <memory>
-#include "services/BasicFitIndefiniteMapi.h"
-#include "TCM.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -18,10 +14,6 @@
 
 #else
 
-#include "Parser/utility.h"
-#include "Database/databaseinterface.h"
-#include "Fred/Mapi/mapi.h"
-#include "Fred/Mapi/indefinitemapi.h"
 #include "Fred/Mapi/mapigroup.h"
 
 #endif
@@ -79,7 +71,7 @@ class Configurations : public Mapigroup
     vector<string> fetchBoardNamesToConfigure(const string& configurationName) const;
 
     string processInputMessage(string msg) override;
-    string processOutputMessage(string msg) override { throw std::runtime_error("Configurations: unexpectedly received '" + msg + "' from ALF"); };
+    string processOutputMessage(string msg) override;
 
     const unordered_map<string, unique_ptr<BoardConfigurations>>& getBoardConfigurationServices() const { return m_boardCofigurationServices; }
 

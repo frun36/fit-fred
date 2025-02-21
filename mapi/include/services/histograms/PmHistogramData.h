@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 #include <array>
-#include "Board.h"
-#include "PM.h"
-#include <services/histograms/BinBlock.h>
+#include "board/Board.h"
+#include "board/PM.h"
+#include "services/histograms/BinBlock.h"
 
 using BlockView = std::map<std::string, std::vector<const BinBlock*>>;
 

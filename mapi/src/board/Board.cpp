@@ -1,6 +1,6 @@
 #include <stdexcept>
-#include "Board.h"
-#include "utils.h"
+#include "board/Board.h"
+#include "utils/utils.h"
 
 #ifdef FIT_UNIT_TEST
 

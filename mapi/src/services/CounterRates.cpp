@@ -1,7 +1,7 @@
 #include "services/CounterRates.h"
 #include "FREDServer/Alfred/print.h"
-#include "TCM.h"
-#include "PM.h"
+#include "board/TCM.h"
+#include "board/PM.h"
 #include <unistd.h>
 #include <iomanip>
 

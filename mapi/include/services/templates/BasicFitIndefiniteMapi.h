@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../BoardCommunicationHandler.h"
+#include "board/BoardCommunicationHandler.h"
 
 #ifdef FIT_UNIT_TEST
 
@@ -12,12 +12,7 @@
 
 #endif
 
-#include "../utils.h"
-#include <list>
 #include <string>
-#include <unordered_map>
-#include <functional>
-#include <sstream>
 #include "Alfred/print.h"
 
 class BasicFitIndefiniteMapi : public IndefiniteMapi
@@ -28,12 +23,14 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
     BoardCommunicationHandler::BlockResponse blockRead(uint32_t baseAddress, bool isIncrementing, uint32_t words);
 
     // Not to be used in constructors, due to the use of `name` in `PrintError`
-    inline void printAndPublishError(const string& errorMsg) {
+    inline void printAndPublishError(const string& errorMsg)
+    {
         Print::PrintError(name, errorMsg);
         publishError(errorMsg);
     }
 
-    inline void printAndPublishError(const BoardCommunicationHandler::ParsedResponse& response) {
+    inline void printAndPublishError(const BoardCommunicationHandler::ParsedResponse& response)
+    {
         Print::PrintError(name, response.getError());
         publishError(response.getContents());
     }

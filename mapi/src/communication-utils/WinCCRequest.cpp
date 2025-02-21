@@ -1,12 +1,14 @@
 #include "communication-utils/WinCCRequest.h"
 #include <cstdint>
+#include <sstream>
 
 WinCCRequest::Command::Command(const std::string& line)
 {
     std::vector<std::string> arguments = Utility::splitString(line, ",");
 
-    if (arguments.size() < 2)
+    if (arguments.size() < 2) {
         throw std::runtime_error("Too few arguments");
+    }
 
     name = std::move(arguments[0]);
 
@@ -16,23 +18,25 @@ WinCCRequest::Command::Command(const std::string& line)
     } else if (arguments[1] == "WRITE") {
         operation = Operation::Write;
 
-        if (arguments.size() < 3)
+        if (arguments.size() < 3) {
             throw std::runtime_error(name + ": Too few arguments for WRITE operation");
+        }
 
         value = stringToDouble(arguments[2]);
 
-        if (!value.has_value())
+        if (!value.has_value()) {
             throw std::runtime_error(name + ": Invalid WRITE argument format \"" + arguments[2] + "\"");
-    } else if(arguments[1] == "WRITE_ELECTRONIC"){
+        }
+    } else if (arguments[1] == "WRITE_ELECTRONIC") {
         operation = Operation::WriteElectronic;
 
-        if (arguments.size() < 3){
+        if (arguments.size() < 3) {
             throw std::runtime_error(name + ": Too few arguments for WRITE_ELECTRONIC operation");
         }
 
         value = stringToDouble(arguments[2]);
 
-        if (!value.has_value()){
+        if (!value.has_value()) {
             throw std::runtime_error(name + ": Invalid WRITE_ELECTRONIC argument format \"" + arguments[2] + "\"");
         }
     } else {
@@ -47,10 +51,9 @@ WinCCRequest::WinCCRequest(const std::string& input)
     for (const auto& line : lines) {
         Command cmd(line);
 
-        if (!m_reqType.has_value()){
+        if (!m_reqType.has_value()) {
             m_reqType = cmd.operation;
-        }
-        else if (m_reqType.value() != cmd.operation){
+        } else if (m_reqType.value() != cmd.operation) {
             throw std::runtime_error(cmd.name + ": attempted operation mixing in single request");
         }
 
@@ -72,8 +75,9 @@ std::optional<double> WinCCRequest::stringToDouble(std::string str)
         ss >> value;
     }
 
-    if (ss.fail())
+    if (ss.fail()) {
         return std::nullopt;
+    }
 
     return value;
 }

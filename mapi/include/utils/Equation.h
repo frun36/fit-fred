@@ -2,19 +2,13 @@
 
 #include <string>
 #include <vector>
-#include <cstdint>
 
 using namespace std;
 
-#include <map>
 #include <cmath>
 
 #include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
 #include <cctype>
-#include <algorithm>
 #include <climits>
 #include <cmath>
 

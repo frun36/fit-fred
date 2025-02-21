@@ -4,14 +4,12 @@
 #include <string_view>
 #include <chrono>
 #include <memory>
-#include<array>
-#include<iostream>
+#include <array>
 #include "communication-utils/WinCCResponse.h"
 
 struct GbtWord {
     static constexpr uint32_t WordSize = 5;
     uint16_t buffer[WordSize];
-    
 };
 
 namespace gbt
@@ -56,7 +54,7 @@ struct GbtErrorType {
     virtual ~GbtErrorType() = default;
     virtual WinCCResponse createWinCCResponse() = 0;
     virtual void saveErrorReport() = 0;
-    static constexpr std::string_view ErrorFile{"GbtErrorsRaport"};
+    static constexpr std::string_view ErrorFile{ "GbtErrorsRaport" };
 };
 
 struct BCSyncLost : public GbtErrorType {
@@ -69,8 +67,8 @@ struct BCSyncLost : public GbtErrorType {
         uint32_t errorCode;
         struct {
             GbtWord data;
-            uint16_t counter:12,
-                    isData:4;
+            uint16_t counter : 12,
+                isData : 4;
         } words[10];
         uint16_t BCCRU;
         uint16_t BCBoard;

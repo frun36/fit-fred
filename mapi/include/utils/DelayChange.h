@@ -3,10 +3,8 @@
 #include <string>
 #include <cstdint>
 #include <optional>
-#include "BoardCommunicationHandler.h"
-#include "services/BasicFitIndefiniteMapi.h"
-#include "TCM.h"
-#include "unistd.h"
+#include "board/BoardCommunicationHandler.h"
+#include "services/templates/BasicFitIndefiniteMapi.h"
 
 struct DelayChange {
     const std::string req;

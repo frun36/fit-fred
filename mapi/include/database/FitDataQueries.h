@@ -1,6 +1,7 @@
 #pragma once
-#include "DatabaseViews.h"
-#include "sql.h"
+
+#include <string>
+
 namespace db_fit
 {
 namespace queries

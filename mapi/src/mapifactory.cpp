@@ -1,7 +1,6 @@
 #include "mapifactory.h"
 #include <memory>
-#include "FitData.h"
-#include "services/histograms/TcmHistograms.h"
+#include "board/FitData.h"
 
 MapiFactory::MapiFactory(Fred* fred) : m_fred(fred)
 {

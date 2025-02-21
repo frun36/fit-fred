@@ -1,11 +1,9 @@
 #pragma once
 
-#include <vector>
 #include <string>
-#include <list>
 #include <unordered_map>
 #include <string_view>
-#include "Equation.h"
+#include "utils/Equation.h"
 
 class EnvironmentVariables
 {

@@ -1,10 +1,4 @@
-#include "BasicFitIndefiniteMapi.h"
-#include "Configurations.h"
-#include "Alfred/print.h"
-#include "../utils.h"
-#include <string_view>
-#include <vector>
-#include <functional>
+#include "services/templates/BasicFitIndefiniteMapi.h"
 
 class ResetFEE : public BasicFitIndefiniteMapi
 {
@@ -41,7 +35,7 @@ class ResetFEE : public BasicFitIndefiniteMapi
     bool m_enforceDefGbtConfig{ false };
     bool m_forceLocalClock{ false };
 
-    bool m_initialized{false};
+    bool m_initialized{ false };
 
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BoardCommunicationHandler> m_PMs;

@@ -1,4 +1,4 @@
-#include "services/BasicFitIndefiniteMapi.h"
+#include "services/templates/BasicFitIndefiniteMapi.h"
 
 BoardCommunicationHandler::ParsedResponse BasicFitIndefiniteMapi::processSequenceThroughHandler(BoardCommunicationHandler& handler, std::string request, bool readAfterWrite)
 {
@@ -29,7 +29,6 @@ BoardCommunicationHandler::FifoResponse BasicFitIndefiniteMapi::readFifo(BoardCo
     return handler.parseFifo(executeAlfSequence(seq));
 }
 
-
 BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint32_t baseAddress, bool isIncrementing, uint32_t words)
 {
     uint32_t fullPacketsNumber = words / SwtSequence::maxBlockReadSize;
@@ -37,25 +36,23 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
 
     SwtSequence sequence;
 
-    if(offset < words){
-        for(uint32_t idx = 0; idx < fullPacketsNumber; idx++){
-        switch (isIncrementing)
-        {
-            case true:
-                sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &SwtSequence::maxBlockReadSize, true);
-                baseAddress += SwtSequence::maxBlockReadSize;
-                break;
-            default:
-                sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &SwtSequence::maxBlockReadSize, true);
-                break;
+    if (offset < words) {
+        for (uint32_t idx = 0; idx < fullPacketsNumber; idx++) {
+            switch (isIncrementing) {
+                case true:
+                    sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &SwtSequence::maxBlockReadSize, true);
+                    baseAddress += SwtSequence::maxBlockReadSize;
+                    break;
+                default:
+                    sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &SwtSequence::maxBlockReadSize, true);
+                    break;
             }
         }
     }
 
-    if(isIncrementing)
-    {
+    if (isIncrementing) {
         sequence.addOperation(SwtSequence::Operation::BlockRead, baseAddress, &offset, true);
-    }else{
+    } else {
         sequence.addOperation(SwtSequence::Operation::BlockReadNonIncrement, baseAddress, &offset, true);
     }
 
@@ -64,21 +61,21 @@ BoardCommunicationHandler::BlockResponse BasicFitIndefiniteMapi::blockRead(uint3
     if (!parser.isSuccess()) {
         return { {}, BoardCommunicationHandler::ErrorReport{ "SEQUENCE", "ALF COMMUNICATION FAILED" } };
     }
-    
+
     BoardCommunicationHandler::BlockResponse blockResponse;
     blockResponse.content.resize(words); // much faster than using reserve + emplace_back
     uint32_t idx = 0;
-    for(auto line: parser){
-        if(line.type == AlfResponseParser::Line::Type::ResponseToWrite){
+    for (auto line : parser) {
+        if (line.type == AlfResponseParser::Line::Type::ResponseToWrite) {
             continue;
         }
-        if(idx >= words){
-            return {{}, BoardCommunicationHandler::ErrorReport{ "SEQUENCE", "Received response contains too many SWT frames" }};
+        if (idx >= words) {
+            return { {}, BoardCommunicationHandler::ErrorReport{ "SEQUENCE", "Received response contains too many SWT frames" } };
         }
         blockResponse.content[idx++] = line.frame.data;
     }
-    if(idx < words){
-        return {{}, BoardCommunicationHandler::ErrorReport{"SEQUENCE", "Received incomplete response; received " + std::to_string(idx)  + " words, expected " + std::to_string(words)}};
+    if (idx < words) {
+        return { {}, BoardCommunicationHandler::ErrorReport{ "SEQUENCE", "Received incomplete response; received " + std::to_string(idx) + " words, expected " + std::to_string(words) } };
     }
 
     return blockResponse;

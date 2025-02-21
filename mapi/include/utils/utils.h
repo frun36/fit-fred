@@ -3,7 +3,11 @@
 
 #include <cmath>
 #include <cstdint>
-#include <functional>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <string_view>
+#include <optional>
 
 template <typename IntegerType, typename RawType>
 RawType twosComplementEncode(IntegerType value, uint32_t bitsNumber)

@@ -1,14 +1,16 @@
 #include "services/ResetFEE.h"
-#include "TCM.h"
-#include "PM.h"
-#include "gbtInterfaceUtils.h"
+#include "board/TCM.h"
+#include "board/PM.h"
+#include "utils/gbtInterfaceUtils.h"
+#include "services/configurations/BoardConfigurations.h"
 #include <thread>
-#include<unistd.h>
+#include <unistd.h>
+
 void ResetFEE::processExecution()
 {
     bool running = true;
 
-    if(m_initialized == false){
+    if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
         auto response = updatePmSpiMask();
         if (response.errors.empty() == false) {
@@ -117,14 +119,14 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
 {
-    bool isConnected[20] = {false};
+    bool isConnected[20] = { false };
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    
+
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
         uint32_t baseIdx = (pm.getBoard()->getIdentity().side == Board::Side::C) ? 10 : 0;
-        isConnected[pmIdx+baseIdx] = true;
+        isConnected[pmIdx + baseIdx] = true;
         {
             auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));
             if (parsedResponse.errors.empty() == false) {
@@ -142,14 +144,14 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
     }
 
     uint32_t currentMask = spiMask.getElectronicValue();
-    for(int idx = 0; idx < 20; idx++){
-        if(isConnected[idx] == false){
+    for (int idx = 0; idx < 20; idx++) {
+        if (isConnected[idx] == false) {
             currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
-             Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
-         } else if( ((currentMask >> idx) & 0x1) == 0){
-            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is not connected"));
+            Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is not connected"));
+        } else if (((currentMask >> idx) & 0x1) == 0) {
+            Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is not connected"));
         } else {
-            Print::PrintData(string_utils::concatenate("PM",(idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10: idx)," is connected"));
+            Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is connected"));
         }
     }
     {
@@ -240,7 +242,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::applyGbtConfigurationToBoard
 std::string ResetFEE::seqCntUpdateRate(uint8_t updateRate)
 {
     return WinCCRequest::writeRequest(tcm_parameters::CounterReadInterval, updateRate);
-}   
+}
 
 std::string ResetFEE::seqSwitchGBTErrorReports(bool on)
 {

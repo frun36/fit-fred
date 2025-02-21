@@ -1,9 +1,10 @@
 #pragma once
+
 #include <cmath>
 #include <memory>
 #include <unordered_map>
 #include "database/DatabaseViews.h"
-#include "Board.h"
+#include "board/Board.h"
 
 typedef uint8_t columnIdx;
 
@@ -35,7 +36,7 @@ class FitData
         std::optional<PmHistogramBlock> negativeBins;
     };
 
-   std::unordered_map<std::string,PmHistogram>& getPmHistograms() {return m_PmHistograms;}
+    std::unordered_map<std::string, PmHistogram>& getPmHistograms() { return m_PmHistograms; }
 
    private:
     struct DeviceInfo {

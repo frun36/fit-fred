@@ -29,7 +29,7 @@ std::string selectEnvironment()
 
 std::string selectPmHistograms()
 {
-    using  namespace db_fit::tables;
+    using namespace db_fit::tables;
     sql::SelectModel query;
     query.select(
              PmChannelHistograms::Name.name,
@@ -40,8 +40,8 @@ std::string selectPmHistograms()
              PmChannelHistogramStructure::BinDirection.name)
         .from(tables::PmChannelHistograms::TableName)
         .join(tables::PmChannelHistogramStructure::TableName)
-        .on(sql::column(fullColumnName(PmChannelHistograms::TableName,PmChannelHistograms::Id.name)) == 
-            sql::column(fullColumnName(PmChannelHistogramStructure::TableName,PmChannelHistogramStructure::PmHistogramId.name)));
+        .on(sql::column(fullColumnName(PmChannelHistograms::TableName, PmChannelHistograms::Id.name)) ==
+            sql::column(fullColumnName(PmChannelHistogramStructure::TableName, PmChannelHistogramStructure::PmHistogramId.name)));
     return query.str();
 }
 } // namespace queries

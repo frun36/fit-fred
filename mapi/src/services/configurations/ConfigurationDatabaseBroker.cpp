@@ -1,7 +1,9 @@
-#include "services/ConfigurationDatabaseBroker.h"
+#include "services/configurations/ConfigurationDatabaseBroker.h"
+#include "Alfred/print.h"
+#include "Database/databaseinterface.h"
 #include "database/sql.h"
-#include <limits>
-
+#include "database/DatabaseViews.h"
+#include <sstream>
 #include <iomanip>
 
 void ConfigurationDatabaseBroker::processExecution()

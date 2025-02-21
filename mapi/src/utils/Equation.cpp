@@ -1,4 +1,5 @@
 #include "utils/Equation.h"
+#include <algorithm> // necessary for Parser/calculator.h to compile
 #include "Parser/calculator.h"
 #include "Alfred/print.h"
 

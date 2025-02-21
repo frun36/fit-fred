@@ -3,6 +3,8 @@
 #include "Database/databaseinterface.h"
 #include "database/sql.h"
 #include "database/DatabaseViews.h"
+#include <sstream>
+#include <iomanip>
 
 void ConfigurationDatabaseBroker::processExecution()
 {

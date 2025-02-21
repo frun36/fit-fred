@@ -1,5 +1,6 @@
 #include "communication-utils/WinCCRequest.h"
 #include <cstdint>
+#include <sstream>
 
 WinCCRequest::Command::Command(const std::string& line)
 {

@@ -2,6 +2,7 @@
 #include "board/TCM.h"
 #include "board/PM.h"
 #include "utils/gbtInterfaceUtils.h"
+#include "services/configurations/BoardConfigurations.h"
 #include <thread>
 #include <unistd.h>
 

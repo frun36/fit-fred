@@ -15,6 +15,7 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
    protected:
     useconds_t getPrevElapsed() const { return m_elapsed; }
     void handleSleepAndWake(useconds_t interval, bool& running);
+    bool isStopped() const { return m_stopped; }
 
     // Handling potential incoming requests
     struct ParsedRequest {
@@ -46,6 +47,7 @@ class LoopingFitIndefiniteMapi : public BasicFitIndefiniteMapi
     void addOrReplaceHandler(const string& prefix, RequestHandler handler);
     Result<string, string> executeSingleRequest(const string& req);
     RequestExecutionResult executeQueuedRequests(bool& running);
+    static std::string getRequestPrefix(const std::string& request);
 
    public:
     LoopingFitIndefiniteMapi(bool isDefaultStopped = false);

@@ -1,7 +1,6 @@
 #ifndef PM_PARAMETERS
 #define PM_PARAMETERS
 #include <string_view>
-#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -55,5 +54,13 @@ inline std::vector<std::string> getAllCounters()
         std::string{ Ch12CtrCfd }, std::string{ Ch12CtrTrg }
     };
 }
+
+constexpr std::string_view BcIdToFilter { "HIST_BCID_TO_FILTER" };
+constexpr std::string_view BcIdFilterOn { "HIST_BCID_FILTER_ON" };
+constexpr std::string_view ResetHistograms { "HIST_RESET" };
+constexpr std::string_view HistogrammingOn { "HIST_ON" };
+constexpr std::string_view CurrentAddressInHistogramData { "CURRENT_ADDRESS_IN_HISTOGRAM_DATA" };
+constexpr std::string_view HistogramReadout { "HISTOGRAM_READOUT" };
+
 } // namespace pm_parameters
 #endif

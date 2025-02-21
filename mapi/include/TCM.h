@@ -2,7 +2,6 @@
 #define TCM_PARAMETERS
 
 #include <string_view>
-#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -42,11 +41,22 @@ constexpr std::string_view ResetCounters{ "BOARD_STATUS_RESET_COUNTERS" };
 constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
 constexpr std::string_view CountersFifoLoad{ "COUNTERS_FIFO_LOAD" };
 
+constexpr std::string_view CorrelationCountersSelectable{ "HISTOGRAM_CORRELATION_COUNTERS_SELECTABLE" };
+constexpr std::string_view CorrelationCountersOrA{ "HISTOGRAM_CORRELATION_COUNTERS_01" };
+constexpr std::string_view CorrelationCountersOrC{ "HISTOGRAM_CORRELATION_COUNTERS_02" };
+constexpr std::string_view CorrelationCountersSelect{ "MODE_CORRELATION_COUNTER_SELECT" };
+constexpr std::string_view ResetHistograms{ "MODE_RESET_PER_BC_TRIGGER_COUNTER" };
+
 inline std::vector<std::string> getAllCounters()
 {
     return { Trigger5.data(), Trigger4.data(), Trigger2.data(), Trigger1.data(), Trigger3.data(),
              Background0.data(), Background1.data(), Background2.data(), Background3.data(), Background4.data(), Background5.data(),
              Background6.data(), Background7.data(), Background8.data(), Background9.data() };
+}
+
+inline std::vector<std::string_view> getAllHistograms()
+{
+    return { CorrelationCountersSelectable, CorrelationCountersOrA, CorrelationCountersOrC };
 }
 
 } // namespace tcm_parameters

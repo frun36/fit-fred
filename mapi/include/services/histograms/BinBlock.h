@@ -6,12 +6,12 @@
 #include "FitData.h"
 
 struct BinBlock {
-    const std::string histogramName;
-    const uint32_t baseAddress;
-    const uint32_t regBlockSize;
-    const int32_t startBin;
-    const uint32_t binsPerRegister;
-    const bool isNegativeDirection;
+    std::string histogramName;
+    uint32_t baseAddress;
+    uint32_t regBlockSize;
+    int32_t startBin;
+    uint32_t binsPerRegister;
+    bool isNegativeDirection;
 
     mutable bool readoutEnabled = false;
     mutable std::vector<uint32_t> data;

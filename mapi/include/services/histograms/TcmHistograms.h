@@ -10,9 +10,9 @@ class TcmHistograms : public BoardHistograms
 {
    private:
     struct Histogram {
-        const string name;
-        const uint32_t baseAddress;
-        const uint32_t binCount;
+        string name;
+        uint32_t baseAddress;
+        uint32_t binCount;
         mutable vector<uint32_t> data;
 
         Histogram(string name, uint32_t baseAddress, uint32_t binCount)

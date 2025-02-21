@@ -42,8 +42,8 @@ constexpr std::string_view CounterFifo{ "COUNTERS_VALUES_READOUT" };
 constexpr std::string_view CountersFifoLoad{ "COUNTERS_FIFO_LOAD" };
 
 constexpr std::string_view CorrelationCountersSelectable{ "HISTOGRAM_CORRELATION_COUNTERS_SELECTABLE" };
-constexpr std::string_view CorrelationCountersOrA{ "HISTOGRAM_CORRELATION_COUNTERS_OR_A" };
-constexpr std::string_view CorrelationCountersOrC{ "HISTOGRAM_CORRELATION_COUNTERS_OR_C" };
+constexpr std::string_view CorrelationCountersOrA{ "HISTOGRAM_CORRELATION_COUNTERS_01" };
+constexpr std::string_view CorrelationCountersOrC{ "HISTOGRAM_CORRELATION_COUNTERS_02" };
 constexpr std::string_view CorrelationCountersSelect{ "MODE_CORRELATION_COUNTER_SELECT" };
 constexpr std::string_view ResetHistograms{ "MODE_RESET_PER_BC_TRIGGER_COUNTER" };
 

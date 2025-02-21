@@ -10,10 +10,10 @@ class TcmHistograms : public BoardHistograms
 {
    private:
     struct Histogram {
-        string name;
-        uint32_t baseAddress;
-        uint32_t binCount;
-        vector<uint32_t> data;
+        const string name;
+        const uint32_t baseAddress;
+        const uint32_t binCount;
+        mutable vector<uint32_t> data;
 
         Histogram(string name, uint32_t baseAddress, uint32_t binCount)
             : name(name), baseAddress(baseAddress), binCount(binCount)
@@ -23,7 +23,9 @@ class TcmHistograms : public BoardHistograms
     };
 
     BoardCommunicationHandler m_handler;
-    vector<Histogram> m_histograms; // Needs to be sorted by base address!
+    const vector<Histogram> m_histograms; // Needs to be sorted by base address!
+
+    static vector<Histogram> fetchHistogramInfo(shared_ptr<Board> tcm);
 
     Result<string, string> setCounterId(uint32_t counterId);
     Result<string, string> resetHistograms() override;

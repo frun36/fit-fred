@@ -6,19 +6,33 @@
 #include <sstream>
 #include <string>
 
-TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm)
+vector<TcmHistograms::Histogram> TcmHistograms::fetchHistogramInfo(shared_ptr<Board> tcm)
 {
     if (!tcm->isTcm()) {
         throw runtime_error("TcmHistograms: board is not a TCM");
     }
 
+    vector<Histogram> histograms;
     for (auto name : tcm_parameters::getAllHistograms()) {
         const Board::ParameterInfo& param = tcm->at(name);
-        m_histograms.emplace_back(string(name), param.baseAddress, param.regBlockSize);
+        string paramName = string(name);
+        size_t lastUnderscorePos = paramName.find_last_of('_');
+        string counterName = (lastUnderscorePos == string::npos ? paramName : paramName.substr(lastUnderscorePos + 1));
+        histograms.emplace_back(counterName, param.baseAddress, param.regBlockSize);
     }
-    sort(m_histograms.begin(), m_histograms.end(), [](const auto& a, const auto& b) {
+
+    sort(histograms.begin(), histograms.end(), [](const auto& a, const auto& b) {
         return a.baseAddress < b.baseAddress;
     });
+
+    return histograms;
+}
+
+TcmHistograms::TcmHistograms(shared_ptr<Board> tcm) : m_handler(tcm), m_histograms(fetchHistogramInfo(tcm))
+{
+    if (!tcm->isTcm()) {
+        throw runtime_error("TcmHistograms: board is not a TCM");
+    }
 
     addOrReplaceHandler("COUNTER", [this](vector<string> arguments) -> Result<string, string> {
         if (arguments.size() != 1 || arguments[0].empty()) {
@@ -69,7 +83,6 @@ Result<string, string> TcmHistograms::readAndStoreHistograms()
     }
 
     int64_t selectedCounter = m_handler.getBoard()->at(tcm_parameters::CorrelationCountersSelect).getElectronicValueOptional().value_or(0);
-    m_histograms[0].name = to_string(selectedCounter);
     bool selectableCounterEnabled = (selectedCounter != 0);
 
     uint32_t startAddress = selectableCounterEnabled ? m_histograms[0].baseAddress : m_histograms[1].baseAddress;

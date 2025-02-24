@@ -135,7 +135,9 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
 optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
     printAndPublishError("Direct counter readout mode unsupported");
-    usleep(1'000'000);
+    while (m_handler.getBoard()->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional() == 0) {
+        usleep(1'000'000);
+    }
     return nullopt;
 }
 

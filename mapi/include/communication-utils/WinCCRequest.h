@@ -34,11 +34,15 @@ class WinCCRequest
         {
             return name == other.name && operation == other.operation && value == other.value;
         }
+ 
+        bool isWrite() const {
+            return operation == Operation::Write || operation == Operation::WriteElectronic;
+        }
     };
 
    private:
     std::vector<Command> m_commands;
-    std::optional<Operation> m_reqType = std::nullopt;
+    std::optional<bool> m_isWrite = std::nullopt;
 
    public:
     explicit WinCCRequest(const std::string& input);
@@ -52,7 +56,7 @@ class WinCCRequest
 
     bool isWrite() const
     {
-        return m_reqType.has_value() && (m_reqType.value() == Operation::Write || m_reqType.value() == Operation::WriteElectronic);
+        return m_isWrite.has_value() && *m_isWrite;
     }
 
     template <typename T>

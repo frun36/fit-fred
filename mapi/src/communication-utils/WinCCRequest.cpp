@@ -51,9 +51,9 @@ WinCCRequest::WinCCRequest(const std::string& input)
     for (const auto& line : lines) {
         Command cmd(line);
 
-        if (!m_reqType.has_value()) {
-            m_reqType = cmd.operation;
-        } else if (m_reqType.value() != cmd.operation) {
+        if (!m_isWrite.has_value()) {
+            m_isWrite = cmd.isWrite();
+        } else if (m_isWrite.value() != cmd.isWrite()) {
             throw std::runtime_error(cmd.name + ": attempted operation mixing in single request");
         }
 

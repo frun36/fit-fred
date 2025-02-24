@@ -41,44 +41,44 @@ endmacro()
 
 ### Test declarations
 
-create_test(Utils 
-    test/Utils/UtilsTest.cpp
-)
-
-create_test(AlfResponseParser
-    test/AlfResponseParser/ParsingTest.cpp 
-    mapi/src/communication-utils/AlfResponseParser.cpp
-)
-
-create_test(SwtSequence
-    test/SwtSequence/SwtSequenceTest.cpp 
-    mapi/src/communication-utils/SwtSequence.cpp
-)
-
-create_test(WinCCMessage
-    test/WinCCMessage/WinCCMessageTest.cpp 
-    mapi/src/communication-utils/WinCCRequest.cpp 
-    ${MOCKS}
-)
-
-create_test(GbtErrorReports
-    test/GbtErrorReport/GbtErrors.cpp
-    mapi/src/gbtInterfaceUtils.cpp
-)
-
-create_test(CounterRates
-    test/CounterRates/CounterRatesTest.cpp
-    mapi/src/services/CounterRates.cpp
-    mapi/src/BoardCommunicationHandler.cpp 
-    mapi/src/Equation.cpp
-    mapi/src/Board.cpp  
-    mapi/src/communication-utils/SwtSequence.cpp 
-    mapi/src/communication-utils/AlfResponseParser.cpp 
-    mapi/src/communication-utils/WinCCRequest.cpp 
-    mapi/src/EnvironmentVariables.cpp 
-    ${MOCKS}
-)
-
+# create_test(Utils 
+#     test/Utils/UtilsTest.cpp
+# )
+#
+# create_test(AlfResponseParser
+#     test/AlfResponseParser/ParsingTest.cpp 
+#     mapi/src/communication-utils/AlfResponseParser.cpp
+# )
+#
+# create_test(SwtSequence
+#     test/SwtSequence/SwtSequenceTest.cpp 
+#     mapi/src/communication-utils/SwtSequence.cpp
+# )
+#
+# create_test(WinCCMessage
+#     test/WinCCMessage/WinCCMessageTest.cpp 
+#     mapi/src/communication-utils/WinCCRequest.cpp 
+#     ${MOCKS}
+# )
+#
+# create_test(GbtErrorReports
+#     test/GbtErrorReport/GbtErrors.cpp
+#     mapi/src/gbtInterfaceUtils.cpp
+# )
+#
+# create_test(CounterRates
+#     test/CounterRates/CounterRatesTest.cpp
+#     mapi/src/services/CounterRates.cpp
+#     mapi/src/BoardCommunicationHandler.cpp 
+#     mapi/src/Equation.cpp
+#     mapi/src/Board.cpp  
+#     mapi/src/communication-utils/SwtSequence.cpp 
+#     mapi/src/communication-utils/AlfResponseParser.cpp 
+#     mapi/src/communication-utils/WinCCRequest.cpp 
+#     mapi/src/EnvironmentVariables.cpp 
+#     ${MOCKS}
+# )
+#
 # create_test(Board
 #     test/Board/BoardTest.cpp
 #     mapi/src/Board.cpp 

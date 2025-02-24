@@ -259,7 +259,11 @@ void CounterRates::processExecution()
         readoutResult = handleFifoReadout(readIntervalState);
     }
 
-    string response = readoutResult->getString();
+    string response;
+    if (readoutResult.has_value()) {
+        response += readoutResult->getString();
+        response += '\n';
+    }
 
     // Allow RESET only if counter FIFO has recently been cleared or readout is disabled
     // (minimises chance of incorrect rate calculation afterwards)
@@ -269,15 +273,12 @@ void CounterRates::processExecution()
         if (result.isError) {
             printAndPublishError(result);
         } else if (!result.isEmpty()) {
-            response += '\n';
             response += result;
         }
     }
 
-    if (readoutResult.has_value()) {
-        Print::PrintVerbose(name, "\n" + response);
-        publishAnswer(response);
-    }
+    Print::PrintVerbose(name, "\n" + response);
+    publishAnswer(response);
 }
 
 ostream& operator<<(ostream& os, CounterRates::ReadIntervalState readIntervalState)

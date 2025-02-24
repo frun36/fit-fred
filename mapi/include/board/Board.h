@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include "utils/Equation.h"
 #include "board/EnvironmentVariables.h"
 

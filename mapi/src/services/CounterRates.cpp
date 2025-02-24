@@ -134,10 +134,8 @@ CounterRates::FifoReadResult CounterRates::handleCounterValues(const BoardCommun
 
 optional<CounterRates::ReadoutResult> CounterRates::handleDirectReadout()
 {
-    printAndPublishError("Direct counter readout mode unsupported");
-    while (m_handler.getBoard()->getParentBoard()->at(tcm_parameters::CounterReadInterval).getElectronicValueOptional() == 0) {
-        usleep(1'000'000);
-    }
+    Print::PrintVerbose("Direct counter readout mode unsupported");
+    usleep(1'000'000);
     return nullopt;
 }
 
@@ -160,7 +158,7 @@ optional<CounterRates::ReadoutResult> CounterRates::handleFifoReadout(ReadInterv
         printAndPublishError("A board error occurred on FIFO_LOAD readout");
         return nullopt;
     } else if (fifoState == FifoState::Partial) {
-        Print::PrintWarning(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
+        Print::PrintVerbose(name, "Partial FIFO_LOAD (" + to_string(*fifoLoad) + ")");
         // By the time the next IPbus packet arrives, the FIFO will have been filled with the complete set of counters
         *fifoLoad += m_numberOfCounters - (*fifoLoad % m_numberOfCounters);
     }

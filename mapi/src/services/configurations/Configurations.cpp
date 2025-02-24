@@ -10,6 +10,10 @@ Configurations::Configurations(const string& fredName, const unordered_map<strin
 {
     string names;
     for (auto [name, board] : boards) {
+        if (!board->isConnected()) {
+            continue;
+        }
+
         if (name.find("TCM") != string::npos) {
             m_boardCofigurationServices[name] = make_unique<TcmConfigurations>(board);
         } else if (name.find("PM") != string::npos) {

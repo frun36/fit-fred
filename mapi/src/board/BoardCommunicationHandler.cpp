@@ -117,7 +117,7 @@ BoardCommunicationHandler::ParsedResponse BoardCommunicationHandler::processMess
     try {
         AlfResponseParser alfMsg(alfresponse);
         if (!alfMsg.isSuccess()) {
-            report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED - message: " + alfresponse);
+            report.emplace_back("SEQUENCE", "ALF COMMUNICATION FAILED");
             return { std::move(response), std::move(report) };
         }
 

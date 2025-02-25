@@ -170,6 +170,11 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructUpdatePar
     double physicalValue = std::stod(update.value);
     int64_t electronicValue = board->calculateElectronic(update.paramName, physicalValue);
 
+    if(electronicValue > board->at(update.paramName).maxValue 
+        || electronicValue < board->at(update.paramName).minValue){
+            return {.ok=std::nullopt, .error = "Value outside of valid range"};
+    }
+
     sql::UpdateModel query;
     query.update(db_fit::tables::ConfigurationParameters::TableName).set(db_fit::tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).where(sql::column(db_fit::tables::ConfigurationParameters::ConfigurationName.name) == update.configName && sql::column(db_fit::tables::ConfigurationParameters::BoardType.name) == boardType && sql::column(db_fit::tables::ConfigurationParameters::BoardName.name) == update.boardName && sql::column(db_fit::tables::ConfigurationParameters::ParameterName.name) == update.paramName);
     return { .ok = query.str(), .error = std::nullopt };

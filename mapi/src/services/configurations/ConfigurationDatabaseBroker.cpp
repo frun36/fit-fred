@@ -115,6 +115,11 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructInsertPar
     double physicalValue = std::stod(insert.value);
     int64_t electronicValue = board->calculateElectronic(insert.paramName, physicalValue);
 
+    if(electronicValue > board->at(insert.paramName).maxValue 
+        || electronicValue < board->at(insert.paramName).minValue){
+            return {.ok=std::nullopt, .error = "Value outside of valid range"};
+    }
+
     sql::InsertModel query;
     query.insert(db_fit::tables::ConfigurationParameters::ConfigurationName.name, insert.configName)(db_fit::tables::ConfigurationParameters::BoardName.name, insert.boardName)(db_fit::tables::ConfigurationParameters::BoardType.name, boardType)(db_fit::tables::ConfigurationParameters::ParameterName.name, insert.paramName)(db_fit::tables::ConfigurationParameters::ParameterValue.name, std::to_string(electronicValue)).into(db_fit::tables::ConfigurationParameters::TableName);
 

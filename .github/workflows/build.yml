@@ -1,0 +1,45 @@
+name: Build with CentOS 7 and Devtoolset-7
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: centos:7
+
+    steps:
+      - name: Install Dependencies
+        run: |
+          yum install -y centos-release-scl epel-release
+          yum install -y devtoolset-7 cmake3 git
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'false'  # We'll manually initialize submodules
+
+      - name: Configure Git for GitLab Authentication
+        run: |
+          git config --global url."https://${GITLAB_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
+
+        env:
+          GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+
+      - name: Initialize and Update Submodules
+        run: |
+          git submodule update --init --recursive
+
+      - name: Build with CMake and Make
+        run: |
+          source /opt/rh/devtoolset-7/enable
+          cd core
+          cmake3 . -DMAPI=1
+          make -j$(nproc)

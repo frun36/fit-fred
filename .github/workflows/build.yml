@@ -21,7 +21,7 @@ jobs:
 
       - name: Configure Git for GitLab Authentication
         run: |
-          git config --global url."https://${GITLAB_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
+          git config --global url."https://${GITLAB_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.cern.ch/".insteadOf "https://gitlab.cern.ch/"
 
         env:
           GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}

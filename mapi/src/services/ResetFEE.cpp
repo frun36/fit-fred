@@ -71,6 +71,7 @@ void ResetFEE::processExecution()
         }
     }
     publishAnswer("SUCCESS");
+    Print::PrintInfo(name, "FEE reset successfully");
 }
 
 BoardCommunicationHandler::ParsedResponse ResetFEE::applyResetFEE()

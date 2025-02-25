@@ -1,4 +1,4 @@
-name: Build with AlmaLinux 8 and devtoolset-7
+name: Build with CentOS 7 and devtoolset-7
 
 on:
   push:
@@ -12,15 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: almalinux:8
+    container: ghcr.io/frun36/cc7-fit
 
     steps:
-      - name: Install Dependencies
-        run: |
-          dnf install -y epel-release dnf-plugins-core
-          dnf config-manager --set-enabled powertools
-          dnf install -y gcc-toolset-7 cmake git
-
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:

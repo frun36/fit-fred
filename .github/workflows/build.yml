@@ -36,6 +36,6 @@ jobs:
       - name: Build with CMake and Make
         run: |
           source /opt/rh/devtoolset-7/enable
-          cd core
+          cd fit-fred/core
           cmake3 . -DMAPI=1
           make -j$(nproc)

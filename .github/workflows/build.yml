@@ -17,12 +17,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          yum install -y git
-          
-      - name: Checkout Repository
-        run: |
-          git clone https://github.com/frun36/fit-fred.git
-          cd fit-fred
+          yum install -y git        
 
       - name: Configure Git for GitLab Authentication
         run: |
@@ -32,8 +27,10 @@ jobs:
           GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
           GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
 
-      - name: Initialize and Update Submodules
+      - name: Clone repository
         run: |
+          git clone https://github.com/frun36/fit-fred.git
+          cd fit-fred
           git submodule update --init --recursive
 
       - name: Build with CMake and Make

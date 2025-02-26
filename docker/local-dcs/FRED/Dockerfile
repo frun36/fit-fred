@@ -11,5 +11,5 @@ RUN source /opt/rh/devtoolset-7/enable && cmake3 -DMAPI=1 .
 RUN make all
 
 COPY boards /fred/boards
-COPY /local-dcs/FRED/config /fred/config
+COPY config /fred/config
 COPY sections /fred/sections

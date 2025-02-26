@@ -5,7 +5,7 @@ print_failure() {
     exit 1
 }
 
-docker build -f FRED/Dockerfile -t fit-fred ..
+docker build -f FRED/Dockerfile -t fit-fred ../../
 if [ $? -ne 0 ]; then
     print_failure "alfipbus-tester build"
 fi

@@ -145,22 +145,38 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
     }
 
     uint32_t currentMask = spiMask.getElectronicValue();
+    uint32_t channelMaskA = 0;
+    uint32_t channelMaskC = 0;
+    
     for (int idx = 0; idx < 20; idx++) {
         if (isConnected[idx] == false) {
             currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
             Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is not connected"));
         } else if (((currentMask >> idx) & 0x1) == 0) {
+            isConnected[idx] = false;
             Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is not connected"));
         } else {
             Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is connected"));
         }
+
+        if(isConnected[idx] == true && idx >= 10){
+            channelMaskC = channelMaskC & (~(static_cagitst<uint32_t>(1u) << (idx-10)));
+        } else if(isConnected[idx] == true){
+            channelMaskA = channelMaskA & (~(static_cast<uint32_t>(1u) << idx));
+        }
     }
     {
-        auto parsedResponse = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
+        std::string request;
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskA,channelMaskA));
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskC, channelMaskC));
+
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, request);
         if (parsedResponse.errors.empty() == false) {
             return parsedResponse;
         }
     }
+
 
     return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }

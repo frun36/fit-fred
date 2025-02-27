@@ -160,9 +160,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
         }
 
         if(isConnected[idx] == true && idx >= 10){
-            channelMaskC = channelMaskC & (~(static_cagitst<uint32_t>(1u) << (idx-10)));
+            channelMaskC = channelMaskC | (static_cast<uint32_t>(1u) << (idx-10));
         } else if(isConnected[idx] == true){
-            channelMaskA = channelMaskA & (~(static_cast<uint32_t>(1u) << idx));
+            channelMaskA = channelMaskA | (static_cast<uint32_t>(1u) << idx);
         }
     }
     {

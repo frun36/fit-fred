@@ -159,6 +159,10 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
             Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is connected"));
         }
 
+        if(m_initialized == true){
+            continue;
+        }
+        
         if(isConnected[idx] == true && idx >= 10){
             channelMaskC = channelMaskC | (static_cast<uint32_t>(1u) << (idx-10));
         } else if(isConnected[idx] == true){

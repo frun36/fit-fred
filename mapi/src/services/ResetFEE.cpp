@@ -9,7 +9,9 @@
 void ResetFEE::processExecution()
 {
     bool running = true;
-
+    m_channelMaskATmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA).getElectronicValueOptional().value_or(0);
+    m_channelMaskCTmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC).getElectronicValueOptional().value_or(0);
+    
     if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
         auto response = updatePmSpiMask();
@@ -145,8 +147,8 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
     }
 
     uint32_t currentMask = spiMask.getElectronicValue();
-    uint32_t channelMaskA = 0;
-    uint32_t channelMaskC = 0;
+    uint32_t channelMaskA = m_initialized ? m_channelMaskATmp: 0;
+    uint32_t channelMaskC = m_initialized ? m_channelMaskCTmp: 0;
     
     for (int idx = 0; idx < 20; idx++) {
         if (isConnected[idx] == false) {

@@ -9,9 +9,6 @@
 void ResetFEE::processExecution()
 {
     bool running = true;
-    m_channelMaskATmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA).getElectronicValueOptional().value_or(0);
-    m_channelMaskCTmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC).getElectronicValueOptional().value_or(0);
-    
     if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
         auto response = updatePmSpiMask();
@@ -22,6 +19,10 @@ void ResetFEE::processExecution()
     }
 
     std::string request = waitForRequest(running);
+
+    m_channelMaskATmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA).getElectronicValueOptional().value_or(0);
+    m_channelMaskCTmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC).getElectronicValueOptional().value_or(0);
+    
     if (running == false) {
         return;
     }

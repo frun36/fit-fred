@@ -36,6 +36,8 @@ class ResetFEE : public BasicFitIndefiniteMapi
     bool m_forceLocalClock{ false };
 
     bool m_initialized{ false };
+    uint32_t m_channelMaskATmp{ 0 };
+    uint32_t m_channelMaskCTmp{ 0 };
 
     std::chrono::milliseconds m_sleepAfterReset{ 2000 };
     std::vector<BoardCommunicationHandler> m_PMs;

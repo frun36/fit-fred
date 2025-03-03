@@ -20,6 +20,9 @@ constexpr std::string_view Trigger5Signature{ "TRIGGER_5_SIGNATURE" };
 constexpr std::string_view DelayA{ "DELAY_A" };
 constexpr std::string_view DelayC{ "DELAY_C" };
 
+constexpr std::string_view ChannelMaskA{ "SIDE_A_CHANNEL_MASK" };
+constexpr std::string_view ChannelMaskC{ "SIDE_C_CHANNEL_MASK" };
+
 constexpr std::string_view Trigger5{ "TRIGGER_5_COUNTER" };
 constexpr std::string_view Trigger4{ "TRIGGER_4_COUNTER" };
 constexpr std::string_view Trigger3{ "TRIGGER_3_COUNTER" };

@@ -3,6 +3,6 @@ TCM = {
         PATH = ../boards/tcm/tcm.conf
     }
     MAPPING = {
-        TCM[0] = ALF/SERIAL_0/LINK_0
+        TCM[0] = ALF/SERIAL_0/ENDPOINT_0/LINK_0
     }
 }

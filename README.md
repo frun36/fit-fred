@@ -3,6 +3,8 @@
 This repository contains the FRED MAPI code for ALICE's FIT detector.
 
 ## Setup
+It is recommended to not download FRED from the releases page, but as a repository at the tag corresponding to the desired release, in order for `git submodule` to work.
+
 This version has been developed and tested using CentOS 7 with `devtoolset-7`. To enable it run:
 ```
 scl enable devtoolset-7 bash

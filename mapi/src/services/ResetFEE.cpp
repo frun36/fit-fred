@@ -11,18 +11,14 @@ void ResetFEE::processExecution()
     bool running = true;
     if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
-        try
-        {
+        try{
             auto response = updatePmSpiMask();
             if (response.errors.empty() == false) {
                 printAndPublishError(response);
             }
+        } catch(const std::exception& e){
+            publishError("Failed to initialize SPI mask and channel mask");
         }
-        catch(const std::exception& e)
-        {
-            publishError(e.what());
-        }
-    
         m_initialized = true;
     }
 
@@ -45,6 +41,22 @@ void ResetFEE::processExecution()
         m_forceLocalClock = true;
     } else {
         m_forceLocalClock = false;
+    }
+
+    if(request.find(ResetFEE::ReinitializeSpiMask) != std::string::npos){
+        m_initialized = false;
+        try{
+            auto response = updatePmSpiMask();
+            if (response.errors.empty() == false) {
+                printAndPublishError(response);
+            } else{
+                publishAnswer("SUCCESS");
+            }
+        } catch(const std::exception& e){
+            publishError("Failed to reinitialize SPI mask and channel mask");
+        }
+        m_initialized = true;
+        return;
     }
 
     Print::PrintVerbose("Applying reset command");

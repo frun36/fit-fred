@@ -31,6 +31,7 @@ class ResetFEE : public BasicFitIndefiniteMapi
 
     static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE_DEFAULT_GBT_CONFIG" };
     static constexpr std::string_view ForceLocalClock{ "FORCE LOCAL CLOCK" };
+    static constexpr std::string_view ReinitializeSpiMask{"REINITIALIZE SPI MASK"};
 
     bool m_enforceDefGbtConfig{ false };
     bool m_forceLocalClock{ false };

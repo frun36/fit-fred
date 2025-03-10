@@ -30,8 +30,8 @@ class ResetFEE : public BasicFitIndefiniteMapi
     uint32_t getEnvBoardId(std::shared_ptr<Board> board);
 
     static constexpr std::string_view EnforceDefGbtConfig{ "ENFORCE_DEFAULT_GBT_CONFIG" };
-    static constexpr std::string_view ForceLocalClock{ "FORCE LOCAL CLOCK" };
-    static constexpr std::string_view ReinitializeSpiMask{"REINITIALIZE SPI MASK"};
+    static constexpr std::string_view ForceLocalClock{ "FORCE_LOCAL_CLOCK" };
+    static constexpr std::string_view ReinitializeSpiMask{ "REINITIALIZE_SPI_MASK" };
 
     bool m_enforceDefGbtConfig{ false };
     bool m_forceLocalClock{ false };

@@ -11,12 +11,12 @@ void ResetFEE::processExecution()
     bool running = true;
     if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
-        try{
+        try {
             auto response = updatePmSpiMask();
             if (response.errors.empty() == false) {
                 printAndPublishError(response);
             }
-        } catch(const std::exception& e){
+        } catch (const std::exception& e) {
             publishError("Failed to initialize SPI mask and channel mask");
         }
         m_initialized = true;
@@ -26,7 +26,7 @@ void ResetFEE::processExecution()
 
     m_channelMaskATmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA).getElectronicValueOptional().value_or(0);
     m_channelMaskCTmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC).getElectronicValueOptional().value_or(0);
-    
+
     if (running == false) {
         return;
     }
@@ -43,16 +43,16 @@ void ResetFEE::processExecution()
         m_forceLocalClock = false;
     }
 
-    if(request.find(ResetFEE::ReinitializeSpiMask) != std::string::npos){
+    if (request.find(ResetFEE::ReinitializeSpiMask) != std::string::npos) {
         m_initialized = false;
-        try{
+        try {
             auto response = updatePmSpiMask();
             if (response.errors.empty() == false) {
                 printAndPublishError(response);
-            } else{
+            } else {
                 publishAnswer("SUCCESS");
             }
-        } catch(const std::exception& e){
+        } catch (const std::exception& e) {
             publishError("Failed to reinitialize SPI mask and channel mask");
         }
         m_initialized = true;
@@ -168,9 +168,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
     }
 
     uint32_t currentMask = spiMask.getElectronicValue();
-    uint32_t channelMaskA = m_initialized ? m_channelMaskATmp: 0;
-    uint32_t channelMaskC = m_initialized ? m_channelMaskCTmp: 0;
-    
+    uint32_t channelMaskA = m_initialized ? m_channelMaskATmp : 0;
+    uint32_t channelMaskC = m_initialized ? m_channelMaskCTmp : 0;
+
     for (int idx = 0; idx < 20; idx++) {
         if (isConnected[idx] == false) {
             currentMask = currentMask & (~(static_cast<uint32_t>(1u) << idx));
@@ -182,20 +182,20 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
             Print::PrintData(string_utils::concatenate("PM", (idx >= 10 ? "C" : "A"), std::to_string(idx >= 10 ? idx - 10 : idx), " is connected"));
         }
 
-        if(m_initialized == true){
+        if (m_initialized == true) {
             continue;
         }
-        
-        if(isConnected[idx] == true && idx >= 10){
-            channelMaskC = channelMaskC | (static_cast<uint32_t>(1u) << (idx-10));
-        } else if(isConnected[idx] == true){
+
+        if (isConnected[idx] == true && idx >= 10) {
+            channelMaskC = channelMaskC | (static_cast<uint32_t>(1u) << (idx - 10));
+        } else if (isConnected[idx] == true) {
             channelMaskA = channelMaskA | (static_cast<uint32_t>(1u) << idx);
         }
     }
     {
         std::string request;
         WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
-        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskA,channelMaskA));
+        WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskA, channelMaskA));
         WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskC, channelMaskC));
 
         auto parsedResponse = processSequenceThroughHandler(m_TCM, request);
@@ -203,7 +203,6 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
             return parsedResponse;
         }
     }
-
 
     return BoardCommunicationHandler::ParsedResponse::EmptyResponse;
 }

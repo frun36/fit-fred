@@ -34,8 +34,9 @@ class WinCCRequest
         {
             return name == other.name && operation == other.operation && value == other.value;
         }
- 
-        bool isWrite() const {
+
+        bool isWrite() const
+        {
             return operation == Operation::Write || operation == Operation::WriteElectronic;
         }
     };

@@ -241,16 +241,13 @@ void CounterRates::processExecution()
     ReadIntervalState readIntervalState = handleReadInterval();
 #endif
 
-    optional<ReadoutResult> readoutResult;
+    optional<ReadoutResult> readoutResult = nullopt;
     if (readIntervalState == ReadIntervalState::Unknown) {
         printAndPublishError("Failed to read COUNTER_READ_INTERVAL value");
         usleep(100'000);
-        return;
-    }
-    if (readIntervalState == ReadIntervalState::Invalid) {
+    } else if (readIntervalState == ReadIntervalState::Invalid) {
         printAndPublishError("Invalid COUNTER_READ_INTERVAL code (" + to_string(m_readIntervalCode) + ")");
         usleep(100'000);
-        return;
     } else if (readIntervalState == ReadIntervalState::Disabled) {
         readoutResult = handleDirectReadout();
     } else {
@@ -263,9 +260,12 @@ void CounterRates::processExecution()
         response += '\n';
     }
 
-    // Allow RESET only if counter FIFO has recently been cleared or readout is disabled
+    // Allow RESET and other commands only if there is no communication with the electronics,
+    // readout is disabled or counter FIFO has recently been cleared
     // (minimises chance of incorrect rate calculation afterwards)
-    if ((readIntervalState == ReadIntervalState::Disabled || (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed))) {
+    if (!readoutResult.has_value() ||
+        readIntervalState == ReadIntervalState::Disabled ||
+        (readoutResult.has_value() && readoutResult->fifoReadResult != FifoReadResult::NotPerformed)) {
         RequestExecutionResult result = executeQueuedRequests(running);
 
         if (result.isError) {

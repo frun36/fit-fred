@@ -115,9 +115,8 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructInsertPar
     double physicalValue = std::stod(insert.value);
     int64_t electronicValue = board->calculateElectronic(insert.paramName, physicalValue);
 
-    if(electronicValue > board->at(insert.paramName).maxValue 
-        || electronicValue < board->at(insert.paramName).minValue){
-            return {.ok=std::nullopt, .error = "Value outside of valid range"};
+    if (electronicValue > board->at(insert.paramName).maxValue || electronicValue < board->at(insert.paramName).minValue) {
+        return { .ok = std::nullopt, .error = "Value outside of valid range" };
     }
 
     sql::InsertModel query;
@@ -170,9 +169,8 @@ Result<std::string, std::string> ConfigurationDatabaseBroker::constructUpdatePar
     double physicalValue = std::stod(update.value);
     int64_t electronicValue = board->calculateElectronic(update.paramName, physicalValue);
 
-    if(electronicValue > board->at(update.paramName).maxValue 
-        || electronicValue < board->at(update.paramName).minValue){
-            return {.ok=std::nullopt, .error = "Value outside of valid range"};
+    if (electronicValue > board->at(update.paramName).maxValue || electronicValue < board->at(update.paramName).minValue) {
+        return { .ok = std::nullopt, .error = "Value outside of valid range" };
     }
 
     sql::UpdateModel query;

@@ -197,9 +197,14 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
         WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::PmSpiMask, currentMask));
         WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskA, channelMaskA));
         WinCCRequest::appendToRequest(request, WinCCRequest::writeRequest(tcm_parameters::ChannelMaskC, channelMaskC));
-
+        
         auto parsedResponse = processSequenceThroughHandler(m_TCM, request);
-        if (parsedResponse.errors.empty() == false) {
+        if (parsedResponse.isError()) {
+            return parsedResponse;
+        }
+
+        auto appliedReadiness = processSequenceThroughHandler(m_TCM, WinCCRequest::writeRequest(tcm_parameters::SystemRestarted, 1),false);
+        if(appliedReadiness.isError()){
             return parsedResponse;
         }
     }

@@ -167,7 +167,7 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
         }
     }
 
-    uint32_t currentMask = spiMask.getElectronicValue();
+    uint32_t currentMask = spiMask.getElectronicValueOptional().value_or(0);
     uint32_t channelMaskA = m_initialized ? m_channelMaskATmp : 0;
     uint32_t channelMaskC = m_initialized ? m_channelMaskCTmp : 0;
 
@@ -308,7 +308,7 @@ std::string ResetFEE::seqSetResetFinished()
 std::string ResetFEE::seqMaskPMLink(uint32_t idx, bool mask)
 {
     Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
-    uint32_t masked = static_cast<uint32_t>(spiMask.getPhysicalValue()) & (~(static_cast<uint32_t>(1u) << idx));
+    uint32_t masked = static_cast<uint32_t>(spiMask.getElectronicValueOptional().value_or(0)) & (~(static_cast<uint32_t>(1u) << idx));
     masked |= static_cast<uint32_t>(mask) << idx;
 
     return WinCCRequest::writeRequest(spiMask.name, masked);

@@ -53,7 +53,7 @@ void ResetFEE::processExecution()
                 publishAnswer("SUCCESS");
             }
         } catch (const std::exception& e) {
-            publishError("Failed to reinitialize SPI mask and channel mask");
+            printAndPublishError("Failed to reinitialize SPI mask and channel mask! Exception " + std::string(e.what()));
         }
         m_initialized = true;
         return;

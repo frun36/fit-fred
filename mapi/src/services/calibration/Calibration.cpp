@@ -67,9 +67,21 @@ class BinTracker
    public:
     BinTracker(int32_t startBin) : startBin(startBin) {}
 
-    uint32_t getSampleCount() const { return sampleCount; }
-    int64_t getSampleSum() const { return sampleSum; }
-    uint64_t getSampleSumOfSquares() const { return sampleSumOfSquares; }
+    uint32_t getSampleCount() const
+    {
+        return sampleCount;
+    }
+
+    double getMean() const
+    {
+        return static_cast<double>(sampleSum) / static_cast<double>(sampleCount);
+    }
+
+    double getStddev() const
+    {
+        double mean = static_cast<double>(sampleSum) / static_cast<double>(sampleCount);
+        return static_cast<double>(sampleSumOfSquares) / static_cast<double>(sampleCount) - mean * mean;
+    }
 
     void addBin(uint16_t val)
     {
@@ -116,8 +128,5 @@ Calibration::ChannelHistogramInfo Calibration::processChannelTimeHistogram(const
         return ChannelHistogramInfo::notEnoughEntries(t.getSampleCount());
     }
 
-    double mean = static_cast<double>(t.getSampleSum()) / static_cast<double>(t.getSampleCount());
-    double stddev = static_cast<double>(t.getSampleSumOfSquares()) / static_cast<double>(t.getSampleCount()) - mean * mean;
-
-    return ChannelHistogramInfo::ok(t.getSampleCount(), mean, stddev);
+    return ChannelHistogramInfo::ok(t.getSampleCount(), t.getMean(), t.getStddev());
 }

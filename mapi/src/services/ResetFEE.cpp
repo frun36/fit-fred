@@ -24,9 +24,6 @@ void ResetFEE::processExecution()
 
     std::string request = waitForRequest(running);
 
-    m_channelMaskATmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA).getElectronicValueOptional().value_or(0);
-    m_channelMaskCTmp = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC).getElectronicValueOptional().value_or(0);
-
     if (running == false) {
         return;
     }
@@ -145,7 +142,21 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
 {
     bool isConnected[20] = { false };
     std::string pmRequest = WinCCRequest::readRequest(pm_parameters::SupplyVoltage1_8V);
-    Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask.data());
+    Board::ParameterInfo& spiMask = m_TCM.getBoard()->at(tcm_parameters::PmSpiMask);
+    Board::ParameterInfo& infoChannelMaskA = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskA);
+    Board::ParameterInfo& infoChannelMaskC = m_TCM.getBoard()->at(tcm_parameters::ChannelMaskC);
+
+    std::string readMasks;
+    WinCCRequest::appendToRequest(readMasks, WinCCRequest::readRequest(tcm_parameters::PmSpiMask));
+    WinCCRequest::appendToRequest(readMasks, WinCCRequest::readRequest(tcm_parameters::ChannelMaskA));
+    WinCCRequest::appendToRequest(readMasks, WinCCRequest::readRequest(tcm_parameters::ChannelMaskC));
+
+    {
+        auto parsedResponse = processSequenceThroughHandler(m_TCM, readMasks);
+            if (parsedResponse.isError()) {
+                return parsedResponse;
+            }
+    }
 
     for (auto& pm : m_PMs) {
         uint32_t pmIdx = pm.getBoard()->getIdentity().number;
@@ -153,13 +164,13 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
         isConnected[pmIdx + baseIdx] = true;
         {
             auto parsedResponse = processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, true));
-            if (parsedResponse.errors.empty() == false) {
+            if (parsedResponse.isError()) {
                 return parsedResponse;
             }
         }
         {
             auto parsedResponse = processSequenceThroughHandler(pm, pmRequest);
-            if (parsedResponse.errors.empty() == false) {
+            if (parsedResponse.isError()) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
             } else if (pm.getBoard()->at(pm_parameters::SupplyVoltage1_8V.data()).getElectronicValue() == 0xFFFFFFFF) {
                 (void)processSequenceThroughHandler(m_TCM, seqMaskPMLink(pmIdx + baseIdx, false));
@@ -167,9 +178,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
         }
     }
 
-    uint32_t currentMask = spiMask.getElectronicValueOptional().value_or(0);
-    uint32_t channelMaskA = m_initialized ? m_channelMaskATmp : 0;
-    uint32_t channelMaskC = m_initialized ? m_channelMaskCTmp : 0;
+    uint32_t currentMask = spiMask.getElectronicValue();
+    uint32_t channelMaskA = m_initialized ? infoChannelMaskA.getElectronicValue() : 0;
+    uint32_t channelMaskC = m_initialized ? infoChannelMaskC.getElectronicValue() : 0;
 
     for (int idx = 0; idx < 20; idx++) {
         if (isConnected[idx] == false) {

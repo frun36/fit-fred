@@ -1,4 +1,7 @@
 #include <exception>
+#include <iomanip>
+#include <sstream>
+#include "services/histograms/BinBlock.h"
 #include "services/calibration/Calibration.h"
 
 Result<array<bool, 12>, string> Calibration::parseRequest(bool& running)
@@ -36,17 +39,85 @@ void Calibration::processExecution()
     const auto calibrationChannelMask = parseRequest(running);
     if (!running) {
         return;
+
+        if (calibrationChannelMask.isError()) {
+            printAndPublishError(*calibrationChannelMask.error);
+            return;
+        }
+
+        const auto& result = run(*calibrationChannelMask.ok);
+        if (result.isOk()) {
+            publishAnswer(*result.ok);
+        } else {
+            printAndPublishError(*result.error);
+        }
+    }
+}
+
+class BinTracker
+{
+   private:
+    int32_t startBin;
+    uint32_t sampleCount = 0;
+    int64_t sampleSum = 0;
+    uint64_t sampleSumOfSquares = 0;
+    uint32_t currBinIdx = 0;
+    uint32_t currTime = 0;
+
+   public:
+    BinTracker(int32_t startBin) : startBin(startBin) {}
+
+    uint32_t getSampleCount() const { return sampleCount; }
+    int64_t getSampleSum() const { return sampleSum; }
+    uint64_t getSampleSumOfSquares() const { return sampleSumOfSquares; }
+
+    void addBin(uint16_t val)
+    {
+        sampleCount += val;
+        currTime = startBin * currBinIdx;
+        sampleSum += val * currTime;
+        sampleSumOfSquares += val * currTime * currTime;
+        currBinIdx++;
+    }
+};
+
+Calibration::ChannelHistogramInfo Calibration::processChannelTimeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries)
+{
+    if (chIdx >= 12) {
+        return ChannelHistogramInfo::badChannelIdx();
     }
 
-    if (calibrationChannelMask.isError()) {
-        printAndPublishError(*calibrationChannelMask.error);
-        return;
+    ostringstream histName;
+    histName << "CH" << setw(2) << chIdx << "TIME";
+    const vector<const BinBlock*>& hist = data.at(histName.str());
+
+    if (hist.size() < 1) {
+        return ChannelHistogramInfo::badHistogramInfo();
     }
 
-    const auto& result = run(*calibrationChannelMask.ok);
-    if (result.isOk()) {
-        publishAnswer(*result.ok);
-    } else {
-        printAndPublishError(*result.error);
+    int32_t t0 = hist[0]->isNegativeDirection ? hist[0]->startBin - 2 * hist[0]->data.size() + 1
+                                              : hist[0]->startBin;
+    BinTracker t(t0);
+    for (auto binBlock : hist) {
+        if (binBlock->isNegativeDirection) {
+            for (auto it = binBlock->data.rbegin(); it < binBlock->data.rend(); it++) {
+                t.addBin(*it >> 16);
+                t.addBin(*it & 0xFFFF);
+            }
+        } else {
+            for (auto it = binBlock->data.begin(); it < binBlock->data.end(); it++) {
+                t.addBin(*it & 0xFFFF);
+                t.addBin(*it >> 16);
+            }
+        }
     }
+
+    if (t.getSampleCount() < 0.8 * expectedEntries) {
+        return ChannelHistogramInfo::notEnoughEntries(t.getSampleCount());
+    }
+
+    double mean = static_cast<double>(t.getSampleSum()) / static_cast<double>(t.getSampleCount());
+    double stddev = static_cast<double>(t.getSampleSumOfSquares()) / static_cast<double>(t.getSampleCount()) - mean * mean;
+
+    return ChannelHistogramInfo::ok(t.getSampleCount(), mean, stddev);
 }

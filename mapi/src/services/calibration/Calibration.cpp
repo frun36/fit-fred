@@ -80,7 +80,7 @@ class BinTracker
     double getStddev() const
     {
         double mean = static_cast<double>(sampleSum) / static_cast<double>(sampleCount);
-        return static_cast<double>(sampleSumOfSquares) / static_cast<double>(sampleCount) - mean * mean;
+        return sqrt(static_cast<double>(sampleSumOfSquares) / static_cast<double>(sampleCount) - mean * mean);
     }
 
     void addBin(uint16_t val)
@@ -120,6 +120,62 @@ Calibration::ChannelHistogramInfo Calibration::processChannelTimeHistogram(const
             for (auto it = binBlock->data.begin(); it < binBlock->data.end(); it++) {
                 t.addBin(*it & 0xFFFF);
                 t.addBin(*it >> 16);
+            }
+        }
+    }
+
+    if (t.getSampleCount() < 0.8 * expectedEntries) {
+        return ChannelHistogramInfo::notEnoughEntries(t.getSampleCount());
+    }
+
+    return ChannelHistogramInfo::ok(t.getSampleCount(), t.getMean(), t.getStddev());
+}
+
+Calibration::ChannelHistogramInfo Calibration::processChannelAmplitudeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries)
+{
+    if (chIdx >= 12) {
+        return ChannelHistogramInfo::badChannelIdx();
+    }
+
+    ostringstream nameAdc0;
+    nameAdc0 << "CH" << setw(2) << chIdx << "ADC0";
+    const vector<const BinBlock*>& histAdc0 = data.at(nameAdc0.str());
+
+    ostringstream nameAdc1;
+    nameAdc1 << "CH" << setw(2) << chIdx << "ADC1";
+    const vector<const BinBlock*>& histAdc1 = data.at(nameAdc1.str());
+
+    if (histAdc0.size() != histAdc1.size() || histAdc0.size() < 1) {
+        return ChannelHistogramInfo::badHistogramInfo();
+    }
+
+    int32_t a0 = histAdc0[0]->isNegativeDirection ? histAdc0[0]->startBin - 2 * histAdc0[0]->data.size() + 1
+                                                  : histAdc0[0]->startBin;
+    BinTracker t(a0);
+
+    for (auto itAdc0Block = histAdc0.begin(), itAdc1Block = histAdc1.begin();
+         itAdc0Block < histAdc0.end() && itAdc1Block < histAdc1.end();
+         itAdc0Block++, itAdc1Block++) {
+        // Check homogeneity of ADC0 and ADC1 blocks - ToDo: move elsewhere?
+        if ((*itAdc0Block)->data.size() != (*itAdc1Block)->data.size() ||
+            (*itAdc0Block)->isNegativeDirection != (*itAdc1Block)->isNegativeDirection ||
+            (*itAdc0Block)->startBin != (*itAdc1Block)->startBin) {
+            return ChannelHistogramInfo::badHistogramInfo();
+        }
+
+        if ((*itAdc0Block)->isNegativeDirection) {
+            for (auto itAdc0 = (*itAdc0Block)->data.rbegin(), itAdc1 = (*itAdc1Block)->data.rbegin();
+                 itAdc0 < (*itAdc0Block)->data.rend() && itAdc1 < (*itAdc1Block)->data.rend();
+                 itAdc0++, itAdc1++) {
+                t.addBin((*itAdc0 >> 16) + (*itAdc1 >> 16));
+                t.addBin((*itAdc0 & 0xFFFF) + (*itAdc1 & 0xFFFF));
+            }
+        } else {
+            for (auto itAdc0 = (*itAdc0Block)->data.begin(), itAdc1 = (*itAdc1Block)->data.begin();
+                 itAdc0 < (*itAdc0Block)->data.end() && itAdc1 < (*itAdc1Block)->data.end();
+                 itAdc0++, itAdc1++) {
+                t.addBin((*itAdc0 & 0xFFFF) + (*itAdc1 & 0xFFFF));
+                t.addBin((*itAdc0 >> 16) + (*itAdc1 >> 16));
             }
         }
     }

@@ -22,9 +22,6 @@ class Calibration : public BasicFitIndefiniteMapi
         const double mean;
         const double stddev;
 
-        ChannelHistogramInfo(Status status, uint32_t sampleCount = 0, double mean = 0., double stddev = 0.)
-            : status(status), sampleCount(sampleCount), mean(mean), stddev(stddev) {}
-
         static ChannelHistogramInfo ok(uint32_t sampleCount, double mean, double stddev)
         {
             return ChannelHistogramInfo(Status::Ok, sampleCount, mean, stddev);
@@ -44,10 +41,16 @@ class Calibration : public BasicFitIndefiniteMapi
         {
             return ChannelHistogramInfo(Status::BadHistogramInfo);
         }
+
+       private:
+        ChannelHistogramInfo(Status status, uint32_t sampleCount = 0, double mean = 0., double stddev = 0.)
+            : status(status), sampleCount(sampleCount), mean(mean), stddev(stddev) {}
     };
 
    private:
     ChannelHistogramInfo processChannelTimeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
+    ChannelHistogramInfo processChannelAmplitudeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
+
     Result<array<bool, 12>, string> parseRequest(bool& running);
 
    public:

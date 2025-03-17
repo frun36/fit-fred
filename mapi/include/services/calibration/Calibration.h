@@ -6,6 +6,9 @@
 #include "services/histograms/PmHistogramData.h"
 #include "utils/utils.h"
 
+template <typename T>
+using ChannelArray = array<T, 12>;
+
 class Calibration : public BasicFitIndefiniteMapi
 {
    protected:
@@ -48,13 +51,20 @@ class Calibration : public BasicFitIndefiniteMapi
     };
 
    private:
+    const double m_refRateHz = 1000.;
+
     ChannelHistogramInfo processChannelTimeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
     ChannelHistogramInfo processChannelAmplitudeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
 
-    Result<array<bool, 12>, string> parseRequest(bool& running);
+    Result<ChannelArray<bool>, string> parseRequest(bool& running);
 
    public:
     void processExecution() override;
 
-    virtual Result<string, string> run(array<bool, 12> calibrationChannelMask) = 0;
+    virtual Result<string, string> run(ChannelArray<bool> calibrationChannelMask) = 0;
+
+    useconds_t getSleepTime(uint32_t expectedEntries);
+
+    ChannelArray<ChannelHistogramInfo> processTimeHistograms(const BlockView& data);
+    ChannelArray<ChannelHistogramInfo> processAmplitudeHistograms(const BlockView& data);
 };

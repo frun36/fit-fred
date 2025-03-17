@@ -1,12 +1,20 @@
+#include <algorithm>
 #include <exception>
 #include <iomanip>
 #include <sstream>
 #include "services/histograms/BinBlock.h"
 #include "services/calibration/Calibration.h"
 
-Result<array<bool, 12>, string> Calibration::parseRequest(bool& running)
+useconds_t Calibration::getSleepTime(uint32_t expectedEntries)
 {
-    array<bool, 12> calibrationChannelMask = { false };
+    static constexpr useconds_t MinSleep = 200'000;
+    useconds_t expectedSleep = 1e6 * static_cast<double>(expectedEntries) / m_refRateHz;
+    return max(MinSleep, expectedSleep);
+}
+
+Result<ChannelArray<bool>, string> Calibration::parseRequest(bool& running)
+{
+    ChannelArray<bool> calibrationChannelMask = { false };
 
     string request = waitForRequest(running);
     auto splitResult = string_utils::Splitter::getAll(request, ',');

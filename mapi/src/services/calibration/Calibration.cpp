@@ -194,3 +194,41 @@ Calibration::ChannelHistogramInfo Calibration::processChannelAmplitudeHistogram(
 
     return ChannelHistogramInfo::ok(t.getSampleCount(), t.getMean(), t.getStddev());
 }
+
+ChannelArray<Calibration::ChannelHistogramInfo> Calibration::processTimeHistograms(const BlockView& data, uint32_t expectedEntries)
+{
+    ChannelArray<ChannelHistogramInfo> res = {
+        processChannelTimeHistogram(data, 0, expectedEntries),
+        processChannelTimeHistogram(data, 1, expectedEntries),
+        processChannelTimeHistogram(data, 2, expectedEntries),
+        processChannelTimeHistogram(data, 3, expectedEntries),
+        processChannelTimeHistogram(data, 4, expectedEntries),
+        processChannelTimeHistogram(data, 5, expectedEntries),
+        processChannelTimeHistogram(data, 6, expectedEntries),
+        processChannelTimeHistogram(data, 7, expectedEntries),
+        processChannelTimeHistogram(data, 8, expectedEntries),
+        processChannelTimeHistogram(data, 9, expectedEntries),
+        processChannelTimeHistogram(data, 10, expectedEntries),
+        processChannelTimeHistogram(data, 11, expectedEntries),
+    };
+    return res;
+}
+
+ChannelArray<Calibration::ChannelHistogramInfo> Calibration::processAmplitudeHistograms(const BlockView& data, uint32_t expectedEntries)
+{
+    ChannelArray<ChannelHistogramInfo> res = {
+        processChannelAmplitudeHistogram(data, 0, expectedEntries),
+        processChannelAmplitudeHistogram(data, 1, expectedEntries),
+        processChannelAmplitudeHistogram(data, 2, expectedEntries),
+        processChannelAmplitudeHistogram(data, 3, expectedEntries),
+        processChannelAmplitudeHistogram(data, 4, expectedEntries),
+        processChannelAmplitudeHistogram(data, 5, expectedEntries),
+        processChannelAmplitudeHistogram(data, 6, expectedEntries),
+        processChannelAmplitudeHistogram(data, 7, expectedEntries),
+        processChannelAmplitudeHistogram(data, 8, expectedEntries),
+        processChannelAmplitudeHistogram(data, 9, expectedEntries),
+        processChannelAmplitudeHistogram(data, 10, expectedEntries),
+        processChannelAmplitudeHistogram(data, 11, expectedEntries),
+    };
+    return res;
+}

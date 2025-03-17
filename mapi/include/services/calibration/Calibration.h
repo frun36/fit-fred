@@ -45,16 +45,15 @@ class Calibration : public BasicFitIndefiniteMapi
             return ChannelHistogramInfo(Status::BadHistogramInfo);
         }
 
-       private:
-        ChannelHistogramInfo(Status status, uint32_t sampleCount = 0, double mean = 0., double stddev = 0.)
+        ChannelHistogramInfo(Status status = Status::BadHistogramInfo, uint32_t sampleCount = 0, double mean = 0., double stddev = 0.)
             : status(status), sampleCount(sampleCount), mean(mean), stddev(stddev) {}
     };
 
    private:
     const double m_refRateHz = 1000.;
 
-    ChannelHistogramInfo processChannelTimeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
-    ChannelHistogramInfo processChannelAmplitudeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
+    static ChannelHistogramInfo processChannelTimeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
+    static ChannelHistogramInfo processChannelAmplitudeHistogram(const BlockView& data, uint32_t chIdx, uint32_t expectedEntries);
 
     Result<ChannelArray<bool>, string> parseRequest(bool& running);
 
@@ -63,8 +62,8 @@ class Calibration : public BasicFitIndefiniteMapi
 
     virtual Result<string, string> run(ChannelArray<bool> calibrationChannelMask) = 0;
 
-    useconds_t getSleepTime(uint32_t expectedEntries);
+    static useconds_t getSleepTime(uint32_t expectedEntries);
 
-    ChannelArray<ChannelHistogramInfo> processTimeHistograms(const BlockView& data);
-    ChannelArray<ChannelHistogramInfo> processAmplitudeHistograms(const BlockView& data);
+    static ChannelArray<ChannelHistogramInfo> processTimeHistograms(const BlockView& data, uint32_t expectedEntries);
+    static ChannelArray<ChannelHistogramInfo> processAmplitudeHistograms(const BlockView& data, uint32_t expectedEntries);
 };

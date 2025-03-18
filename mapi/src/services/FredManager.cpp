@@ -41,7 +41,6 @@ void FredManager::startServices(std::optional<std::string> config)
     newMapiGroupRequest({{m_resetSystemService, ReinitializeSpiMaks}});
 
     usleep(DelayAfterReinitializeSpiMask);
-    newMapiGroupRequest(m_startLooping);
 
     if(config.has_value()){
         newMapiGroupRequest({{m_configurationService,config.value()}});
@@ -51,6 +50,8 @@ void FredManager::startServices(std::optional<std::string> config)
         }
         newMapiGroupRequest({{m_resetErrorsService,""}});
     }
+    
+    newMapiGroupRequest(m_startLooping);
 }
 
 void FredManager::stopServices()

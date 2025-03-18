@@ -153,9 +153,9 @@ BoardCommunicationHandler::ParsedResponse ResetFEE::updatePmSpiMask()
 
     {
         auto parsedResponse = processSequenceThroughHandler(m_TCM, readMasks);
-            if (parsedResponse.isError()) {
-                return parsedResponse;
-            }
+        if (parsedResponse.isError()) {
+            return parsedResponse;
+        }
     }
 
     for (auto& pm : m_PMs) {

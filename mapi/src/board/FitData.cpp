@@ -84,7 +84,7 @@ bool FitData::fetchEnvironment()
     if (!checkEnvironment()) {
         return false;
     }
-
+    m_environmentalVariables->emplace(EnvironmentVariables::Variable("TCM_CONFIG", Equation::Empty()));
     return true;
 }
 

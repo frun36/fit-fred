@@ -39,20 +39,23 @@ std::string FredManager::processInputMessage(string msg)
 void FredManager::startServices(std::optional<std::string> config)
 {
     newMapiGroupRequest({{m_resetSystemService, ReinitializeSpiMaks}});
-
-    usleep(DelayAfterReinitializeSpiMask);
-
+    usleep(10'000);
+    while(m_TCM->getEnvironment("RESET_SYSTEM") == 1){
+        usleep(1'000);
+    }
+    
     if(config.has_value()){
         newMapiGroupRequest({{m_configurationService,config.value()}});
-        usleep(DelayAfterConfiguration);
-        uint8_t running = m_configs.size();
-        for(const auto& config: m_configs){
-            if(m_TCM->getEnvironment(config)==0){
-                running -= 1;
+        usleep(10'000);
+        uint32_t running = 0;
+        while(running != m_configs.size()){
+            running = 0;
+            for(const auto& config: m_configs){
+                if(m_TCM->getEnvironment(config)==0){
+                    running += 1;
+                }
             }
-            if(running == 0){
-                break;
-            }
+            usleep(1'000);
         }
         newMapiGroupRequest({{m_resetErrorsService,""}});
     }

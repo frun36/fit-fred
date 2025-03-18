@@ -8,6 +8,7 @@
 
 void ResetFEE::processExecution()
 {
+    m_TCM.getBoard()->setEnvironemnt("RESET_SYSTEM",0);
     bool running = true;
     if (m_initialized == false) {
         usleep(1e6); // wait for fred to start;
@@ -27,6 +28,7 @@ void ResetFEE::processExecution()
     if (running == false) {
         return;
     }
+    m_TCM.getBoard()->setEnvironemnt("RESET_SYSTEM",1);
 
     if (request.find(ResetFEE::EnforceDefGbtConfig) != std::string::npos) {
         m_enforceDefGbtConfig = true;

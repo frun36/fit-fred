@@ -4,5 +4,6 @@ TCM = {
     }
     MAPPING = {
         TCM[0] = ALF/SERIAL_0/ENDPOINT_0/LINK_0
+        TCM[1] = ALF/SERIAL_0/ENDPOINT_0/LINK_1
     }
 }

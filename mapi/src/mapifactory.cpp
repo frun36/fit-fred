@@ -31,7 +31,7 @@ void MapiFactory::generateObjects()
 
     m_configurationsObject = make_unique<Configurations>(m_fred->Name(), boardsData.getBoards());
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", m_configurationsObject.get());
-    config = m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS_REQ";
+    config = m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS";
 
     std::shared_ptr<Board> tcm;
     std::vector<std::shared_ptr<Board>> pms;
@@ -58,7 +58,7 @@ void MapiFactory::generateObjects()
 
         m_fred->registerMapiObject(servicePrefix + "PARAMETERS", &m_parametersObjects.back());
         m_fred->registerMapiObject(servicePrefix + "STATUS", &m_statusObjects.back());
-        looping.emplace_back(servicePrefix + "STATUS_REQ");
+        looping.emplace_back(servicePrefix + "STATUS");
 
         m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject->getBoardConfigurationServices().at(boardName).get()));
         environment->emplace({servicePrefix + "_INTERNAL_CONFIGURATIONS",Equation::Empty()});
@@ -67,7 +67,7 @@ void MapiFactory::generateObjects()
 
         m_fred->registerMapiObject(servicePrefix + "RESET", &m_resetObjects.back());
         m_fred->registerMapiObject(servicePrefix + "COUNTER_RATES", &m_counterRatesObjects.back());
-        looping.emplace_back(servicePrefix + "COUNTER_RATES_REQ");
+        looping.emplace_back(servicePrefix + "COUNTER_RATES_");
         
         if (!board->isTcm()) {
             m_pmHistogramsObjects.emplace_back(board, boardsData.getPmHistograms());
@@ -78,11 +78,11 @@ void MapiFactory::generateObjects()
 
     m_resetSystem = std::make_unique<ResetFEE>(tcm, pms);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM"), m_resetSystem.get());
-    resetSystem = string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM_REQ");
+    resetSystem = string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_SYSTEM");
 
     m_resetError = std::make_unique<ResetErrors>(tcm, pms);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS"), m_resetError.get());
-    resetErrors = string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS_REQ");
+    resetErrors = string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/RESET_ERRORS");
 
     m_setPhaseDelay = std::make_unique<SetPhaseDelay>(tcm);
     m_fred->registerMapiObject(string_utils::concatenate(m_fred->Name(), "/TCM/TCM0/SET_PHASE_DELAY"), m_setPhaseDelay.get());
@@ -93,5 +93,5 @@ void MapiFactory::generateObjects()
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/HISTOGRAMS", m_tcmHistograms.get());
 
     m_manager = std::make_unique<FredManager>(tcm,config,resetSystem,resetErrors,looping,configurations);
-    m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/MANAGER", m_manager.get());
+    m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM1/MANAGER", m_manager.get());
 }

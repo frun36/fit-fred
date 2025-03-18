@@ -1,4 +1,5 @@
 #include "services/configurations/TcmConfigurations.h"
+#include "communication-utils/WinCCRequest.h"
 #include "utils/DelayChange.h"
 #include "board/TCM.h"
 #include <unistd.h>
@@ -12,6 +13,13 @@ TcmConfigurations::TcmConfigurations(std::shared_ptr<Board> board) : BoardConfig
 
 bool TcmConfigurations::handleDelays()
 {
+    string delayReadRequest = WinCCRequest::readRequest(tcm_parameters::DelayA);
+    WinCCRequest::appendToRequest(delayReadRequest, WinCCRequest::readRequest(tcm_parameters::DelayC));
+    auto delayReadResponse = processSequenceThroughHandler(m_handler, delayReadRequest);
+    if (delayReadResponse.isError()) {
+        return false;
+    }
+
     optional<DelayChange> delayChange = DelayChange::fromElectronicValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
 
     if (!delayChange.has_value()) {

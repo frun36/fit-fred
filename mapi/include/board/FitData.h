@@ -37,6 +37,7 @@ class FitData
     };
 
     std::unordered_map<std::string, PmHistogram>& getPmHistograms() { return m_PmHistograms; }
+    std::shared_ptr<EnvironmentVariables> getEnvironment(){return m_environmentalVariables;}
 
    private:
     struct DeviceInfo {

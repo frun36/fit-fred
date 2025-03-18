@@ -13,6 +13,7 @@
 #include "services/configurations/ConfigurationDatabaseBroker.h"
 #include "services/histograms/PmHistograms.h"
 #include "services/histograms/TcmHistograms.h"
+#include "services/FredManager.h"
 #include <memory>
 
 class MapiFactory
@@ -31,7 +32,7 @@ class MapiFactory
     std::unique_ptr<ResetErrors> m_resetError;
     std::unique_ptr<SetPhaseDelay> m_setPhaseDelay;
     std::unique_ptr<ConfigurationDatabaseBroker> m_saveConfiguration;
-
+    std::unique_ptr<FredManager> m_manager;
     std::unique_ptr<TcmHistograms> m_tcmHistograms;
 
     void generateObjects();

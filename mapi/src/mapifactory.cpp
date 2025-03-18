@@ -67,7 +67,7 @@ void MapiFactory::generateObjects()
 
         m_fred->registerMapiObject(servicePrefix + "RESET", &m_resetObjects.back());
         m_fred->registerMapiObject(servicePrefix + "COUNTER_RATES", &m_counterRatesObjects.back());
-        looping.emplace_back(servicePrefix + "COUNTER_RATES_");
+        looping.emplace_back(servicePrefix + "COUNTER_RATES");
         
         if (!board->isTcm()) {
             m_pmHistogramsObjects.emplace_back(board, boardsData.getPmHistograms());

@@ -32,7 +32,7 @@ std::string FredManager::processInputMessage(string msg)
     } else if(cmd == StopService){
         stopServices();
     }
-
+    publishAnswer("SUCCESS");
     noRpcRequest = true;
     return {};
 }

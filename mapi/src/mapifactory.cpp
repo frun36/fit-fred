@@ -22,9 +22,12 @@ void MapiFactory::generateObjects()
     Print::PrintVerbose("Registering MAPI Objects");
 
     std::list<std::string> looping;
+    std::list<std::string> configurations;
+
     std::string resetSystem;
     std::string resetErrors;
     std::string config;
+    auto environment = boardsData.getEnvironment();
 
     m_configurationsObject = make_unique<Configurations>(m_fred->Name(), boardsData.getBoards());
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/CONFIGURATIONS", m_configurationsObject.get());
@@ -56,10 +59,16 @@ void MapiFactory::generateObjects()
         m_fred->registerMapiObject(servicePrefix + "PARAMETERS", &m_parametersObjects.back());
         m_fred->registerMapiObject(servicePrefix + "STATUS", &m_statusObjects.back());
         looping.emplace_back(servicePrefix + "STATUS_REQ");
+
         m_fred->registerMapiObject(servicePrefix + "_INTERNAL_CONFIGURATIONS", dynamic_cast<Mapi*>(m_configurationsObject->getBoardConfigurationServices().at(boardName).get()));
+        environment->emplace({servicePrefix + "_INTERNAL_CONFIGURATIONS",Equation::Empty()});
+        environment->setVariable(servicePrefix + "_INTERNAL_CONFIGURATIONS",0);
+        configurations.emplace_back(servicePrefix + "_INTERNAL_CONFIGURATIONS");
+
         m_fred->registerMapiObject(servicePrefix + "RESET", &m_resetObjects.back());
         m_fred->registerMapiObject(servicePrefix + "COUNTER_RATES", &m_counterRatesObjects.back());
         looping.emplace_back(servicePrefix + "COUNTER_RATES_REQ");
+        
         if (!board->isTcm()) {
             m_pmHistogramsObjects.emplace_back(board, boardsData.getPmHistograms());
             m_fred->registerMapiObject(servicePrefix + "HISTOGRAMS", &m_pmHistogramsObjects.back());
@@ -83,6 +92,6 @@ void MapiFactory::generateObjects()
     m_tcmHistograms = std::make_unique<TcmHistograms>(tcm);
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/HISTOGRAMS", m_tcmHistograms.get());
 
-    m_manager = std::make_unique<FredManager>(tcm,config,resetSystem,resetErrors,looping);
+    m_manager = std::make_unique<FredManager>(tcm,config,resetSystem,resetErrors,looping,configurations);
     m_fred->registerMapiObject(m_fred->Name() + "/TCM/TCM0/MANAGER", m_manager.get());
 }

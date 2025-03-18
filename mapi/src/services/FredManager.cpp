@@ -1,8 +1,8 @@
 #include "services/FredManager.h"
 #include<unistd.h>
 
-FredManager::FredManager(std::shared_ptr<Board> TCM, const std::string& configSrv, const std::string& resetSystemSrv, const std::string& resetErrorsSrv, const std::list<std::string>& looping) : m_TCM(TCM),
-m_configurationService(configSrv), m_resetErrorsService(resetErrorsSrv), m_resetSystemService(resetSystemSrv)
+FredManager::FredManager(std::shared_ptr<Board> TCM, const std::string& configSrv, const std::string& resetSystemSrv, const std::string& resetErrorsSrv, const std::list<std::string>& looping, const std::list<std::string>& configs) : m_TCM(TCM),
+m_configurationService(configSrv), m_resetErrorsService(resetErrorsSrv), m_resetSystemService(resetSystemSrv), m_configs(configs)
 {
     for(auto& srv: looping){
         m_startLooping.emplace_back(srv, StartService);
@@ -45,8 +45,14 @@ void FredManager::startServices(std::optional<std::string> config)
     if(config.has_value()){
         newMapiGroupRequest({{m_configurationService,config.value()}});
         usleep(DelayAfterConfiguration);
-        while(m_TCM->getEnvironment("TCM_CONFIG")==1){
-            usleep(1'000);
+        uint8_t running = m_configs.size();
+        for(const auto& config: m_configs){
+            if(m_TCM->getEnvironment(config)==0){
+                running -= 1;
+            }
+            if(running == 0){
+                break;
+            }
         }
         newMapiGroupRequest({{m_resetErrorsService,""}});
     }

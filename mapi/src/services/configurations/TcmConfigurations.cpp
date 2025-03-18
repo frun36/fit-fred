@@ -59,7 +59,7 @@ void TcmConfigurations::handleResetErrors()
 
 void TcmConfigurations::processExecution()
 {
-    m_handler.getBoard()->setEnvironment("TCM_CONFIG",0);
+    m_handler.getBoard()->setEnvironment(getServiceName(),0);
     m_response.clear();
 
     bool running = true;
@@ -67,7 +67,7 @@ void TcmConfigurations::processExecution()
     if (running == false) {
         return;
     }
-    m_handler.getBoard()->setEnvironment("TCM_CONFIG",1);
+    m_handler.getBoard()->setEnvironment(getServiceName(),1);
 
     const string& configurationName = request;
     m_configurationInfo = getConfigurationInfo(configurationName);

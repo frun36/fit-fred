@@ -11,7 +11,7 @@ void SetPhaseDelay::processExecution()
         return;
     }
 
-    optional<DelayChange> delayChange = DelayChange::fromWinCCRequest(m_handler, request);
+    optional<DelayChange> delayChange = DelayChange::fromWinCCRequest(m_handler.getBoard(), request);
 
     if (!delayChange.has_value()) {
         Print::PrintWarning("No delay change");

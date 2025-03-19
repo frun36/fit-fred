@@ -12,7 +12,7 @@ TcmConfigurations::TcmConfigurations(std::shared_ptr<Board> board) : BoardConfig
 
 bool TcmConfigurations::handleDelays()
 {
-    optional<DelayChange> delayChange = DelayChange::fromElectronicValues(m_handler, m_configurationInfo.delayA, m_configurationInfo.delayC);
+    optional<DelayChange> delayChange = DelayChange::fromElectronicValues(m_handler.getBoard(), m_configurationInfo.delayA, m_configurationInfo.delayC);
 
     if (!delayChange.has_value()) {
         return true;

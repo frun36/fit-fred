@@ -21,7 +21,7 @@ class FredManager : public Mapigroup
 
     const std::string StartService{ "START" };
     const std::string StopService{ "STOP" };
-    const std::string ReinitializeSpiMaks{ "REINITIALIZE_SPI_MASK" };
+    const std::string ReinitializeSpiMask{ "REINITIALIZE_SPI_MASK" };
 
     const useconds_t DelayAfterReinitializeSpiMask{ 500'000 };
     const useconds_t DelayAfterConfiguration{ 250'000 };

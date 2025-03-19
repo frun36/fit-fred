@@ -1,3 +1,4 @@
+#include "Alfred/print.h"
 #include "services/FredManager.h"
 #include "utils/utils.h"
 #include <sstream>
@@ -45,13 +46,15 @@ std::string FredManager::processInputMessage(string msg)
 
 void FredManager::startServices(std::optional<std::string> config)
 {
-    newMapiGroupRequest({ { m_resetSystemService, ReinitializeSpiMaks } });
+    Print::PrintWarning(name, "Manager requesting " + ReinitializeSpiMask);
+    newMapiGroupRequest({ { m_resetSystemService, ReinitializeSpiMask } });
     usleep(10'000);
     while (m_TCM->getEnvironment("RESET_SYSTEM") == 1) {
         usleep(1'000);
     }
 
     if (config.has_value()) {
+        Print::PrintWarning(name, "Manager requesting configuration '" + config.value() + "'");
         newMapiGroupRequest({ { m_configurationService, config.value() } });
         usleep(10'000);
         uint32_t running = 0;
@@ -64,14 +67,17 @@ void FredManager::startServices(std::optional<std::string> config)
             }
             usleep(1'000);
         }
+        Print::PrintWarning(name, "Manager requesting RESET_ERRORS");
         newMapiGroupRequest({ { m_resetErrorsService, "" } });
     }
 
+    Print::PrintWarning(name, "Manager requesting start of looping services");
     newMapiGroupRequest(m_startLooping);
 }
 
 void FredManager::stopServices()
 {
+    Print::PrintWarning(name, "Manager requesting stop of looping services");
     newMapiGroupRequest(m_stopLooping);
 }
 

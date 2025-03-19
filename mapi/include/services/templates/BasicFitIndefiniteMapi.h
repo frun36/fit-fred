@@ -34,4 +34,8 @@ class BasicFitIndefiniteMapi : public IndefiniteMapi
         Print::PrintError(name, response.getError());
         publishError(response.getContents());
     }
+
+    inline string getName() const {
+        return name;
+    }
 };

@@ -6,7 +6,7 @@
 #include "utils/utils.h"
 
 PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms)
-    : m_controller(pm, histograms)
+    : m_controller(*this, pm, histograms)
 {
     addOrReplaceHandler("SELECT", [this](vector<string> arguments) -> Result<string, string> {
         return m_controller.selectHistograms(arguments);
@@ -16,7 +16,7 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string,
         if (arguments.size() != 1 || (arguments[0] != "0" && arguments[0] != "1")) {
             return { .ok = nullopt, .error = "HISTOGRAMMING command takes exactly one argument: 0 or 1" };
         }
-        return m_controller.switchHistogramming(*this, arguments[0] == "1");
+        return m_controller.switchHistogramming(arguments[0] == "1");
     });
 
     addOrReplaceHandler("BCID_FILTER", [this](vector<string> arguments) -> Result<string, string> {
@@ -24,20 +24,25 @@ PmHistograms::PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string,
         istringstream iss(arguments.size() == 1 ? arguments[0] : "");
 
         if (arguments[0] == "OFF") {
-            return m_controller.setBcIdFilter(*this, -1);
+            return m_controller.setBcIdFilter(-1);
         }
 
         if (!(iss >> counterId) || !iss.eof()) {
             return { .ok = nullopt, .error = "BCID_FILTER takes exactly one valid integer argument or the string \"OFF\"" };
         }
 
-        return m_controller.setBcIdFilter(*this, counterId);
+        return m_controller.setBcIdFilter(counterId);
     });
 }
 
 Result<std::string, std::string> PmHistograms::readAndStoreHistograms()
 {
-    return m_controller.readAndStoreHistograms(*this);
+    return m_controller.readAndStoreHistograms();
+}
+
+Result<std::string, std::string> PmHistograms::resetHistograms()
+{
+    return m_controller.resetHistograms();
 }
 
 void PmHistograms::parseResponse(ostringstream& oss) const

@@ -16,5 +16,6 @@ class PmHistograms : public BoardHistograms
     PmHistograms(shared_ptr<Board> pm, std::unordered_map<std::string, FitData::PmHistogram> histograms);
 
     Result<std::string, std::string> readAndStoreHistograms() override;
+    Result<std::string, std::string> resetHistograms() override;
     void parseResponse(ostringstream& oss) const override;
 };

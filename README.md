@@ -1,4 +1,8 @@
 # FIT FRED
+
+> [!WARNING]  
+> Development has been moved to [CERN GitLab](https://gitlab.cern.ch/alialfred/fred_fv0).
+
 ## About
 This repository contains the FRED MAPI code for ALICE's FIT detector.
 
